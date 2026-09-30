@@ -12,7 +12,7 @@ Konkourix is a specialized exam-preparation ecosystem with independent public en
 
 ## Current Phase
 
-**RECOVERY FOUNDATION 3 — MINIMAL CANONICAL CURRICULUM RUNTIME** is the current completed milestone in the working tree. It adds a deterministic, file-backed, read-only Curriculum projection and authenticated read API without changing the database, Prisma schema, applied migrations, protected educational source, or Student/Counselor workflows.
+**RECOVERY FOUNDATION 4 — RETIRE HISTORICAL CURRICULUM GOVERNANCE SCHEMA** is the current completed milestone in the working tree. It removes the unused historical Curriculum governance models from Prisma and retires their PostgreSQL objects through one forward migration. The deterministic, file-backed, read-only Curriculum projection and authenticated read API remain unchanged.
 
 Phase 2 Milestone 19 — AssessmentAttempt Foundation remains the clean runtime comparison baseline at commit `76bc4d77dd015ef458e898d974fa23537de85948`. Historically completed core milestones remain valid. Authentication, independent browser application shells, account settings, student planning and task lifecycle, student-owned subject/topic management, study execution and recovery, completed assessment-attempt recording, assigned-student counselor access, and counselor task creation are verified foundations; later capabilities are not implied complete.
 
@@ -34,9 +34,9 @@ Recovery is being performed through forward corrective commits. Applied migratio
 - Rejected import/bootstrap commands, taxonomy/content/Knowledge Package modules, review runtime, package data, and their behavior tests are removed.
 - The runtime is generated from `docs/curriculum/CANONICAL_CURRICULUM.md` into a checked-in deterministic JSON artifact included in the API production image. It contains 4 scopes, 12 scope/grade placements, 74 subject placements, 67 detailed source representations, and 5,484 label-bearing source nodes covering the locked 6,588-entry detailed source block.
 - No Curriculum database persistence, write/admin API, governance, authoring, import, publication/version workflow, or product-record integration is implemented.
-- The local development database has all 18 tracked migration directories applied, including the four additive post-baseline Curriculum migrations. Applied history must remain intact during recovery.
-- The Prisma schema and generated client temporarily retain historical Curriculum governance models. Existing PostgreSQL tables and rows remain untouched.
-- **TEMPORARILY RETAINED HISTORICAL SCHEMA — TO BE REMOVED BY FORWARD MIGRATION IN RF4:** Curriculum governance/import/review/mapping models and their applied PostgreSQL tables remain present but have no active application service or HTTP route.
+- The local development database has all 19 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 forward retirement migration.
+- The Prisma schema and generated client no longer expose historical Curriculum governance/import/review/mapping/capability models.
+- PostgreSQL contains no Canonical Curriculum persistence and no historical Curriculum governance tables, triggers, functions, or enum types.
 - Product loop: **Plan → Execute → Measure → Improve**.
 - Planning domain: `DailyTask` records planned educational intention.
 - Execution domain: `StudySession` records actual study intervals.
@@ -55,7 +55,7 @@ Recovery is being performed through forward corrective commits. Applied migratio
 ### EXPLORATORY / DEFERRED
 
 - Product-record references to Canonical Curriculum nodes remain deferred to an explicitly approved integration milestone.
-- Historical model/table cleanup is deferred to a separately approved forward migration in RF4.
+- Product-record reference integration requires a separately approved migration. Any Product Owner-approved source change requires explicit reference migration and ID-stability planning.
 - Historical Knowledge Package, scientific review, taxonomy, and content-production designs below are not approved future state.
 
 Historical milestone sections below are preserved as records of their time. When historical text conflicts with the source and scope locks above, the current locks govern.
@@ -1383,6 +1383,6 @@ The rejected AI-review document, evidence support, and runtime were removed in R
 
 ## Recovery Foundation — Current Next Work
 
-Recovery Foundation 3 leaves core Student/Counselor behavior intact while adding only the minimal read-only Canonical Curriculum runtime. The protected source transcription and source-fidelity evidence remain in the repository and remain authoritative over the generated projection.
+Recovery Foundation 4 leaves core Student/Counselor behavior and the RF3 read-only Canonical Curriculum runtime intact while retiring only the unused historical governance persistence. The protected source transcription and source-fidelity evidence remain in the repository and remain authoritative over the generated projection.
 
-Historical Curriculum model/table cleanup remains deferred to a separately approved RF4 forward migration. Product-record integration, data mapping, Question Bank linking, and Student/Counselor UX changes require their own explicit milestones. Applied migration history remains immutable.
+Product-record integration, data mapping, Question Bank linking, source-reference migration planning, and Student/Counselor UX changes require their own explicit milestones. Applied migration history remains immutable.

@@ -11,8 +11,8 @@ This directory is governed by [CURRICULUM_SOURCE_OF_TRUTH.md](../CURRICULUM_SOUR
 - The generated deployment artifact is `apps/api/src/curriculum/generated/canonical-curriculum.v1.json`. It includes source hashes, counts, placements, representations, detailed nodes, and a deterministic payload hash, with no timestamp or runtime-generated identity.
 - `pnpm --filter api curriculum:build-artifact` is the one-way compiler command. It reads only `CANONICAL_CURRICULUM.md`, never edits it, and has no database access.
 - The active API has no Curriculum write, administration, governance, import, taxonomy, content-ingestion, Knowledge Package, or review runtime.
-- The historical Prisma governance models and applied tables remain temporarily present because their removal requires a separately approved forward migration.
-- **TEMPORARILY RETAINED HISTORICAL SCHEMA — TO BE REMOVED BY FORWARD MIGRATION IN RF4:** these models and tables are inactive historical structure, not the replacement Curriculum design.
+- Recovery Foundation 4 retired the historical Prisma governance models and their resulting PostgreSQL tables, triggers, functions, and enum types through one forward migration.
+- The four historical Curriculum migration directories remain immutable history. PostgreSQL contains no Canonical Curriculum persistence.
 - `CURRICULUM_AUDIT_REPORT.json` and `CURRICULUM_FREEZE_MANIFEST.json` are retained historical projection evidence. Their 56-subject projection is not authoritative.
 - `INITIAL_IMPORT_AMBIGUITIES.json` is retained as historical source-observation evidence. It does not authorize resolution or import.
 
@@ -24,4 +24,4 @@ Product records may reference canonical Curriculum nodes only in a later explici
 
 ## EXPLORATORY / DEFERRED
 
-No Curriculum persistence, import workflow, publication lifecycle, mapping strategy, or cleanup migration is defined here. The retained historical database schema is not a template for the file-backed runtime. If the Product Owner later approves a source change, technical ID/reference stability must be handled explicitly rather than hidden behind a versioning engine.
+No Curriculum persistence, import workflow, publication lifecycle, or mapping strategy is defined here. If the Product Owner later approves a source change, technical ID/reference stability and reference migration must be planned explicitly rather than hidden behind a versioning engine.

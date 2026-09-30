@@ -46,12 +46,12 @@ The 2026-09-30 source audit confirmed that `docs/curriculum/CANONICAL_CURRICULUM
 
 ### CURRENT IMPLEMENTED STATE
 
-The rejected partial runtime projection and Curriculum governance/Knowledge machinery created after the AssessmentAttempt checkpoint has been removed from the active application. A deterministic, file-backed, read-only runtime now projects the protected transcription without changing its educational meaning or using PostgreSQL. The historical Prisma models and database tables remain temporarily retained, unused by this runtime, and do not supersede `cori.docx`.
+The rejected partial runtime projection and Curriculum governance/Knowledge machinery created after the AssessmentAttempt checkpoint has been removed from the active application. A deterministic, file-backed, read-only runtime now projects the protected transcription without changing its educational meaning or using PostgreSQL. Recovery Foundation 4 retired the historical governance Prisma models and PostgreSQL objects through a forward migration; the immutable historical migration files remain as implementation history and do not supersede `cori.docx`.
 
 ### APPROVED FUTURE STATE
 
-Konkourix will preserve the authored source and expose fit-for-purpose runtime projections for student/counselor planning, progress measurement, reporting, and future question linking.
+Konkourix will preserve the authored source and expose fit-for-purpose runtime projections for student/counselor planning, progress measurement, reporting, and future question linking. Product records may reference stable runtime IDs only through a separately approved migration. A Product Owner-approved source change requires explicit reference migration and ID-stability planning.
 
 ### EXPLORATORY / DEFERRED
 
-The replacement runtime data model, projection process, publication controls, and compatibility strategy require separately approved architecture milestones. This source lock does not authorize runtime recovery or database changes.
+Product-record integration, source-change compatibility, and reference migration strategy require separately approved architecture milestones. This source lock does not authorize additional database changes.
