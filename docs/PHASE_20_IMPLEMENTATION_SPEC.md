@@ -1,13 +1,13 @@
 # Phase 20 Implementation Specification — Canonical Curriculum Foundation
 
-**Status:** Proposed first coding-phase blueprint; implementation requires explicit approval
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Last synchronized:** 2026-09-17
 **Starting implementation baseline:** M19 (`76bc4d7`)
 **Roadmap alignment:** [ROADMAP_V2.md](ROADMAP_V2.md) Phase 1, after Phase 0 exit criteria
 
 “Phase 20” in this document names the next implementation milestone after M19. It does not introduce a twentieth phase into Roadmap V2 and does not reorder the approved critical path.
 
-This document is an implementation blueprint only. Creating it does not authorize code, schema, Prisma, migration, API, frontend, test, deployment, import, or database changes.
+This document is retained as a historical implementation record. It does not authorize code, schema, Prisma, migration, API, frontend, test, deployment, import, or database changes. Its rejected governance/import design and removed support artifacts must not guide the replacement runtime.
 
 ## Sources of Truth
 
@@ -22,7 +22,7 @@ This document is an implementation blueprint only. Creating it does not authoriz
 - [PROJECT_STATE.md](PROJECT_STATE.md)
 - [CANONICAL_CURRICULUM_SPECIFICATION.md](CANONICAL_CURRICULUM_SPECIFICATION.md)
 - [CANONICAL_CURRICULUM.md](curriculum/CANONICAL_CURRICULUM.md)
-- [CURRICULUM_IMPORT_RULES.md](curriculum/CURRICULUM_IMPORT_RULES.md)
+- Curriculum import rules (historical support artifact removed in Recovery Foundation 2)
 - ADR-024 and ADR-025 in [DECISIONS.md](DECISIONS.md)
 - [ADR-033](adr/ADR-033-curriculum-persistence-and-composite-references.md)
 - [ADR-034](adr/ADR-034-curriculum-governance-and-administrative-permissions.md)

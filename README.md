@@ -60,7 +60,7 @@ The root `dev`, `build`, `test`, and `typecheck` commands retain their existing 
 | `pnpm db:validate` | Validate the Prisma schema without running migrations |
 | `pnpm validate` | Run the complete canonical local validation gate |
 
-Curriculum operators can preflight or execute the governed Human Sciences, Mathematics & Physics, and Experimental Sciences structural imports with `pnpm --filter api curriculum:import-human-sciences`, `pnpm --filter api curriculum:import-mathematics-physics`, and `pnpm --filter api curriculum:import-experimental-sciences`. Every command requires the original reviewed source artifact and never publishes a Curriculum Version. See the field-specific import runbooks below.
+The rejected Curriculum governance/import commands were removed during Recovery Foundation 2. The authoritative source and exact repository transcription remain protected, but no canonical Curriculum HTTP or persistence runtime is active until the separately approved minimal-runtime milestone.
 
 Production-mode frontend builds require a public HTTPS `VITE_API_URL`. Use a safe non-secret value for local validation:
 
@@ -88,15 +88,9 @@ The validation command runs API and focused frontend tests, API type-check/build
 - [Roadmap](docs/ROADMAP.md)
 - [API contracts](docs/API.md)
 - [Project state](docs/PROJECT_STATE.md)
-- [Human Sciences curriculum import](docs/curriculum/HUMAN_SCIENCES_IMPORT.md)
-- [Mathematics & Physics curriculum import](docs/curriculum/MATHEMATICS_PHYSICS_IMPORT.md)
-- [Experimental Sciences curriculum import](docs/curriculum/EXPERIMENTAL_SCIENCES_IMPORT.md)
-- [Curriculum freeze and audit](docs/curriculum/CURRICULUM_FREEZE.md)
-- [Curriculum knowledge taxonomy design](docs/curriculum/TAXONOMY_DESIGN.md)
-- [Curriculum content ingestion design](docs/curriculum/CONTENT_INGESTION_DESIGN.md)
-- [Physics 12 Motion curriculum knowledge pilot](docs/curriculum/PILOT_PHYSICS12_MOTION.md)
-- [Arabic 10 Lesson 1 cross-domain knowledge pilot](docs/curriculum/PILOT_ARABIC10_LESSON1.md)
-- [Curriculum scaling architecture](docs/curriculum/SCALING_ARCHITECTURE.md)
+- [Curriculum source of truth](docs/CURRICULUM_SOURCE_OF_TRUTH.md)
+- [Canonical Curriculum transcription](docs/curriculum/CANONICAL_CURRICULUM.md)
+- [Curriculum artifact status](docs/curriculum/README.md)
 - [Technical architectural decisions](docs/DECISIONS.md)
 - [Production container, Compose, and edge contract](docs/CONTAINERS.md)
 - [Production security and operations contract](docs/SECURITY.md)

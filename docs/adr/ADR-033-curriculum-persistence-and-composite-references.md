@@ -1,8 +1,10 @@
 # ADR-033: Curriculum Persistence and Composite Reference Contract
 
-**Status:** Accepted target architecture; not implemented
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Decision date:** 2026-09-17
 **Related decisions:** ADR-024, ADR-025, ADR-028
+
+This ADR is retained as history. Its persistence/versioning design must not be treated as the replacement Curriculum architecture.
 
 ## Context
 

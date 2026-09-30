@@ -1,8 +1,10 @@
 # ADR-034: Curriculum Governance and Administrative Permission Model
 
-**Status:** Accepted target architecture; not implemented
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Decision date:** 2026-09-17
 **Related decisions:** ADR-007, ADR-024, ADR-025, ADR-033
+
+This ADR is retained as history. Its governance and permission model belongs to the rejected runtime direction.
 
 ## Context and Problem
 

@@ -12,25 +12,30 @@ Konkourix is a specialized exam-preparation ecosystem with independent public en
 
 ## Current Phase
 
-**RECOVERY FOUNDATION 1 — CURRICULUM SOURCE LOCK** is the active milestone. It is documentation and verification work only; it does not authorize runtime recovery, Prisma changes, migrations, or database writes.
+**RECOVERY FOUNDATION 2 — DECOUPLE REJECTED CURRICULUM RUNTIME** is the current completed milestone in the working tree. It removes rejected executable Curriculum governance, import, taxonomy, content-ingestion, Knowledge Package, and AI/human review machinery without changing the database, Prisma schema, applied migrations, or protected educational source.
 
 Phase 2 Milestone 19 — AssessmentAttempt Foundation remains the clean runtime comparison baseline at commit `76bc4d77dd015ef458e898d974fa23537de85948`. Historically completed core milestones remain valid. Authentication, independent browser application shells, account settings, student planning and task lifecycle, student-owned subject/topic management, study execution and recovery, completed assessment-attempt recording, assigned-student counselor access, and counselor task creation are verified foundations; later capabilities are not implied complete.
 
-Post-checkpoint curriculum work entered an over-engineered governance and Knowledge direction. Its runtime and migration artifacts still exist at the current HEAD, but the rejected direction is not active product scope. Authored Curriculum data derived from `cori.docx` remains valuable, authoritative, and protected.
+Post-checkpoint curriculum work entered an over-engineered governance and Knowledge direction. Recovery Foundation 2 removes that direction from the active API and package commands. Authored Curriculum data derived from `cori.docx` remains valuable, authoritative, and protected.
 
 Recovery is being performed through forward corrective commits. Applied migration history will not be reset, removed, renamed, or rewritten.
 
 - Phase 0 completion estimate from the last core audit: **50%**
 - Current recovery confidence: **HIGH**
 - Recovery source-lock date: **2026-09-30**
+- Rejected-runtime decoupling date: **2026-09-30**
 
 ## Current Architecture Baseline
 
 ### CURRENT IMPLEMENTED STATE
 
 - Runtime comparison baseline: `76bc4d77dd015ef458e898d974fa23537de85948` (`feat: add assessment attempt foundation`).
-- Current repository HEAD contains later Curriculum governance, import, mapping, taxonomy, content, package, and review machinery. That presence is implemented history, not approved direction.
+- The active API no longer constructs Curriculum governance services or registers public/admin Curriculum endpoints.
+- Rejected import/bootstrap commands, taxonomy/content/Knowledge Package modules, review runtime, package data, and their behavior tests are removed.
+- No replacement canonical Curriculum runtime or persistence architecture is implemented yet.
 - The local development database has all 18 tracked migration directories applied, including the four additive post-baseline Curriculum migrations. Applied history must remain intact during recovery.
+- The Prisma schema and generated client temporarily retain historical Curriculum governance models. Existing PostgreSQL tables and rows remain untouched.
+- **TEMPORARILY RETAINED HISTORICAL SCHEMA — TO BE REMOVED BY FORWARD MIGRATION IN RF4:** Curriculum governance/import/review/mapping models and their applied PostgreSQL tables remain present but have no active application service or HTTP route.
 - Product loop: **Plan → Execute → Measure → Improve**.
 - Planning domain: `DailyTask` records planned educational intention.
 - Execution domain: `StudySession` records actual study intervals.
@@ -48,7 +53,8 @@ Recovery is being performed through forward corrective commits. Applied migratio
 
 ### EXPLORATORY / DEFERRED
 
-- The replacement Curriculum runtime model, compatibility plan, corrective migration, and rollout sequence require a separately approved architect milestone.
+- The next milestone is **Minimal Canonical Curriculum Runtime**. Its exact read/selection scope requires the approved milestone contract and must not inherit the rejected governance model by default.
+- Historical model/table cleanup is deferred to a separately approved forward migration in RF4.
 - Historical Knowledge Package, scientific review, taxonomy, and content-production designs below are not approved future state.
 
 Historical milestone sections below are preserved as records of their time. When historical text conflicts with the source and scope locks above, the current locks govern.
@@ -1206,7 +1212,7 @@ ADRs 025 through 032 record the accepted lifecycle, compatibility, planning, ass
 - Focused verification: API type-check passed; all 6 Human Sciences catalog/import tests passed through a compiler-bundled Node test run. The native `tsx` launcher is currently blocked on this Windows host by `uv_os_get_passwd` returning `ENOMEM` before test startup.
 - The database import was not executed. The original `cori.docx` required by the provenance contract is absent from the workspace, and no authorized operator/database import context was supplied. Public curriculum API queryability therefore remains pending the normal import, review, and publication workflow.
 
-Operational instructions and exact counts are in [curriculum/HUMAN_SCIENCES_IMPORT.md](curriculum/HUMAN_SCIENCES_IMPORT.md).
+The historical supporting runbook referenced at the time was removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.9 — Mathematics & Physics Curriculum Structural Import
 
@@ -1220,7 +1226,7 @@ Operational instructions and exact counts are in [curriculum/HUMAN_SCIENCES_IMPO
 - Focused regression verification passed 12/12 tests across both field catalogs. API type-check and production build passed. No Prisma schema or migration change was required.
 - No database import or publication was executed because no authorized draft/version/admin context was supplied. The workspace also still lacks the original reviewed `cori.docx` required by the provenance contract.
 
-Operational instructions and exact counts are in [curriculum/MATHEMATICS_PHYSICS_IMPORT.md](curriculum/MATHEMATICS_PHYSICS_IMPORT.md).
+The historical supporting runbook referenced at the time was removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.10 — Experimental Sciences Curriculum Structural Import
 
@@ -1234,7 +1240,7 @@ Operational instructions and exact counts are in [curriculum/MATHEMATICS_PHYSICS
 - The import command uses the shared structural runner and preserves the same authorization, provenance, idempotency, validation, reporting, and no-publication boundaries.
 - No database import or publication was executed because the reviewed source artifact, authorized Admin UUID, and draft Curriculum Version were not supplied.
 
-Operational instructions, exact counts, and unresolved source boundaries are in [curriculum/EXPERIMENTAL_SCIENCES_IMPORT.md](curriculum/EXPERIMENTAL_SCIENCES_IMPORT.md).
+The historical supporting runbook referenced at the time was removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.11 — Curriculum Freeze and Audit Layer
 
@@ -1247,7 +1253,7 @@ Operational instructions, exact counts, and unresolved source boundaries are in 
 - The checked-in audit report and freeze-candidate manifest pin counts, the full subject list, unresolved review items, and the aggregate catalog SHA-256. Source artifact/transcription checksums and the database Curriculum Version identifier remain null placeholders.
 - The audit command is read-only and has no Prisma/database dependency. It cannot import, review, freeze, or publish a Curriculum Version.
 
-The approval process and audit command are documented in [curriculum/CURRICULUM_FREEZE.md](curriculum/CURRICULUM_FREEZE.md).
+The historical freeze runbook and executable audit command were removed in Recovery Foundation 2; retained JSON evidence is explicitly non-authoritative.
 
 ### Phase 20.12 — Curriculum Knowledge Graph Foundation
 
@@ -1260,7 +1266,7 @@ The approval process and audit command are documented in [curriculum/CURRICULUM_
 - Focused tests cover valid future hierarchy fixtures and rejection of missing anchors, orphan Concepts, duplicate keys, cross-subject ownership, and populated `EMPTY` registries. The frozen structural catalog and its checksum remain unchanged.
 - No Prisma schema, migration, database import, API, frontend, question, analytics, planning, or scheduling behavior was added.
 
-The domain boundary, future source import, and review workflow are documented in [curriculum/TAXONOMY_DESIGN.md](curriculum/TAXONOMY_DESIGN.md).
+The rejected taxonomy design document and runtime were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.13 — Curriculum Content Ingestion Foundation
 
@@ -1273,7 +1279,7 @@ The domain boundary, future source import, and review workflow are documented in
 - Production content and mapping registries remain empty. No textbook, OCR output, question, concept, taxonomy node, or educational content was created.
 - The frozen structural checksum and empty taxonomy production state remain unchanged. No Prisma schema, migration, database, API, frontend, scheduling, or analytics behavior was added.
 
-The content boundary, ownership requirements, future import pipeline, and review workflow are documented in [curriculum/CONTENT_INGESTION_DESIGN.md](curriculum/CONTENT_INGESTION_DESIGN.md).
+The rejected content-ingestion design document and runtime were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.14 — Physics 12 Motion Curriculum Knowledge Pilot
 
@@ -1287,7 +1293,7 @@ The content boundary, ownership requirements, future import pipeline, and review
 - Validation confirms hierarchy, Concept ownership, mapping targets, provenance, version/subject isolation, the 20-item limit, and no impact on the frozen structural checksum.
 - No unrelated subject is populated. No PostgreSQL import, Prisma schema, migration, API, frontend, analytics, scheduling, recommendation, or broader Physics ingestion was introduced.
 
-Pilot inventory, limitations, and required review steps are documented in [curriculum/PILOT_PHYSICS12_MOTION.md](curriculum/PILOT_PHYSICS12_MOTION.md).
+The rejected pilot document, payload, and review support were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.15 — Arabic 10 Lesson 1 Cross-Domain Knowledge Pilot
 
@@ -1300,7 +1306,7 @@ Pilot inventory, limitations, and required review steps are documented in [curri
 - Combined Arabic and Physics registries validate without duplicate keys, version mismatch, or cross-subject ownership conflict. Physics pilot records remain unchanged and the frozen structural checksum is unchanged.
 - No Question Bank, question, answer, option, difficulty, analytics, scheduling, planning, frontend, Prisma migration, database import, publication, or broader Arabic ingestion was introduced.
 
-Pilot scope, cross-domain findings, inventory, and exclusions are documented in [curriculum/PILOT_ARABIC10_LESSON1.md](curriculum/PILOT_ARABIC10_LESSON1.md).
+The rejected pilot document, payload, and review support were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20.16 — Curriculum Scaling Architecture
 
@@ -1315,7 +1321,7 @@ Pilot scope, cross-domain findings, inventory, and exclusions are documented in 
 - The registered inventory remains 57 taxonomy nodes, 24 Content Items, and 24 mappings. The frozen structural checksum is unchanged.
 - No bulk import, OCR, AI generation, Question Bank, analytics, scheduling, database, migration, API, or frontend behavior was added.
 
-Package format, lifecycle, manual review points, and future automation boundaries are documented in [curriculum/SCALING_ARCHITECTURE.md](curriculum/SCALING_ARCHITECTURE.md).
+The rejected package/scaling document and runtime were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Phase 20 Authoring Tooling Checkpoints
 
@@ -1347,7 +1353,7 @@ Package format, lifecycle, manual review points, and future automation boundarie
 - The package remains pinned provisionally to the frozen candidate and explicitly requires an exact Curriculum Version rebind before any future persistence. No database record, structural Curriculum change, Question Bank item, analytics, planning, recommendation, or additional educational material was created.
 - Arabic 10 remains an isolated pilot and no Arabic production package was created. The structural checksum remains `ef04a21c556dbc716137d8291c44e933f73fc8fd3c538dc3dfd59a1f560164be`.
 
-Candidate identity, readiness, boundaries, and the unanswered Physics human-review checklist are documented in [curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md](curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md).
+The rejected production-package document, payload, and review support were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Knowledge Phase 7.2 — Governed Educational Review Workflow
 
@@ -1360,7 +1366,7 @@ Candidate identity, readiness, boundaries, and the unanswered Physics human-revi
 - A deterministic Physics review packet and blank JSON template expose all current taxonomy, Content, and mapping identities without reviewer answers. The real Physics candidate remains Revision 1, `DRAFT`, `PENDING`, unpersisted, and rebind-blocked; all 12 Content Items remain `UNVERIFIED`.
 - No educational payload, structural Curriculum, pilot data, database schema, Question Bank, analytics, or planning behavior changed.
 
-The workflow and boundaries are documented in [curriculum/KNOWLEDGE_PACKAGE_REVIEW.md](curriculum/KNOWLEDGE_PACKAGE_REVIEW.md).
+The rejected Knowledge Package review document and runtime were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ### Knowledge Phase 7.3A — AI Review Triage & Human Attestation Preparation
 
@@ -1372,10 +1378,10 @@ The workflow and boundaries are documented in [curriculum/KNOWLEDGE_PACKAGE_REVI
 - A deterministic attestation packet and blank JSON input expose all twelve dimensions and all nine AI findings without fabricating a human identity, answer, timestamp, or outcome.
 - No Revision 2, educational payload change, Content verification, database persistence, structural Curriculum change, approval, or publication occurred.
 
-The provenance boundary and attestation workflow are documented in [curriculum/KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md](curriculum/KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md).
+The rejected AI-review document, evidence support, and runtime were removed in Recovery Foundation 2; this entry remains as the implementation record.
 
 ## Recovery Foundation — Current Next Work
 
-Recovery Foundation 1 locks the authoritative Curriculum source, product scope, UX rules, brand/design direction, and repository governance. It makes no application, Prisma, migration, API, UI, or database change.
+Recovery Foundation 2 leaves core Student/Counselor behavior intact while removing the rejected Curriculum/Knowledge runtime from the application. The protected source transcription and source-fidelity evidence remain in the repository.
 
-The current student-owned subject/topic behavior and post-baseline Curriculum machinery remain implemented reality until a separately approved recovery milestone changes them. Runtime Recovery and any forward corrective migration must not begin without that milestone. Applied migration history remains immutable.
+The next milestone is **Minimal Canonical Curriculum Runtime**. It must begin from the locked source, not the historical 56-subject freeze or retained governance schema. No replacement database model, data import, consumer mapping, cleanup migration, or Student/Counselor UX change is authorized by RF2. Applied migration history remains immutable.

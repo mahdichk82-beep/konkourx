@@ -46,7 +46,7 @@ The 2026-09-30 source audit confirmed that `docs/curriculum/CANONICAL_CURRICULUM
 
 ### CURRENT IMPLEMENTED STATE
 
-The repository contains a partial runtime projection and curriculum governance machinery created after the AssessmentAttempt checkpoint. It does not supersede `cori.docx`.
+The rejected partial runtime projection and Curriculum governance/Knowledge machinery created after the AssessmentAttempt checkpoint has been removed from the active application. The historical Prisma models and database tables remain temporarily retained and do not supersede `cori.docx`. No replacement canonical Curriculum runtime exists yet.
 
 ### APPROVED FUTURE STATE
 

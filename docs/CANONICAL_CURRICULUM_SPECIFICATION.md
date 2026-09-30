@@ -1,7 +1,9 @@
 # Canonical Curriculum Specification
 
-**Status:** Approved target architecture; not implemented
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Last synchronized:** 2026-09-17
+
+This document is retained as historical design context. Its fixed taxonomy, governance, and publication assumptions do not govern current or future implementation. The authoritative educational source and current recovery boundary are defined by [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md), [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md), and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 This specification defines the canonical educational taxonomy that future planning, student progress, questions, internal exams, and analytics will share. It defines domain behavior only. It does not prescribe a database schema, migration, API, or administration interface.
 

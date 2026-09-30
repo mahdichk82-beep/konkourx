@@ -5,8 +5,6 @@ import { createAuthService } from './auth/auth-service.js'
 import { createPrismaAuthStore } from './auth/prisma-auth-store.js'
 import { createPrismaCounselorTaskStore } from './counselor-tasks/prisma-store.js'
 import { createCounselorTaskServices } from './counselor-tasks/services.js'
-import { createPrismaCurriculumStore } from './curriculum/prisma-store.js'
-import { createCurriculumServices } from './curriculum/services.js'
 import { createDomainService } from './domain/domain-service.js'
 import { createPrismaDomainStore } from './domain/prisma-domain-store.js'
 import { createPrismaStudentCoreStore } from './student-core/prisma-store.js'
@@ -35,9 +33,6 @@ const app = buildApp({
     store: createPrismaAuthStore(prisma),
   }),
   counselorTasks: createCounselorTaskServices(createPrismaCounselorTaskStore(prisma)),
-  curriculum: createCurriculumServices(createPrismaCurriculumStore(prisma)),
-  curriculumAdminEnabled: env.CURRICULUM_ADMIN_ENABLED,
-  curriculumReadEnabled: env.CURRICULUM_READ_ENABLED,
   domain: createDomainService(createPrismaDomainStore(prisma)),
   studentCore: createStudentCoreServices(createPrismaStudentCoreStore(prisma)),
   studyTracking: createStudyTrackingServices(createPrismaStudyTrackingStore(prisma)),

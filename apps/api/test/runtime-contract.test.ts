@@ -23,22 +23,6 @@ test('runtime environment normalizes origins and defaults to host-only cookies',
   ])
   assert.equal(environment.COOKIE_DOMAIN, undefined)
   assert.equal(environment.TRUST_PROXY, false)
-  assert.equal(environment.CURRICULUM_ADMIN_ENABLED, false)
-  assert.equal(environment.CURRICULUM_READ_ENABLED, false)
-})
-
-test('curriculum release controls require explicit boolean values', () => {
-  const enabled = parseEnv({
-    ...developmentEnvironment(),
-    CURRICULUM_ADMIN_ENABLED: 'true',
-    CURRICULUM_READ_ENABLED: 'true',
-  })
-  assert.equal(enabled.CURRICULUM_ADMIN_ENABLED, true)
-  assert.equal(enabled.CURRICULUM_READ_ENABLED, true)
-  assert.throws(
-    () => parseEnv({ ...developmentEnvironment(), CURRICULUM_ADMIN_ENABLED: 'yes' }),
-    /CURRICULUM_ADMIN_ENABLED/,
-  )
 })
 
 test('runtime environment rejects malformed origins and empty CORS entries', () => {

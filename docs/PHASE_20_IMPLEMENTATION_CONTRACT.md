@@ -1,11 +1,11 @@
 # Phase 20 Implementation Contract — Canonical Curriculum Foundation
 
-**Status:** Binding execution contract; implementation is not authorized by this documentation task
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Contract date:** 2026-09-18
 **Starting baseline:** M19 (`76bc4d7`)
 **Roadmap alignment:** Roadmap V2 Phase 1 after Phase 0 readiness gates
 
-This document is the execution boundary for the first coding milestone after M19. Any implementation labeled Phase 20 must conform to this contract. It may be split into smaller delivery checkpoints, but no checkpoint may expand scope, weaken an invariant, expose incomplete capability, or begin a later domain.
+This document records the former Phase 20 execution boundary. It is retained for history and must not guide the replacement Curriculum runtime.
 
 This document defines intended future work only. It creates no code, Prisma model, migration, API implementation, UI, test, import run, permission grant, or database change.
 

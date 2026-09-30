@@ -6,15 +6,15 @@ ADR numbers are identifiers, not a claim that every lower number has already bee
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [ADR-033](ADR-033-curriculum-persistence-and-composite-references.md) | Curriculum persistence and composite reference contract | Accepted target architecture; not implemented |
-| [ADR-034](ADR-034-curriculum-governance-and-administrative-permissions.md) | Curriculum governance and administrative permission model | Accepted target architecture; not implemented |
+| [ADR-033](ADR-033-curriculum-persistence-and-composite-references.md) | Curriculum persistence and composite reference contract | Historical / superseded by Recovery Foundation 1 and 2 |
+| [ADR-034](ADR-034-curriculum-governance-and-administrative-permissions.md) | Curriculum governance and administrative permission model | Historical / superseded by Recovery Foundation 1 and 2 |
 | [ADR-036](ADR-036-counselor-plan-publication-and-task-materialization.md) | Counselor plan publication and task materialization | Accepted target architecture; not implemented |
 | [ADR-037](ADR-037-task-result-and-learning-quality.md) | Task result and five-level learning quality | Accepted target architecture; not implemented |
 | [ADR-038](ADR-038-daily-reality-schedule-semantics.md) | Daily Reality Schedule semantics | Accepted target architecture; not implemented |
 | [ADR-039](ADR-039-practice-activity-lifecycle.md) | Practice Activity lifecycle | Accepted target architecture; not implemented |
 | [ADR-041](ADR-041-question-bank-moderation-versioning-and-rights.md) | Question Bank moderation, versioning, curriculum classification, and rights | Accepted target architecture; not implemented |
 | [ADR-043](ADR-043-internal-online-exam-lifecycle-and-scoring.md) | Internal Online Exam lifecycle and scoring | Accepted target architecture; not implemented |
-| [ADR-044](ADR-044-curriculum-authoring-ownership-and-review-workflow.md) | Curriculum authoring ownership and review workflow | Accepted target architecture; not implemented |
+| [ADR-044](ADR-044-curriculum-authoring-ownership-and-review-workflow.md) | Curriculum authoring ownership and review workflow | Historical / superseded by Recovery Foundation 1 and 2 |
 
 ## Reserved Numbers
 

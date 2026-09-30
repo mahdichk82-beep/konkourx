@@ -6,13 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "curriculum:audit-authoring": "tsx src/scripts/audit-curriculum-authoring.ts",
-    "curriculum:audit-theoretical": "tsx src/scripts/audit-theoretical-curriculum.ts",
-    "curriculum:bootstrap-permissions": "tsx src/scripts/bootstrap-curriculum-permissions.ts",
-    "curriculum:import-human-sciences": "tsx src/scripts/import-human-sciences-curriculum.ts",
-    "curriculum:import-mathematics-physics": "tsx src/scripts/import-mathematics-physics-curriculum.ts",
-    "curriculum:import-experimental-sciences": "tsx src/scripts/import-experimental-sciences-curriculum.ts",
-    "curriculum:prepare-import": "tsx src/scripts/prepare-curriculum-import.ts",
     "seed": "tsx src/scripts/seed-domain.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test test/*.test.ts",
@@ -26,7 +19,6 @@
     "fastify": "^5.12.1",
     "jose": "^6.2.10",
     "pg": "^8.23.0",
-    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

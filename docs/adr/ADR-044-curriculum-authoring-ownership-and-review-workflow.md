@@ -1,9 +1,11 @@
 # ADR-044: Curriculum Authoring Ownership and Review Workflow
 
-**Status:** Accepted target architecture; not implemented
+**Status:** HISTORICAL / SUPERSEDED by Recovery Foundation 1 and 2; not active authority
 **Decision date:** 2026-09-18
 **Related decisions:** ADR-033, ADR-034
-**Related specifications:** [Curriculum Authoring Guide](../curriculum/CURRICULUM_AUTHORING_GUIDE.md), [Curriculum Authoring Template](../curriculum/CURRICULUM_AUTHORING_TEMPLATE.md), [Curriculum Import Rules](../curriculum/CURRICULUM_IMPORT_RULES.md)
+**Related specifications:** Historical support artifacts removed in Recovery Foundation 2; retained Git history is the record.
+
+This ADR is retained as history. Its authoring, review, and import workflow belongs to the rejected runtime direction.
 
 ## Context
 
