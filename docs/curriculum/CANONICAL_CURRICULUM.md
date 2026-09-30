@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-This document defines the canonical curriculum structure for Konkourix. Its educational content is transcribed only from `cori.docx`, the canonical source supplied for this project. Architecture terms, identifiers, and lifecycle rules in this document describe how that source is represented; they do not add educational content.
+This document contains a lossless curriculum transcription from `cori.docx`. The DOCX, governed by [CURRICULUM_SOURCE_OF_TRUTH.md](../CURRICULUM_SOURCE_OF_TRUTH.md), is authoritative. Architecture terms, identifiers, lifecycle rules, and semantic type mappings in this document are retained projection metadata; they are not educational source content and do not override the DOCX.
 
 The source contains two complementary views:
 
@@ -11,9 +11,9 @@ The source contains two complementary views:
 
 The high-level matrix is authoritative for subject availability. A detailed tree is authoritative only for the nodes it explicitly contains. Absence of a detailed tree must not be interpreted as removal of the subject.
 
-## Canonical hierarchy
+## Historical projection metadata: hierarchy
 
-The source groups shared courses first and field-specific courses by major second. To preserve that hierarchy without duplicating shared subjects, the canonical owning tree is:
+The following owning-tree projection was introduced after the AssessmentAttempt checkpoint. It is not an authoritative fixed-depth taxonomy and is not approved runtime recovery architecture.
 
 ```text
 Curriculum root
@@ -39,7 +39,7 @@ The source sometimes uses `فصل`, `بخش`, `درس`, `گفتار`, or `موض
 
 Cross-grade headings containing `موضوعی` are alternate source-defined organizations. They must remain distinct source trees until a future decision determines whether they are subjects, views, or taxonomies. They must not be merged automatically with grade-specific nodes merely because their labels are similar.
 
-## Node semantics and ownership
+## Historical projection metadata: node semantics and ownership
 
 | Level | Meaning | Owned by | Relationships | Change and version policy |
 |---|---|---|---|---|
@@ -54,7 +54,7 @@ Cross-grade headings containing `موضوعی` are alternate source-defined orga
 
 Ownership means one canonical parent edge per node per curriculum version. Reuse, prerequisite, similarity, applicability, and replacement are non-owning relationships and must not alter the source tree.
 
-## Naming conventions
+## Historical projection metadata: naming conventions
 
 - `display_name` is the exact visible source text, including Persian/Arabic diacritics, digits, punctuation, stars (`⭐`), and English text. Do not silently correct spelling, spacing, or typography.
 - Store text as Unicode and normalize to NFC for storage consistency. If search requires additional normalization, keep it in a separate derived search value; never overwrite `display_name`.
@@ -64,7 +64,7 @@ Ownership means one canonical parent edge per node per curriculum version. Reuse
 - Preserve source order with an explicit sibling position. Alphabetical sorting is not canonical order.
 - Do not infer missing words, headings, parents, grade labels, or field labels from outside knowledge.
 
-## Stable Node IDs
+## Historical projection metadata: stable Node IDs
 
 Each logical curriculum node receives one opaque, immutable Node ID on first accepted import. Recommended form: a lowercase type prefix plus UUIDv7, for example `sub_0195...` or `con_0195...`. Allowed prefixes are `cur`, `fld`, `grd`, `sub`, `chp`, `top`, `con`, and `sco` (sub-concept).
 
@@ -85,7 +85,7 @@ This is the exact high-level educational matrix from the source, expressed as th
 ```text
 Curriculum
 ├── دروس مشترک پایه‌های دهم، یازدهم و دوازدهم
-│   ├── دهم
+│   ├── دهم:
 │   │   ├── فارسی ۱
 │   │   ├── نگارش ۱
 │   │   ├── عربی، زبان قرآن ۱
@@ -94,14 +94,14 @@ Curriculum
 │   │   ├── آمادگی دفاعی
 │   │   ├── تفکر و سواد رسانه‌ای
 │   │   └── هنر
-│   ├── یازدهم
+│   ├── یازدهم:
 │   │   ├── فارسی ۲
 │   │   ├── نگارش ۲
 │   │   ├── عربی، زبان قرآن ۲
 │   │   ├── دین و زندگی ۲
 │   │   ├── زبان انگلیسی ۲
 │   │   └── انسان و محیط زیست
-│   └── دوازدهم
+│   └── دوازدهم:
 │       ├── فارسی ۳
 │       ├── نگارش ۳
 │       ├── عربی، زبان قرآن ۳
@@ -110,7 +110,7 @@ Curriculum
 │       ├── سلامت و بهداشت
 │       └── هویت اجتماعی
 ├── دروس اختصاصی رشته ریاضی‌فیزیک
-│   ├── دهم
+│   ├── دهم:
 │   │   ├── ریاضی ۱
 │   │   ├── هندسه ۱
 │   │   ├── فیزیک ۱
@@ -118,20 +118,20 @@ Curriculum
 │   │   ├── آزمایشگاه علوم تجربی ۱
 │   │   ├── جغرافیای ایران
 │   │   └── تاریخ ۱ ایران و جهان باستان
-│   ├── یازدهم
+│   ├── یازدهم:
 │   │   ├── حسابان ۱
 │   │   ├── هندسه ۲
 │   │   ├── آمار و احتمال
 │   │   ├── فیزیک ۲
 │   │   └── شیمی ۲
-│   └── دوازدهم
+│   └── دوازدهم:
 │       ├── حسابان ۲
 │       ├── هندسه ۳
 │       ├── ریاضیات گسسته
 │       ├── فیزیک ۳
 │       └── شیمی ۳
 ├── دروس اختصاصی رشته علوم تجربی
-│   ├── دهم
+│   ├── دهم:
 │   │   ├── ریاضی ۱
 │   │   ├── فیزیک ۱
 │   │   ├── شیمی ۱
@@ -139,19 +139,19 @@ Curriculum
 │   │   ├── آزمایشگاه علوم تجربی ۱
 │   │   ├── جغرافیای ایران
 │   │   └── تاریخ ۱ ایران و جهان باستان
-│   ├── یازدهم
+│   ├── یازدهم:
 │   │   ├── ریاضی ۲
 │   │   ├── فیزیک ۲
 │   │   ├── شیمی ۲
 │   │   ├── زیست‌شناسی ۲
 │   │   └── زمین‌شناسی
-│   └── دوازدهم
+│   └── دوازدهم:
 │       ├── ریاضی ۳
 │       ├── فیزیک ۳
 │       ├── شیمی ۳
 │       └── زیست‌شناسی ۳
 └── دروس اختصاصی رشته علوم انسانی
-    ├── دهم
+    ├── دهم:
     │   ├── علوم و فنون ادبی ۱
     │   ├── جامعه‌شناسی ۱
     │   ├── منطق
@@ -159,7 +159,7 @@ Curriculum
     │   ├── ریاضی و آمار ۱
     │   ├── تاریخ ۱
     │   └── جغرافیای ایران
-    ├── یازدهم
+    ├── یازدهم:
     │   ├── علوم و فنون ادبی ۲
     │   ├── جامعه‌شناسی ۲
     │   ├── روان‌شناسی
@@ -167,7 +167,7 @@ Curriculum
     │   ├── ریاضی و آمار ۲
     │   ├── تاریخ ۲
     │   └── جغرافیا ۲
-    └── دوازدهم
+    └── دوازدهم:
         ├── علوم و فنون ادبی ۳
         ├── جامعه‌شناسی ۳
         ├── فلسفه ۲
