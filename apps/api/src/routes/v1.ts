@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import type { AssessmentAttemptServices } from '../assessment-attempts/services.js'
 import type { AuthService } from '../auth/auth-service.js'
 import type { CounselorTaskServices } from '../counselor-tasks/services.js'
+import type { CurriculumReadStore } from '../curriculum/store.js'
 import type { DomainService } from '../domain/domain-service.js'
 import type { StudentCoreServices } from '../student-core/services.js'
 import type { StudyTrackingServices } from '../study-tracking/services.js'
@@ -18,11 +19,13 @@ import { registerRoleBoundaryRoutes } from './role-boundaries.js'
 import { registerCounselorStudentRoutes } from './counselor-students.js'
 import { registerCounselorTaskRoutes } from './counselor-tasks.js'
 import { registerAssessmentAttemptRoutes } from './assessment-attempts.js'
+import { registerCurriculumRoutes } from './curriculum.js'
 
 type V1RouteOptions = {
   assessmentAttempts?: AssessmentAttemptServices
   auth?: AuthService
   counselorTasks?: CounselorTaskServices
+  curriculum?: CurriculumReadStore
   domain?: DomainService
   studentCore?: StudentCoreServices
   studyTracking?: StudyTrackingServices
@@ -47,6 +50,13 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
       refreshTokenTtlSeconds: options.refreshTokenTtlSeconds ?? 2_592_000,
     })
     registerRoleBoundaryRoutes(app, { auth: options.auth })
+
+    if (options.curriculum) {
+      registerCurriculumRoutes(app, {
+        auth: options.auth,
+        curriculum: options.curriculum,
+      })
+    }
 
     if (options.assessmentAttempts) {
       registerAssessmentAttemptRoutes(app, {

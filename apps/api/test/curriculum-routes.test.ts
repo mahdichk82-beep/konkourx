@@ -1,0 +1,129 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { buildApp } from '../src/app.js'
+import type { AuthService } from '../src/auth/auth-service.js'
+import type { PublicUser } from '../src/auth/types.js'
+import { canonicalCurriculumArtifact, canonicalCurriculumStore } from '../src/curriculum/artifact.js'
+
+const createUser = (role: PublicUser['role']): PublicUser => ({
+  id: `${role.toLowerCase()}-user`,
+  email: `${role.toLowerCase()}@example.com`,
+  phone: null,
+  role,
+  status: 'ACTIVE',
+  createdAt: new Date('2026-09-30T00:00:00.000Z'),
+  updatedAt: new Date('2026-09-30T00:00:00.000Z'),
+})
+
+const auth: AuthService = {
+  authenticateAccessToken: async (token) => {
+    if (token === 'student-token') return createUser('STUDENT')
+    if (token === 'counselor-token') return createUser('COUNSELOR')
+    if (token === 'admin-token') return createUser('ADMIN')
+    throw new Error('invalid token')
+  },
+  changePassword: async () => undefined,
+  getCurrentUser: async () => createUser('STUDENT'),
+  login: async () => { throw new Error('unused') },
+  logout: async () => undefined,
+  logoutAll: async () => undefined,
+  refresh: async () => { throw new Error('unused') },
+  register: async () => { throw new Error('unused') },
+}
+
+const createApp = () => buildApp({
+  auth,
+  curriculum: canonicalCurriculumStore,
+  environment: 'test',
+  logger: false,
+  prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
+})
+
+const get = (app: ReturnType<typeof createApp>, url: string, token = 'student-token') =>
+  app.inject({ headers: { authorization: `Bearer ${token}` }, method: 'GET', url })
+
+test('Curriculum routes require authentication and allow every existing role', async () => {
+  const app = createApp()
+  const anonymous = await app.inject({ method: 'GET', url: '/api/v1/curriculum/scopes' })
+  assert.equal(anonymous.statusCode, 401)
+  assert.equal(anonymous.json().error.code, 'TOKEN_MISSING')
+
+  for (const token of ['student-token', 'counselor-token', 'admin-token']) {
+    const response = await get(app, '/api/v1/curriculum/scopes', token)
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.json().data.scopeCount, 4)
+    assert.equal(response.json().data.gradePlacementCount, 12)
+    assert.equal(response.json().data.subjectPlacementCount, 74)
+    assert.equal(response.json().data.scopes.length, 4)
+  }
+  await app.close()
+})
+
+test('Curriculum routes expose placements, representations, nodes, children, and search', async () => {
+  const app = createApp()
+  const firstScope = canonicalCurriculumArtifact.scopes[0]!
+  const placements = await get(
+    app,
+    `/api/v1/curriculum/placements?scopeId=${firstScope.id}&limit=100`,
+  )
+  assert.equal(placements.statusCode, 200)
+  assert.equal(placements.json().data.total, 21)
+
+  const representations = await get(
+    app,
+    '/api/v1/curriculum/representations?limit=5&offset=15',
+  )
+  assert.equal(representations.statusCode, 200)
+  assert.deepEqual(
+    representations.json().data.items.map((item: { sourceHeading: string }) => item.sourceHeading),
+    ['فصل ۱ ـ دنیای زنده', 'فصل ۱ ـ تنظیم عصبی', 'فصل ۱ ـ مولکول‌های اطلاعاتی', 'شیمی دهم', 'شیمی یازدهم'],
+  )
+
+  const node = canonicalCurriculumArtifact.nodes.find((candidate) => candidate.childrenCount > 0)!
+  const read = await get(app, `/api/v1/curriculum/nodes/${node.id}`)
+  assert.equal(read.statusCode, 200)
+  assert.equal(read.json().data.rawLabel, node.rawLabel)
+
+  const children = await get(app, `/api/v1/curriculum/nodes/${node.id}/children`)
+  assert.equal(children.statusCode, 200)
+  assert.equal(children.json().data.total, node.childrenCount)
+
+  const search = await get(app, '/api/v1/curriculum/search?q=فیزیک&limit=3')
+  assert.equal(search.statusCode, 200)
+  assert.equal(search.json().data.items.length, 3)
+  assert.equal(search.json().data.items.every(
+    (item: { rawLabel: string }) => item.rawLabel.includes('فیزیک'),
+  ), true)
+  await app.close()
+})
+
+test('Curriculum routes reject unknown IDs, unsafe bounds, and all write/admin paths', async () => {
+  const app = createApp()
+  const unknown = await get(app, `/api/v1/curriculum/nodes/cn_${'0'.repeat(32)}`)
+  assert.equal(unknown.statusCode, 404)
+  assert.equal(unknown.json().error.code, 'CURRICULUM_NODE_NOT_FOUND')
+
+  for (const url of [
+    '/api/v1/curriculum/search?q=',
+    `/api/v1/curriculum/search?q=${'x'.repeat(101)}`,
+    '/api/v1/curriculum/search?q=test&limit=101',
+    '/api/v1/curriculum/placements?offset=10001',
+    '/api/v1/curriculum/nodes/not-an-id',
+  ]) {
+    const response = await get(app, url)
+    assert.equal(response.statusCode, 400, url)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
+
+  const write = await app.inject({
+    headers: { authorization: 'Bearer admin-token' },
+    method: 'POST',
+    payload: {},
+    url: '/api/v1/curriculum/placements',
+  })
+  assert.equal(write.statusCode, 404)
+
+  const admin = await get(app, '/api/v1/admin/curriculum')
+  assert.equal(admin.statusCode, 404)
+  await app.close()
+})

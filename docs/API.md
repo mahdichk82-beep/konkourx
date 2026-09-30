@@ -2,7 +2,36 @@
 
 All application routes use the `/api/v1` prefix and the standard success/error envelope. Authentication and authorization are server-owned; browser-supplied roles, owners, and creator identities are never authoritative.
 
-This file documents the currently implemented HTTP contract, including student-owned subject/topic validation. ADR-024 establishes a future centrally managed canonical curriculum and supersedes user-created curriculum as the target architecture; no API or runtime behavior changed during that documentation decision.
+This file documents the currently implemented HTTP contract, including student-owned subject/topic validation and the read-only file-backed Canonical Curriculum runtime.
+
+## Canonical Curriculum reads
+
+### CURRENT IMPLEMENTED STATE
+
+The following authenticated routes are readable by `STUDENT`, `COUNSELOR`, and `ADMIN`:
+
+```text
+GET /api/v1/curriculum/scopes
+GET /api/v1/curriculum/placements
+GET /api/v1/curriculum/representations
+GET /api/v1/curriculum/nodes/:id
+GET /api/v1/curriculum/nodes/:id/children
+GET /api/v1/curriculum/search?q=...
+```
+
+The runtime loads the checked-in deterministic artifact generated from `docs/curriculum/CANONICAL_CURRICULUM.md`. It exposes four source scopes, twelve scope/grade placements, all 74 subject placements, and 67 independent detailed source representations. Detailed nodes retain exact raw labels, source locators and order, source-visible depth, nullable source marker metadata, and direct-child counts. Representation metadata does not assert that a detailed tree belongs to a high-level placement unless the source states that relationship unambiguously.
+
+Placement and representation lists use `limit` and `offset`. Node children and search use the same bounded pagination. Limits are 1 through 100, offsets are 0 through 10,000, and search text is required with a maximum length of 100 characters. Search normalization never replaces the returned raw label, and results remain in deterministic source order. Unknown well-formed node IDs return `CURRICULUM_NODE_NOT_FOUND`; malformed IDs and invalid bounds return `VALIDATION_ERROR`.
+
+There is no Curriculum write endpoint, admin Curriculum endpoint, authoring operation, import operation, publication/version workflow, or separate Curriculum permission system.
+
+### TEMPORARY
+
+Historical Prisma Curriculum governance models and their applied PostgreSQL tables remain unused until a separately approved RF4 forward migration. The read API neither reads nor writes those tables.
+
+### APPROVED FUTURE STATE
+
+Product records may reference approved canonical Curriculum nodes in a later milestone. A future Question Bank may also link to existing Curriculum nodes, but remains separate from Curriculum authority. Neither integration is implemented by the current API.
 
 ## Counselor batch task creation
 
