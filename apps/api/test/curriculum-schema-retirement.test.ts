@@ -49,7 +49,10 @@ test('Prisma schema excludes every retired Curriculum governance model and back-
   for (const modelName of retiredModelNames) {
     assert.doesNotMatch(schema, new RegExp(`\\bmodel\\s+${modelName}\\b`), modelName)
   }
-  assert.doesNotMatch(schema, /\benum\s+(?:Curriculum|LegacyCurriculum)/)
+  assert.doesNotMatch(
+    schema,
+    /\benum\s+(?:Curriculum(?:Version|Node|Import|Source|Issue|Mapping|Validation|Review|Capability|Audit)|LegacyCurriculum)/,
+  )
   assert.doesNotMatch(schema, /legacyCurriculumMappings|curriculumCapabilities|curriculumVersions/)
 })
 
@@ -57,13 +60,14 @@ test('one forward retirement migration follows the four immutable historical mig
   const entries = await readdir(migrationsUrl, { withFileTypes: true })
   const migrationNames = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 
-  assert.equal(migrationNames.length, 19)
+  assert.equal(migrationNames.length, 20)
   for (const historicalMigration of historicalMigrations) {
     assert.ok(migrationNames.includes(historicalMigration), historicalMigration)
   }
 
   const retirementName = '20260930010000_retire_curriculum_governance_schema'
   assert.ok(migrationNames.includes(retirementName))
+  assert.ok(migrationNames.includes('20260930020000_add_planning_curriculum_references'))
   const sql = await readFile(new URL(`${retirementName}/migration.sql`, migrationsUrl), 'utf8')
   assert.equal((sql.match(/^DROP TABLE /gm) ?? []).length, 14)
   assert.equal((sql.match(/^DROP TYPE /gm) ?? []).length, 17)

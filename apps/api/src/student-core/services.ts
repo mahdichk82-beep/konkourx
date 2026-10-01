@@ -1,4 +1,8 @@
 import { ApiError } from '../errors/api-error.js'
+import type { CurriculumReadStore } from '../curriculum/store.js'
+import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
+import type { CurriculumTargetInput } from '../task-curriculum/types.js'
+import { curriculumCoverage } from '../task-curriculum/view.js'
 import type { StudentCoreStore } from './store.js'
 import type {
   DailyTaskRecord,
@@ -12,6 +16,7 @@ import type {
   StudyPlanStatus,
   StudySubjectRecord,
   TopicRecord,
+  StudentTaskCreateInput,
 } from './types.js'
 
 const requireProfile = async (store: StudentCoreStore, actor: DomainStudent) => {
@@ -30,7 +35,11 @@ const page = <T extends { id: string }>(items: T[], query: PageQuery = {}): Page
 }
 
 const dateOnly = (value: string): Date => new Date(`${value}T00:00:00.000Z`)
-const toTaskView = ({ createdByUserId: _createdByUserId, ...task }: DailyTaskRecord): DailyTaskView => task
+const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): DailyTaskView => ({
+  ...task,
+  partialAt: task.partialAt ?? null,
+  curriculum: curriculumCoverage(curriculumTargets),
+})
 const validDate = (value: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
   const parsed = dateOnly(value)
@@ -70,7 +79,38 @@ const plannedTaskFields = [
   'estimatedMinutes',
 ] as const
 
-export const createStudentCoreServices = (store: StudentCoreStore, now = () => new Date()) => {
+const requireCurriculum = (curriculum: CurriculumReadStore | undefined): CurriculumReadStore => {
+  if (!curriculum) throw new ApiError(503, 'CURRICULUM_UNAVAILABLE', 'Canonical Curriculum is unavailable')
+  return curriculum
+}
+
+const validateCurriculumOutcome = (task: DailyTaskRecord, status: DailyTaskStatus): void => {
+  const coverage = curriculumCoverage(task.curriculumTargets)
+  if (coverage.totalItemCount === 0) {
+    if (status === 'PARTIAL') {
+      throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'PARTIAL requires Curriculum execution items')
+    }
+    return
+  }
+  if (status === 'COMPLETED' && coverage.completedItemCount !== coverage.totalItemCount) {
+    throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'COMPLETED requires all Curriculum items to be completed')
+  }
+  if (status === 'PARTIAL' && (
+    coverage.completedItemCount === 0
+    || coverage.completedItemCount === coverage.totalItemCount
+  )) {
+    throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'PARTIAL requires completed and unfinished Curriculum items')
+  }
+  if (status === 'SKIPPED' && coverage.completedItemCount > 0) {
+    throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'Use PARTIAL when some Curriculum items are completed')
+  }
+}
+
+export const createStudentCoreServices = (
+  store: StudentCoreStore,
+  now = () => new Date(),
+  curriculum?: CurriculumReadStore,
+) => {
   const subjects = {
     async list(actor: DomainStudent, query?: PageQuery): Promise<Page<StudySubjectRecord>> {
       const profile = await requireProfile(store, actor)
@@ -248,7 +288,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)
     },
-    async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; topicId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus; skipReason?: DailyTaskSkipReason | null }) {
+    async create(actor: DomainStudent, input: StudentTaskCreateInput) {
       const profile = await requireProfile(store, actor)
       if (!validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
@@ -258,9 +298,17 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         if (subject.archivedAt) throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be assigned to new tasks')
       }
       await requireTaskTopicConsistency(store, profile.id, input.subjectId, input.topicId)
+      const resolvedTargets = (input.curriculumTargets?.length ?? 0) > 0
+        ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets!)
+        : []
+      if (input.status === 'PARTIAL' || (resolvedTargets.length > 0 && input.status === 'COMPLETED')) {
+        throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'New Curriculum tasks have no completed execution items')
+      }
+      const { curriculumTargets: _curriculumTargets, ...taskInput } = input
       const result = await store.createTask({
-        ...input,
+        ...taskInput,
         completedAt: input.status === 'COMPLETED' ? now() : null,
+        partialAt: null,
         createdByUserId: actor.id,
         description: input.description ?? null,
         plannedTestCount: 0,
@@ -269,7 +317,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null,
         skippedAt: input.status === 'SKIPPED' ? now() : null,
         studentProfileId: profile.id,
-      })
+      }, resolvedTargets)
       return toTaskView(result)
     },
     async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; estimatedMinutes?: number | null; status?: DailyTaskStatus; skipReason?: DailyTaskSkipReason | null }) {
@@ -296,6 +344,10 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
           input.topicId === undefined ? current.topicId : input.topicId,
         )
       }
+      if (current.status === 'PARTIAL' && input.status !== undefined) {
+        throw new ApiError(409, 'TASK_TERMINAL', 'PARTIAL tasks are closed')
+      }
+      if (input.status !== undefined) validateCurriculumOutcome(current, input.status)
       const lifecycleAt = input.status === undefined ? null : now()
       const update = {
         ...(input.studyPlanId === undefined ? {} : { studyPlanId: input.studyPlanId }),
@@ -306,10 +358,11 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         ...(input.estimatedMinutes === undefined ? {} : { estimatedMinutes: input.estimatedMinutes }),
         ...(input.status === undefined ? {} : { status: input.status }),
         ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? lifecycleAt : null }),
+        ...(input.status === undefined ? {} : { partialAt: input.status === 'PARTIAL' ? lifecycleAt : null }),
         ...(input.status === undefined ? {} : { skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null }),
         ...(input.status === undefined ? {} : { skippedAt: input.status === 'SKIPPED' ? lifecycleAt : null }),
       }
-      if (input.status === 'COMPLETED' || input.status === 'SKIPPED') {
+      if (input.status === 'COMPLETED' || input.status === 'PARTIAL' || input.status === 'SKIPPED') {
         const result = await store.updateTerminalTask(profile.id, id, update)
         if (!result.ok) {
           if (result.reason === 'ACTIVE_STUDY_SESSION_EXISTS') {
@@ -342,6 +395,43 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
           case 'TASK_EXECUTED':
             throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded execution cannot be rescheduled')
         }
+      }
+      return toTaskView(result.value)
+    },
+    async replaceCurriculumTargets(
+      actor: DomainStudent,
+      id: string,
+      input: { curriculumTargets: CurriculumTargetInput[] },
+    ) {
+      const profile = await requireProfile(store, actor)
+      const method = store.replacePersonalTaskCurriculumTargets
+      if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
+      const targets = input.curriculumTargets.length > 0
+        ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets)
+        : []
+      const result = await method(profile.id, id, targets)
+      if (!result.ok) {
+        if (result.reason === 'TASK_NOT_FOUND') throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+        if (result.reason === 'TASK_SOURCE_FORBIDDEN') throw new ApiError(403, 'TASK_UPDATE_FORBIDDEN', 'Counselor-created task targets cannot be changed by students')
+        if (result.reason === 'TASK_NOT_PENDING') throw new ApiError(409, 'TASK_TERMINAL', 'Curriculum targets are immutable after task closure')
+        throw new ApiError(409, 'TASK_CURRICULUM_EXECUTION_STARTED', 'Curriculum targets are immutable after execution starts')
+      }
+      return toTaskView(result.value)
+    },
+    async toggleCurriculumItem(
+      actor: DomainStudent,
+      taskId: string,
+      itemId: string,
+      input: { completed: boolean },
+    ) {
+      const profile = await requireProfile(store, actor)
+      const method = store.toggleTaskCurriculumItem
+      if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
+      const result = await method(profile.id, taskId, itemId, input.completed ? now() : null)
+      if (!result.ok) {
+        if (result.reason === 'TASK_NOT_FOUND') throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+        if (result.reason === 'TASK_NOT_PENDING') throw new ApiError(409, 'TASK_TERMINAL', 'Closed task execution cannot be changed')
+        throw new ApiError(404, 'CURRICULUM_ITEM_NOT_FOUND', 'Task Curriculum item not found')
       }
       return toTaskView(result.value)
     },

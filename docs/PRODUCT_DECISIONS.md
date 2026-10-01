@@ -133,7 +133,7 @@ Canonical Curriculum
         `-- Student Topic Progress
 ```
 
-The progress layer may record mastery level, learning status, notes, review dates, weaknesses, strengths, and last activity. Approved status vocabulary:
+The future progress layer may record separate student self-rating, counselor rating, system-estimated mastery, learning status, notes, review dates, weaknesses, strengths, and last activity. Approved status vocabulary:
 
 - شروع نشده
 - در حال یادگیری
@@ -141,7 +141,7 @@ The progress layer may record mastery level, learning status, notes, review date
 - مسلط
 - ضعیف
 
-Mastery uses an integer scale from 1 through 5.
+Each mastery signal uses an integer scale from 1 through 5. The raw signals must not be collapsed into one field; a future UI may derive a Current Mastery display.
 
 Example:
 
@@ -161,15 +161,15 @@ Progress is student-owned learning state, not curriculum ownership. The exact st
 
 **Decision:** A task is a planned learning execution unit, not a generic todo and not the actual execution record. `DailyTask` remains in the Planning domain; `StudySession` continues to record what actually happened.
 
-A complete target task intention references:
+A complete target task intention may reference one or more canonical Curriculum items and includes:
 
-- canonical curriculum item;
+- canonical Curriculum selection(s);
 - activity type;
 - planned duration;
 - planned question count;
 - expected learning outcome.
 
-Task completion is learning feedback, not merely a checkbox. The target student result includes completed/incomplete state, learning quality on a five-level scale, and optional student note, difficulty, or problem description.
+Curriculum checklist completion records coverage, not mastery. The future student result may also include learning quality on a five-level scale and an optional student note, difficulty, or problem description.
 
 | Level | Learning quality |
 | --- | --- |
@@ -188,7 +188,7 @@ Note: Concept understood but exercises are difficult
 
 **Separation rule:** Task-level learning quality describes the outcome of the planned learning unit. Existing `StudySession.studyQualityRating` describes one actual interval. One must not be silently copied to or inferred from the other.
 
-**Current implementation gap:** `DailyTask` already supports source, schedule, planned duration, planned test count, and lifecycle, but canonical-node reference, explicit activity type, expected outcome, incomplete-result semantics, and task-level learning-quality feedback are not all implemented. Current `PENDING`/`COMPLETED`/`SKIPPED` behavior remains factual until a separately approved implementation reconciles it with the target completed/incomplete feedback language.
+**Current implemented state:** `DailyTask` supports multiple validated Canonical Curriculum targets, direct execution checklist items, historical display snapshots, and terminal `PARTIAL` outcomes. Explicit activity type, expected outcome, task-level learning-quality feedback, mastery persistence, and their UI remain future work.
 
 ## Decision: Practice, External Exams, and Internal Exams Are Separate
 
@@ -335,3 +335,35 @@ Private notes are not chat, student feedback, plan content, progress facts, or a
 Konkourix must not resemble Todoist, a generic calendar, or a CRM. The student experience is motivating, alive, and progress-oriented. The counselor experience emphasizes control, planning, monitoring, and analysis.
 
 The visual identity is blue-based, modern, premium, comfortable, and energetic. Glass UI elements may be used selectively where they preserve accessibility, contrast, performance, and clarity. Exact components and design tokens require later UX work.
+
+## Decision: DailyTask Curriculum Coverage
+
+**Status:** CURRENT IMPLEMENTED STATE.
+
+- One DailyTask may reference multiple Canonical Curriculum targets while freeform tasks remain valid without any Curriculum reference.
+- Target reference kinds are `NODE` and `PLACEMENT`; selection modes are `EXACT` and `WHOLE`.
+- `NODE + EXACT` produces one execution checklist item. `NODE + WHOLE` produces only the selected node's direct children, or the selected node itself when it is a leaf. It never recursively flattens the subtree.
+- `PLACEMENT` supports `EXACT` only. No placement-to-representation mapping is inferred.
+- Duplicate or overlapping selections that produce the same execution item are rejected rather than silently changing intent.
+- Persisted task references store opaque runtime IDs and historical label/path snapshots. They do not create Curriculum nodes or make the database authoritative over Curriculum.
+- Planning targets may change only while the task is pending and no Curriculum item is complete. Students cannot edit counselor-created planning targets; they may update their own execution checklist.
+
+## Decision: PARTIAL Is a Closed Task Outcome
+
+**Status:** CURRENT IMPLEMENTED STATE.
+
+For Curriculum-backed tasks, `COMPLETED` requires all planned checklist items, `PARTIAL` requires at least one completed and at least one unfinished item, and `SKIPPED` requires zero completed items. Checkbox changes do not transition status automatically; the student explicitly closes the task through the existing lifecycle operation. `PARTIAL` is terminal, preserves both completed and remaining coverage, does not reopen the original task, and never creates a make-up task automatically.
+
+**APPROVED FUTURE STATE:** An authorized counselor may later create a separate compensatory task from remaining items. No button, automatic task generation, or compensatory workflow is currently implemented.
+
+## Decision: Planning Time Grid
+
+**Status:** APPROVED FUTURE STATE; no UI change in the current milestone.
+
+The planning day is represented as 24 hourly boxes, each containing four 15-minute mini-boxes. Tasks may span hour boundaries; `15:45–17:00` occupies five mini-boxes. Mini-boxes are a time-grid representation, not database rows or lifecycle entities. Existing task scheduling/duration persistence remains authoritative until a separately approved UI milestone.
+
+## Decision: Mastery Signals Remain Separate
+
+**Status:** APPROVED FUTURE STATE; no persistence or UI implemented.
+
+Mastery uses a five-level scale. Student self-rating, counselor rating, and system-estimated mastery from assessment/performance remain separate signals and must not be collapsed into one raw field. A future UI may derive a Current Mastery display from those signals under a separately approved design. Task completion and Curriculum checklist coverage do not imply mastery.

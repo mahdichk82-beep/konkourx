@@ -2,6 +2,7 @@ import type {
   DailyTaskRecord,
   DailyTaskView,
 } from '../student-core/types.js'
+import type { CurriculumTargetInput, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
 
 export type CounselorTaskActor = {
   id: string
@@ -47,6 +48,7 @@ export type CreateCounselorTaskInput = {
   estimatedMinutes: number | null
   subjectId: string | null
   topicId: string | null
+  curriculumTargets?: CurriculumTargetInput[]
 }
 
 export type CreateCounselorTaskBatchItemInput = {
@@ -57,6 +59,7 @@ export type CreateCounselorTaskBatchItemInput = {
   plannedTestCount: number
   subjectId: string | null
   topicId: string | null
+  curriculumTargets?: CurriculumTargetInput[]
 }
 
 export type CreateCounselorTaskBatchView = {
@@ -66,14 +69,27 @@ export type CreateCounselorTaskBatchView = {
 
 export type CreateCounselorTaskRecordInput = Omit<
   DailyTaskRecord,
-  'id' | 'createdAt' | 'updatedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'
 >
+
+export type CounselorTaskCreatePlan = {
+  task: CreateCounselorTaskRecordInput
+  curriculumTargets: ResolvedCurriculumTarget[]
+}
 
 export type AssignedResourceResult<T> =
   | { ok: true; value: T }
   | { ok: false; reason: 'STUDENT_NOT_FOUND' }
 
-export type AssignedTaskResult = AssignedResourceResult<CounselorVisibleTaskView[]>
+export type CounselorVisibleTaskRecord = Omit<DailyTaskRecord, 'createdByUserId'> & {
+  completedStudySessionCount: number
+  hasActiveStudySession: boolean
+  hasValidAssessmentAttempt: boolean
+  recordedMinutes: number
+  studySessionCount: number
+}
+
+export type AssignedTaskResult = AssignedResourceResult<CounselorVisibleTaskRecord[]>
 
 export type AssignedTopicResult =
   | AssignedResourceResult<CounselorStudentTopic[]>

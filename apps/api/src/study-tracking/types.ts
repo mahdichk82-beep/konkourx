@@ -10,7 +10,7 @@ export type DailyTaskRef = {
   id: string
   studentProfileId: string
   subjectId: string | null
-  status: 'PENDING' | 'COMPLETED' | 'SKIPPED'
+  status: 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 }
 export type StudentGoalStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
 

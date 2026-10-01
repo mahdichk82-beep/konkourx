@@ -25,13 +25,44 @@ Placement and representation lists use `limit` and `offset`. Node children and s
 
 There is no Curriculum write endpoint, admin Curriculum endpoint, authoring operation, import operation, publication/version workflow, or separate Curriculum permission system.
 
-### TEMPORARY
+### CURRENT DATABASE BOUNDARY
 
-Historical Prisma Curriculum governance models and their applied PostgreSQL tables remain unused until a separately approved RF4 forward migration. The read API neither reads nor writes those tables.
+Historical Prisma Curriculum governance models and PostgreSQL objects were retired by the RF4 forward migration. Canonical Curriculum itself remains file-backed and has no PostgreSQL persistence. DailyTask planning stores only validated runtime IDs and historical display snapshots; these task references do not make PostgreSQL authoritative over Curriculum.
 
 ### APPROVED FUTURE STATE
 
-Product records may reference approved canonical Curriculum nodes in a later milestone. A future Question Bank may also link to existing Curriculum nodes, but remains separate from Curriculum authority. Neither integration is implemented by the current API.
+Additional product records and a future Question Bank may link to existing Curriculum nodes in separately approved milestones. Such links remain separate from Curriculum authority.
+
+## DailyTask Curriculum planning and execution
+
+### CURRENT IMPLEMENTED STATE
+
+Student personal-task creation, counselor single-task creation, and counselor batch-task creation accept an optional `curriculumTargets` array. Each target has `referenceKind` (`NODE` or `PLACEMENT`), `curriculumRefId`, and `selectionMode` (`EXACT` or `WHOLE`). References are checked against the file-backed Canonical Curriculum before persistence.
+
+- `NODE + EXACT` creates one execution item for the selected node.
+- `NODE + WHOLE` creates one execution item per direct child; a leaf creates one item for itself. Descendants below the direct children are not recursively flattened.
+- `PLACEMENT + EXACT` creates one execution item for the selected subject placement.
+- `PLACEMENT + WHOLE` returns `CURRICULUM_PLACEMENT_WHOLE_UNSUPPORTED` because no placement-to-representation mapping is inferred.
+- Duplicate targets or overlapping selections that would create the same item return `CURRICULUM_TARGET_OVERLAP`.
+
+One task may contain multiple targets. Curriculum-backed and freeform tasks coexist; omitting or clearing targets leaves a normal freeform task and never creates a Curriculum node. Stored targets/items contain opaque runtime IDs plus immutable raw-label and path snapshots for historical display. There is no database foreign key to Curriculum.
+
+Task responses include `curriculum.targets`, `completedItemCount`, `totalItemCount`, and `remainingItemCount`. Planning-target replacement uses:
+
+```text
+PATCH /api/v1/student/daily-tasks/:id/curriculum-targets
+PATCH /api/v1/counselor/students/:studentProfileId/tasks/:taskId/curriculum-targets
+```
+
+The strict body is `{ "curriculumTargets": [...] }`; an empty array clears targets. A student may replace targets only on an owned personal task. A counselor may replace targets only on a counselor-created task for an actively assigned student. The task must be `PENDING` and have zero completed Curriculum items. Targets and snapshots become immutable after execution starts or the task closes.
+
+Student checklist execution uses `PATCH /api/v1/student/daily-tasks/:id/curriculum-items/:itemId` with the strict body `{ "completed": true | false }`. The server assigns or clears the item `completedAt`. The authenticated student may toggle items on their own personal tasks and counselor-created tasks assigned to them while the task is `PENDING`; this does not grant permission to edit counselor planning content. Foreign task/item identifiers are hidden behind owner-scoped not-found responses. Counselors read checklist coverage through their existing assigned-student task list.
+
+`DailyTask.status` now includes terminal `PARTIAL`. For a Curriculum-backed task: `COMPLETED` requires N/N completed items, `PARTIAL` requires X/N where `0 < X < N`, and `SKIPPED` requires 0/N. `PENDING` remains open, checkbox changes never automatically transition the task, and lifecycle timestamps remain server-owned. `PARTIAL` keeps the completed and unfinished items, never reopens the original task, and never creates a compensatory task automatically. Existing tasks without Curriculum references retain their prior `PENDING`/`COMPLETED`/`SKIPPED` behavior; freeform tasks cannot use `PARTIAL`.
+
+### APPROVED FUTURE STATE
+
+A counselor may later create a separate compensatory task from a partial task's remaining items. Reporting may derive direct coverage, repeated study, last-study time, accumulated duration, and unfinished planned content. Task completion is not mastery. No compensatory workflow, aggregate report, mastery persistence, or UI is implemented here.
 
 ## Counselor batch task creation
 
@@ -63,7 +94,7 @@ Request body:
 - `subjectId`, `topicId`, and `description` are optional. A topic requires a subject and must be an active topic belonging to that active student-owned subject.
 - The strict request schema rejects `studentProfileId`, `createdByUserId`, `source`, status/lifecycle timestamps, and all other unknown fields.
 
-The server assigns the URL student after authorization, uses the authenticated user as creator, and sets every task to `source: "COUNSELOR"` and `status: "PENDING"` with empty completion/skip metadata. It validates the full batch before one transactional bulk insert, so a rejected or failed item creates no tasks.
+The server assigns the URL student after authorization, uses the authenticated user as creator, and sets every task to `source: "COUNSELOR"` and `status: "PENDING"` with empty completion/skip metadata. It validates the full batch and persists it in one transaction, so a rejected or failed item creates no tasks.
 
 Successful response (`201`):
 
@@ -161,7 +192,7 @@ The existing completed-session creation routes remain available for compatibilit
 
 Manual/generic StudySession creation still requires both client timestamps and may record only a completed historical interval with `startedAt < endedAt`; valid optional ratings may accompany that completed interval. It cannot create an open live session or assign `cancelledAt`. Generic updates cannot assign ratings, edit active or cancelled sessions, reopen a finished session, or clear server-owned cancellation metadata. Feedback edits use the focused endpoint. Live start, finish, and cancellation timestamps remain exclusive to the server-backed start, switch, finish, and cancel operations.
 
-Changing a linked `DailyTask` to `COMPLETED` or `SKIPPED` returns HTTP `409` with `TASK_ACTIVE_SESSION_EXISTS` while that task has an active session. A cancelled session does not block this independent outcome choice. Task rescheduling is blocked by active or finished execution, while cancelled-only history does not block it. No execution endpoint changes `DailyTask.status`.
+Changing a linked `DailyTask` to `COMPLETED`, `PARTIAL`, or `SKIPPED` returns HTTP `409` with `TASK_ACTIVE_SESSION_EXISTS` while that task has an active session. A cancelled session does not block this independent outcome choice. Task rescheduling is blocked by active or finished execution, while cancelled-only history does not block it. No execution endpoint changes `DailyTask.status`.
 
 ## Completed assessment attempts
 

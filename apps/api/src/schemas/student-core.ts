@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { curriculumTargetsSchema } from './task-curriculum.js'
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
@@ -42,7 +43,7 @@ export const listTasksSchema = z.object({
   date: dateOnly.optional(),
   from: dateOnly.optional(),
   to: dateOnly.optional(),
-  status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional(),
+  status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional(),
   studyPlanId: z.string().uuid().optional(),
   subjectId: z.string().uuid().optional(),
 }).strict()
@@ -56,8 +57,9 @@ export const createTaskSchema = z.object({
   description: optionalText(2000),
   scheduledFor: dateOnly,
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
-  status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional().default('PENDING'),
+  status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional().default('PENDING'),
   skipReason: taskSkipReason.nullable().optional().default(null),
+  curriculumTargets: curriculumTargetsSchema,
 }).strict().superRefine((value, context) => {
   if (value.skipReason !== null && value.status !== 'SKIPPED') {
     context.addIssue({
@@ -74,7 +76,7 @@ export const updateTaskSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   description: optionalText(2000),
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
-  status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional(),
+  status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional(),
   skipReason: taskSkipReason.nullable().optional(),
 }).strict()
   .refine((value) => Object.keys(value).length > 0, 'At least one field is required')

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { curriculumTargetsSchema } from './task-curriculum.js'
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
 const pagination = {
@@ -38,6 +39,7 @@ export const createCounselorTaskSchema = z.object({
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),
+  curriculumTargets: curriculumTargetsSchema,
 }).strict()
 
 const createCounselorTaskBatchItemSchema = z.object({
@@ -48,6 +50,7 @@ const createCounselorTaskBatchItemSchema = z.object({
   plannedTestCount: z.number().int().min(0).optional().default(0),
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),
+  curriculumTargets: curriculumTargetsSchema,
 }).strict()
 
 export const createCounselorTaskBatchSchema = z.object({

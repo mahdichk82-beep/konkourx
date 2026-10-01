@@ -30,12 +30,14 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
         taskQueries.push(query)
         return [{
           completedAt: null,
+          partialAt: null,
           createdAt: timestamp,
           description: null,
           estimatedMinutes: 30,
           id: ids.task,
           plannedTestCount: 0,
           assessmentAttempts: [],
+          curriculumTargets: [],
           scheduledFor: timestamp,
           skipReason: null,
           skippedAt: null,
@@ -102,6 +104,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
     orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
     select: {
       completedAt: true,
+      partialAt: true,
       createdAt: true,
       description: true,
       estimatedMinutes: true,
@@ -126,6 +129,10 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       title: true,
       topicId: true,
       updatedAt: true,
+      curriculumTargets: {
+        orderBy: { position: 'asc' },
+        include: { items: { orderBy: { position: 'asc' } } },
+      },
     },
     skip: undefined,
     take: 26,
@@ -250,6 +257,7 @@ test('Prisma counselor task creation validates assignment and relations atomical
   }])
   assert.deepEqual(taskCreates[0]?.data, {
     completedAt: null,
+    partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
     estimatedMinutes: 45,
@@ -375,6 +383,7 @@ test('Prisma counselor batch creation verifies profile, assignment, resources, a
   assert.equal(batchCreates[0]?.data.length, 2)
   assert.deepEqual(batchCreates[0]?.data[0], {
     completedAt: null,
+    partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
     estimatedMinutes: 90,
@@ -571,7 +580,15 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
   }])
   assert.deepEqual(taskFindQueries, [
     { where: { id: ids.task, studentProfileId: ids.student } },
-    { where: { id: ids.task, studentProfileId: ids.student } },
+    {
+      include: {
+        curriculumTargets: {
+          orderBy: { position: 'asc' },
+          include: { items: { orderBy: { position: 'asc' } } },
+        },
+      },
+      where: { id: ids.task, studentProfileId: ids.student },
+    },
   ])
   assert.deepEqual(taskUpdateQueries, [{
     data: { scheduledFor },

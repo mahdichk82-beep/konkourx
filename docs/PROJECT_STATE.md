@@ -12,7 +12,7 @@ Konkourix is a specialized exam-preparation ecosystem with independent public en
 
 ## Current Phase
 
-**RECOVERY FOUNDATION 4 — RETIRE HISTORICAL CURRICULUM GOVERNANCE SCHEMA** is the current completed milestone in the working tree. It removes the unused historical Curriculum governance models from Prisma and retires their PostgreSQL objects through one forward migration. The deterministic, file-backed, read-only Curriculum projection and authenticated read API remain unchanged.
+**PLANNING CURRICULUM REFERENCE FOUNDATION** is the current implemented milestone in the working tree. It connects existing DailyTask planning and student execution to the deterministic, file-backed, read-only Canonical Curriculum without adding Curriculum persistence or changing either frontend.
 
 Phase 2 Milestone 19 — AssessmentAttempt Foundation remains the clean runtime comparison baseline at commit `76bc4d77dd015ef458e898d974fa23537de85948`. Historically completed core milestones remain valid. Authentication, independent browser application shells, account settings, student planning and task lifecycle, student-owned subject/topic management, study execution and recovery, completed assessment-attempt recording, assigned-student counselor access, and counselor task creation are verified foundations; later capabilities are not implied complete.
 
@@ -33,8 +33,11 @@ Recovery is being performed through forward corrective commits. Applied migratio
 - The active API registers only authenticated read endpoints for Canonical Curriculum scopes, placements, detailed representations, nodes, children, and search.
 - Rejected import/bootstrap commands, taxonomy/content/Knowledge Package modules, review runtime, package data, and their behavior tests are removed.
 - The runtime is generated from `docs/curriculum/CANONICAL_CURRICULUM.md` into a checked-in deterministic JSON artifact included in the API production image. It contains 4 scopes, 12 scope/grade placements, 74 subject placements, 67 detailed source representations, and 5,484 label-bearing source nodes covering the locked 6,588-entry detailed source block.
-- No Curriculum database persistence, write/admin API, governance, authoring, import, publication/version workflow, or product-record integration is implemented.
-- The local development database has all 19 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 forward retirement migration.
+- Canonical Curriculum has no database persistence, write/admin API, governance, authoring, import, or publication/version workflow. DailyTask stores validated opaque Curriculum runtime IDs and historical label/path snapshots only; these task references do not make PostgreSQL authoritative over Curriculum.
+- A DailyTask may contain multiple `NODE` or `PLACEMENT` targets. `EXACT` selects the referenced item; `WHOLE` on a node expands only direct children (or the leaf itself). `WHOLE` on a placement and duplicate/overlapping item expansion are rejected.
+- Task execution items are student-toggleable while the task is pending. Responses expose completed, total, and remaining item counts. Counselor task reads expose this same coverage for actively assigned students.
+- `PARTIAL` is a server-timestamped terminal task outcome requiring at least one completed and one unfinished Curriculum item. It preserves unfinished coverage without reopening the task or automatically creating a compensatory task.
+- The local development database has all 20 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 retirement migration and the task-reference planning migration.
 - The Prisma schema and generated client no longer expose historical Curriculum governance/import/review/mapping/capability models.
 - PostgreSQL contains no Canonical Curriculum persistence and no historical Curriculum governance tables, triggers, functions, or enum types.
 - Product loop: **Plan → Execute → Measure → Improve**.
@@ -54,8 +57,9 @@ Recovery is being performed through forward corrective commits. Applied migratio
 
 ### EXPLORATORY / DEFERRED
 
-- Product-record references to Canonical Curriculum nodes remain deferred to an explicitly approved integration milestone.
-- Product-record reference integration requires a separately approved migration. Any Product Owner-approved source change requires explicit reference migration and ID-stability planning.
+- Additional product-record reference integration remains deferred. Any Product Owner-approved source change requires explicit reference migration and ID-stability planning for stored task references.
+- A counselor-created compensatory task from unfinished `PARTIAL` items is approved future behavior but has no automatic task generation or UI in the current milestone.
+- Mastery is approved as a future five-level model with separate student self-rating, counselor rating, and system-estimated signals. It has no persistence or UI yet.
 - Historical Knowledge Package, scientific review, taxonomy, and content-production designs below are not approved future state.
 
 Historical milestone sections below are preserved as records of their time. When historical text conflicts with the source and scope locks above, the current locks govern.

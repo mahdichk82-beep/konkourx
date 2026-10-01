@@ -1,4 +1,8 @@
 import { ApiError } from '../errors/api-error.js'
+import type { CurriculumReadStore } from '../curriculum/store.js'
+import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
+import type { CurriculumTargetInput } from '../task-curriculum/types.js'
+import { curriculumCoverage } from '../task-curriculum/view.js'
 import type { DailyTaskRecord } from '../student-core/types.js'
 import type { CounselorTaskStore } from './store.js'
 import type {
@@ -46,7 +50,35 @@ const page = <T extends { id: string }>(
   }
 }
 
-const toTaskView = ({ createdByUserId: _createdByUserId, ...task }: DailyTaskRecord): CounselorTaskView => task
+const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): CounselorTaskView => ({
+  ...task,
+  partialAt: task.partialAt ?? null,
+  curriculum: curriculumCoverage(curriculumTargets),
+})
+
+const toVisibleTaskView = ({
+  completedStudySessionCount,
+  hasActiveStudySession,
+  hasValidAssessmentAttempt,
+  recordedMinutes,
+  studySessionCount,
+  curriculumTargets,
+  ...task
+}: import('./types.js').CounselorVisibleTaskRecord): CounselorVisibleTaskView => ({
+  ...task,
+  partialAt: task.partialAt ?? null,
+  curriculum: curriculumCoverage(curriculumTargets),
+  completedStudySessionCount,
+  hasActiveStudySession,
+  hasValidAssessmentAttempt,
+  recordedMinutes,
+  studySessionCount,
+})
+
+const requireCurriculum = (curriculum: CurriculumReadStore | undefined): CurriculumReadStore => {
+  if (!curriculum) throw new ApiError(503, 'CURRICULUM_UNAVAILABLE', 'Canonical Curriculum is unavailable')
+  return curriculum
+}
 
 const throwCreateFailure = (
   result:
@@ -88,7 +120,10 @@ const throwRescheduleFailure = (
   }
 }
 
-export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
+export const createCounselorTaskServices = (
+  store: CounselorTaskStore,
+  curriculum?: CurriculumReadStore,
+) => ({
   async list(
     actor: CounselorTaskActor,
     studentProfileId: string,
@@ -122,7 +157,7 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
     if (!result.ok) {
       throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
     }
-    return page(result.value, query)
+    return page(result.value.map(toVisibleTaskView), query)
   },
 
   async listSubjects(
@@ -173,23 +208,30 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
       throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
     }
 
-    const result = await store.createAssignedStudentTask(actor.id, studentProfileId, {
-      completedAt: null,
-      createdByUserId: actor.id,
-      description: input.description ?? null,
-      estimatedMinutes: input.estimatedMinutes,
-      plannedTestCount: 0,
-      scheduledFor: dateOnly(input.scheduledFor),
-      skipReason: null,
-      skippedAt: null,
-      source: 'COUNSELOR',
-      status: 'PENDING',
-      studentProfileId,
-      studyPlanId: null,
-      subjectId: input.subjectId,
-      title: input.title.trim(),
-      topicId: input.topicId,
-    })
+    const resolvedTargets = (input.curriculumTargets?.length ?? 0) > 0
+      ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets!)
+      : []
+    const result = await store.createAssignedStudentTask(actor.id, studentProfileId,
+      {
+        completedAt: null,
+        partialAt: null,
+        createdByUserId: actor.id,
+        description: input.description ?? null,
+        estimatedMinutes: input.estimatedMinutes,
+        plannedTestCount: 0,
+        scheduledFor: dateOnly(input.scheduledFor),
+        skipReason: null,
+        skippedAt: null,
+        source: 'COUNSELOR',
+        status: 'PENDING',
+        studentProfileId,
+        studyPlanId: null,
+        subjectId: input.subjectId,
+        title: input.title.trim(),
+        topicId: input.topicId,
+      },
+      resolvedTargets,
+    )
 
     if (!result.ok) return throwCreateFailure(result)
     return toTaskView(result.value)
@@ -214,22 +256,26 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
       actor.id,
       studentProfileId,
       input.tasks.map((task) => ({
-        completedAt: null,
-        createdByUserId: actor.id,
-        description: task.description,
-        estimatedMinutes: task.plannedMinutes,
-        plannedTestCount: task.plannedTestCount,
-        scheduledFor: dateOnly(task.scheduledFor),
-        skipReason: null,
-        skippedAt: null,
-        source: 'COUNSELOR',
-        status: 'PENDING',
-        studentProfileId,
-        studyPlanId: null,
-        subjectId: task.subjectId,
-        title: task.title.trim(),
-        topicId: task.topicId,
+          completedAt: null,
+          partialAt: null,
+          createdByUserId: actor.id,
+          description: task.description,
+          estimatedMinutes: task.plannedMinutes,
+          plannedTestCount: task.plannedTestCount,
+          scheduledFor: dateOnly(task.scheduledFor),
+          skipReason: null,
+          skippedAt: null,
+          source: 'COUNSELOR',
+          status: 'PENDING',
+          studentProfileId,
+          studyPlanId: null,
+          subjectId: task.subjectId,
+          title: task.title.trim(),
+          topicId: task.topicId,
       })),
+      input.tasks.map((task) => (task.curriculumTargets?.length ?? 0) > 0
+        ? resolveCurriculumTargets(requireCurriculum(curriculum), task.curriculumTargets!)
+        : []),
     )
 
     if (!result.ok) return throwCreateFailure(result)
@@ -256,6 +302,28 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
       dateOnly(input.scheduledFor),
     )
     if (!result.ok) return throwRescheduleFailure(result)
+    return toTaskView(result.value)
+  },
+  async replaceCurriculumTargets(
+    actor: CounselorTaskActor,
+    studentProfileId: string,
+    taskId: string,
+    input: { curriculumTargets: CurriculumTargetInput[] },
+  ) {
+    ensureCounselor(actor)
+    const method = store.replaceAssignedTaskCurriculumTargets
+    if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
+    const targets = input.curriculumTargets.length > 0
+      ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets)
+      : []
+    const result = await method(actor.id, studentProfileId, taskId, targets)
+    if (!result.ok) {
+      if (result.reason === 'STUDENT_NOT_FOUND') throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+      if (result.reason === 'TASK_NOT_FOUND') throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+      if (result.reason === 'TASK_SOURCE_FORBIDDEN') throw new ApiError(403, 'TASK_UPDATE_FORBIDDEN', 'Student personal task targets cannot be changed by counselors')
+      if (result.reason === 'TASK_NOT_PENDING') throw new ApiError(409, 'TASK_TERMINAL', 'Curriculum targets are immutable after task closure')
+      throw new ApiError(409, 'TASK_CURRICULUM_EXECUTION_STARTED', 'Curriculum targets are immutable after execution starts')
+    }
     return toTaskView(result.value)
   },
 })

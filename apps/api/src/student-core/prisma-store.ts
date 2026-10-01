@@ -8,6 +8,13 @@ import type {
 const lockStudentProfileSql =
   'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE'
 
+const curriculumInclude = {
+  curriculumTargets: {
+    orderBy: { position: 'asc' as const },
+    include: { items: { orderBy: { position: 'asc' as const } } },
+  },
+}
+
 export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreStore => ({
   async findStudentProfileByUserId(userId) {
     return prisma.studentProfile.findUnique({
@@ -103,6 +110,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
 
   async listTasks(studentProfileId, query) {
     return prisma.dailyTask.findMany({
+      include: curriculumInclude,
       cursor: query?.cursor ? { id: query.cursor } : undefined,
       orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
       skip: query?.cursor ? 1 : undefined,
@@ -122,11 +130,38 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
   },
 
   async findTaskById(studentProfileId, id) {
-    return prisma.dailyTask.findFirst({ where: { id, studentProfileId } })
+    return prisma.dailyTask.findFirst({ include: curriculumInclude, where: { id, studentProfileId } })
   },
 
-  async createTask(input) {
-    return prisma.dailyTask.create({ data: input })
+  async createTask(input, curriculumTargets = []) {
+    return prisma.$transaction(async (transaction) => {
+      const task = await transaction.dailyTask.create({ data: input })
+      for (const target of curriculumTargets) {
+        await transaction.dailyTaskCurriculumTarget.create({
+          data: {
+            curriculumRefId: target.curriculumRefId,
+            dailyTaskId: task.id,
+            labelSnapshot: target.labelSnapshot,
+            pathSnapshot: target.pathSnapshot,
+            position: target.position,
+            referenceKind: target.referenceKind,
+            representationIdSnapshot: target.representationIdSnapshot,
+            selectionMode: target.selectionMode,
+            items: {
+              create: target.items.map((item) => ({
+                curriculumRefId: item.curriculumRefId,
+                dailyTaskId: task.id,
+                labelSnapshot: item.labelSnapshot,
+                pathSnapshot: item.pathSnapshot,
+                position: item.position,
+                referenceKind: item.referenceKind,
+              })),
+            },
+          },
+        })
+      }
+      return transaction.dailyTask.findUniqueOrThrow({ include: curriculumInclude, where: { id: task.id } })
+    })
   },
 
   async updateTask(studentProfileId, id, input) {
@@ -135,7 +170,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       where: { id, studentProfileId },
     })
     if (result.count !== 1) return null
-    return prisma.dailyTask.findFirst({ where: { id, studentProfileId } })
+    return prisma.dailyTask.findFirst({ include: curriculumInclude, where: { id, studentProfileId } })
   },
 
   async updateTerminalTask(studentProfileId, id, input) {
@@ -159,6 +194,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
         return { ok: false, reason: 'ACTIVE_STUDY_SESSION_EXISTS' as const }
       }
       const task = await transaction.dailyTask.findFirst({
+        include: curriculumInclude,
         where: { id, studentProfileId },
       })
       if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
@@ -192,10 +228,68 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       }
 
       const task = await transaction.dailyTask.findFirst({
+        include: curriculumInclude,
         where: { id, studentProfileId },
       })
       if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
       return { ok: true, value: task }
+    })
+  },
+
+  async replacePersonalTaskCurriculumTargets(studentProfileId, id, targets) {
+    return prisma.$transaction(async (transaction) => {
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const current = await transaction.dailyTask.findFirst({
+        include: { curriculumItems: { select: { completedAt: true } } },
+        where: { id, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (current.source !== 'PERSONAL') return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      if (current.status !== 'PENDING') return { ok: false, reason: 'TASK_NOT_PENDING' as const }
+      if (current.curriculumItems.some((item) => item.completedAt !== null)) {
+        return { ok: false, reason: 'CURRICULUM_EXECUTION_STARTED' as const }
+      }
+      await transaction.dailyTaskCurriculumTarget.deleteMany({ where: { dailyTaskId: id } })
+      for (const target of targets) {
+        await transaction.dailyTaskCurriculumTarget.create({
+          data: {
+            curriculumRefId: target.curriculumRefId,
+            dailyTaskId: id,
+            labelSnapshot: target.labelSnapshot,
+            pathSnapshot: target.pathSnapshot,
+            position: target.position,
+            referenceKind: target.referenceKind,
+            representationIdSnapshot: target.representationIdSnapshot,
+            selectionMode: target.selectionMode,
+            items: { create: target.items.map((item) => ({
+              curriculumRefId: item.curriculumRefId,
+              dailyTaskId: id,
+              labelSnapshot: item.labelSnapshot,
+              pathSnapshot: item.pathSnapshot,
+              position: item.position,
+              referenceKind: item.referenceKind,
+            })) },
+          },
+        })
+      }
+      const task = await transaction.dailyTask.findUniqueOrThrow({ include: curriculumInclude, where: { id } })
+      return { ok: true, value: task }
+    })
+  },
+
+  async toggleTaskCurriculumItem(studentProfileId, taskId, itemId, completedAt) {
+    return prisma.$transaction(async (transaction) => {
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const task = await transaction.dailyTask.findFirst({ select: { id: true, status: true }, where: { id: taskId, studentProfileId } })
+      if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (task.status !== 'PENDING') return { ok: false, reason: 'TASK_NOT_PENDING' as const }
+      const updated = await transaction.dailyTaskCurriculumItem.updateMany({
+        data: { completedAt },
+        where: { dailyTaskId: taskId, id: itemId },
+      })
+      if (updated.count !== 1) return { ok: false, reason: 'CURRICULUM_ITEM_NOT_FOUND' as const }
+      const value = await transaction.dailyTask.findUniqueOrThrow({ include: curriculumInclude, where: { id: taskId } })
+      return { ok: true, value }
     })
   },
 })

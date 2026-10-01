@@ -6,7 +6,9 @@ export type DomainStudent = {
 
 export type StudentProfileRef = { id: string; userId: string }
 export type StudyPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
-export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
+import type { CurriculumTargetRecord, CurriculumTargetInput, TaskCurriculumCoverage } from '../task-curriculum/types.js'
+
+export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
@@ -57,13 +59,31 @@ export type DailyTaskRecord = {
   plannedTestCount: number
   status: DailyTaskStatus
   completedAt: Date | null
+  partialAt?: Date | null
   skipReason: DailyTaskSkipReason | null
   skippedAt: Date | null
   createdAt: Date
   updatedAt: Date
+  curriculumTargets?: CurriculumTargetRecord[]
 }
 
-export type DailyTaskView = Omit<DailyTaskRecord, 'createdByUserId'>
+export type DailyTaskView = Omit<DailyTaskRecord, 'createdByUserId' | 'curriculumTargets'> & {
+  partialAt: Date | null
+  curriculum: TaskCurriculumCoverage
+}
+
+export type StudentTaskCreateInput = {
+  studyPlanId: string | null
+  subjectId: string | null
+  topicId: string | null
+  title: string
+  description?: string | null
+  scheduledFor: string
+  estimatedMinutes: number | null
+  status: DailyTaskStatus
+  skipReason?: DailyTaskSkipReason | null
+  curriculumTargets?: CurriculumTargetInput[]
+}
 
 export type RescheduleStudentTaskResult =
   | { ok: true; value: DailyTaskRecord }

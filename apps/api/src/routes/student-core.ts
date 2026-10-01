@@ -22,6 +22,11 @@ import {
   updateTopicSchema,
   uuidParamSchema,
 } from '../schemas/student-core.js'
+import {
+  replaceCurriculumTargetsSchema,
+  taskCurriculumItemParamSchema,
+  toggleCurriculumItemSchema,
+} from '../schemas/task-curriculum.js'
 
 type StudentCoreRouteOptions = {
   auth: AuthService
@@ -206,4 +211,28 @@ export const registerStudentCoreRoutes = (
       request.context.requestId,
     ),
   )
+
+  app.patch('/student/daily-tasks/:id/curriculum-targets', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.tasks.replaceCurriculumTargets(
+        request.user!,
+        parseId(request.params),
+        parseBody(replaceCurriculumTargetsSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/daily-tasks/:id/curriculum-items/:itemId', studentOnly, async (request) => {
+    const { id, itemId } = parseBody(taskCurriculumItemParamSchema.safeParse(request.params))
+    return successResponse(
+      await options.studentCore.tasks.toggleCurriculumItem(
+        request.user!,
+        id,
+        itemId,
+        parseBody(toggleCurriculumItemSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    )
+  })
 }

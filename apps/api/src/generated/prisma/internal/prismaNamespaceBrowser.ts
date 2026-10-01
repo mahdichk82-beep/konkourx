@@ -60,6 +60,8 @@ export const ModelName = {
   Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
+  DailyTaskCurriculumTarget: 'DailyTaskCurriculumTarget',
+  DailyTaskCurriculumItem: 'DailyTaskCurriculumItem',
   StudySession: 'StudySession',
   AssessmentAttempt: 'AssessmentAttempt',
   StudentGoal: 'StudentGoal'
@@ -205,6 +207,7 @@ export const DailyTaskScalarFieldEnum = {
   plannedTestCount: 'plannedTestCount',
   status: 'status',
   completedAt: 'completedAt',
+  partialAt: 'partialAt',
   skipReason: 'skipReason',
   skippedAt: 'skippedAt',
   createdAt: 'createdAt',
@@ -212,6 +215,38 @@ export const DailyTaskScalarFieldEnum = {
 } as const
 
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
+
+
+export const DailyTaskCurriculumTargetScalarFieldEnum = {
+  id: 'id',
+  dailyTaskId: 'dailyTaskId',
+  referenceKind: 'referenceKind',
+  curriculumRefId: 'curriculumRefId',
+  selectionMode: 'selectionMode',
+  position: 'position',
+  labelSnapshot: 'labelSnapshot',
+  pathSnapshot: 'pathSnapshot',
+  representationIdSnapshot: 'representationIdSnapshot',
+  createdAt: 'createdAt'
+} as const
+
+export type DailyTaskCurriculumTargetScalarFieldEnum = (typeof DailyTaskCurriculumTargetScalarFieldEnum)[keyof typeof DailyTaskCurriculumTargetScalarFieldEnum]
+
+
+export const DailyTaskCurriculumItemScalarFieldEnum = {
+  id: 'id',
+  targetId: 'targetId',
+  dailyTaskId: 'dailyTaskId',
+  referenceKind: 'referenceKind',
+  curriculumRefId: 'curriculumRefId',
+  labelSnapshot: 'labelSnapshot',
+  pathSnapshot: 'pathSnapshot',
+  position: 'position',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type DailyTaskCurriculumItemScalarFieldEnum = (typeof DailyTaskCurriculumItemScalarFieldEnum)[keyof typeof DailyTaskCurriculumItemScalarFieldEnum]
 
 
 export const StudySessionScalarFieldEnum = {

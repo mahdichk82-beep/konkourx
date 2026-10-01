@@ -13,6 +13,7 @@ This directory is governed by [CURRICULUM_SOURCE_OF_TRUTH.md](../CURRICULUM_SOUR
 - The active API has no Curriculum write, administration, governance, import, taxonomy, content-ingestion, Knowledge Package, or review runtime.
 - Recovery Foundation 4 retired the historical Prisma governance models and their resulting PostgreSQL tables, triggers, functions, and enum types through one forward migration.
 - The four historical Curriculum migration directories remain immutable history. PostgreSQL contains no Canonical Curriculum persistence.
+- DailyTask planning may reference runtime `NODE` and `PLACEMENT` IDs. PostgreSQL stores task-owned reference IDs plus label/path snapshots and execution checklist state; it does not store or author Canonical Curriculum nodes.
 - `CURRICULUM_AUDIT_REPORT.json` and `CURRICULUM_FREEZE_MANIFEST.json` are retained historical projection evidence. Their 56-subject projection is not authoritative.
 - `INITIAL_IMPORT_AMBIGUITIES.json` is retained as historical source-observation evidence. It does not authorize resolution or import.
 
@@ -20,7 +21,7 @@ The executable import, authoring, governance, taxonomy, Knowledge Package, AI/hu
 
 ## APPROVED FUTURE STATE
 
-Product records may reference canonical Curriculum nodes only in a later explicitly approved integration milestone. A future Question Bank may reference existing nodes but cannot modify Curriculum authority.
+Additional product records may reference stable runtime IDs only in later explicitly approved integration milestones. A future Question Bank may reference existing nodes but cannot modify Curriculum authority.
 
 ## EXPLORATORY / DEFERRED
 

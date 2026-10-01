@@ -406,6 +406,8 @@ export const ModelName = {
   Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
+  DailyTaskCurriculumTarget: 'DailyTaskCurriculumTarget',
+  DailyTaskCurriculumItem: 'DailyTaskCurriculumItem',
   StudySession: 'StudySession',
   AssessmentAttempt: 'AssessmentAttempt',
   StudentGoal: 'StudentGoal'
@@ -424,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "studySession" | "assessmentAttempt" | "studentGoal"
+    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "dailyTaskCurriculumTarget" | "dailyTaskCurriculumItem" | "studySession" | "assessmentAttempt" | "studentGoal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1094,6 +1096,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DailyTaskCurriculumTarget: {
+      payload: Prisma.$DailyTaskCurriculumTargetPayload<ExtArgs>
+      fields: Prisma.DailyTaskCurriculumTargetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DailyTaskCurriculumTargetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DailyTaskCurriculumTargetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        findFirst: {
+          args: Prisma.DailyTaskCurriculumTargetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DailyTaskCurriculumTargetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        findMany: {
+          args: Prisma.DailyTaskCurriculumTargetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>[]
+        }
+        create: {
+          args: Prisma.DailyTaskCurriculumTargetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        createMany: {
+          args: Prisma.DailyTaskCurriculumTargetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DailyTaskCurriculumTargetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>[]
+        }
+        delete: {
+          args: Prisma.DailyTaskCurriculumTargetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        update: {
+          args: Prisma.DailyTaskCurriculumTargetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        deleteMany: {
+          args: Prisma.DailyTaskCurriculumTargetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DailyTaskCurriculumTargetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DailyTaskCurriculumTargetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>[]
+        }
+        upsert: {
+          args: Prisma.DailyTaskCurriculumTargetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumTargetPayload>
+        }
+        aggregate: {
+          args: Prisma.DailyTaskCurriculumTargetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDailyTaskCurriculumTarget>
+        }
+        groupBy: {
+          args: Prisma.DailyTaskCurriculumTargetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskCurriculumTargetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DailyTaskCurriculumTargetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskCurriculumTargetCountAggregateOutputType> | number
+        }
+      }
+    }
+    DailyTaskCurriculumItem: {
+      payload: Prisma.$DailyTaskCurriculumItemPayload<ExtArgs>
+      fields: Prisma.DailyTaskCurriculumItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DailyTaskCurriculumItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DailyTaskCurriculumItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        findFirst: {
+          args: Prisma.DailyTaskCurriculumItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DailyTaskCurriculumItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        findMany: {
+          args: Prisma.DailyTaskCurriculumItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>[]
+        }
+        create: {
+          args: Prisma.DailyTaskCurriculumItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        createMany: {
+          args: Prisma.DailyTaskCurriculumItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DailyTaskCurriculumItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>[]
+        }
+        delete: {
+          args: Prisma.DailyTaskCurriculumItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        update: {
+          args: Prisma.DailyTaskCurriculumItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.DailyTaskCurriculumItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DailyTaskCurriculumItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DailyTaskCurriculumItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.DailyTaskCurriculumItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskCurriculumItemPayload>
+        }
+        aggregate: {
+          args: Prisma.DailyTaskCurriculumItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDailyTaskCurriculumItem>
+        }
+        groupBy: {
+          args: Prisma.DailyTaskCurriculumItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskCurriculumItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DailyTaskCurriculumItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskCurriculumItemCountAggregateOutputType> | number
+        }
+      }
+    }
     StudySession: {
       payload: Prisma.$StudySessionPayload<ExtArgs>
       fields: Prisma.StudySessionFieldRefs
@@ -1479,6 +1629,7 @@ export const DailyTaskScalarFieldEnum = {
   plannedTestCount: 'plannedTestCount',
   status: 'status',
   completedAt: 'completedAt',
+  partialAt: 'partialAt',
   skipReason: 'skipReason',
   skippedAt: 'skippedAt',
   createdAt: 'createdAt',
@@ -1486,6 +1637,38 @@ export const DailyTaskScalarFieldEnum = {
 } as const
 
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
+
+
+export const DailyTaskCurriculumTargetScalarFieldEnum = {
+  id: 'id',
+  dailyTaskId: 'dailyTaskId',
+  referenceKind: 'referenceKind',
+  curriculumRefId: 'curriculumRefId',
+  selectionMode: 'selectionMode',
+  position: 'position',
+  labelSnapshot: 'labelSnapshot',
+  pathSnapshot: 'pathSnapshot',
+  representationIdSnapshot: 'representationIdSnapshot',
+  createdAt: 'createdAt'
+} as const
+
+export type DailyTaskCurriculumTargetScalarFieldEnum = (typeof DailyTaskCurriculumTargetScalarFieldEnum)[keyof typeof DailyTaskCurriculumTargetScalarFieldEnum]
+
+
+export const DailyTaskCurriculumItemScalarFieldEnum = {
+  id: 'id',
+  targetId: 'targetId',
+  dailyTaskId: 'dailyTaskId',
+  referenceKind: 'referenceKind',
+  curriculumRefId: 'curriculumRefId',
+  labelSnapshot: 'labelSnapshot',
+  pathSnapshot: 'pathSnapshot',
+  position: 'position',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type DailyTaskCurriculumItemScalarFieldEnum = (typeof DailyTaskCurriculumItemScalarFieldEnum)[keyof typeof DailyTaskCurriculumItemScalarFieldEnum]
 
 
 export const StudySessionScalarFieldEnum = {
@@ -1713,6 +1896,34 @@ export type ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> = FieldRefInp
 
 
 /**
+ * Reference to a field of type 'CurriculumReferenceKind'
+ */
+export type EnumCurriculumReferenceKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CurriculumReferenceKind'>
+
+
+
+/**
+ * Reference to a field of type 'CurriculumReferenceKind[]'
+ */
+export type ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CurriculumReferenceKind[]'>
+
+
+
+/**
+ * Reference to a field of type 'CurriculumSelectionMode'
+ */
+export type EnumCurriculumSelectionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CurriculumSelectionMode'>
+
+
+
+/**
+ * Reference to a field of type 'CurriculumSelectionMode[]'
+ */
+export type ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CurriculumSelectionMode[]'>
+
+
+
+/**
  * Reference to a field of type 'StudentGoalStatus'
  */
 export type EnumStudentGoalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentGoalStatus'>
@@ -1899,6 +2110,8 @@ export type GlobalOmitConfig = {
   topic?: Prisma.TopicOmit
   studyPlan?: Prisma.StudyPlanOmit
   dailyTask?: Prisma.DailyTaskOmit
+  dailyTaskCurriculumTarget?: Prisma.DailyTaskCurriculumTargetOmit
+  dailyTaskCurriculumItem?: Prisma.DailyTaskCurriculumItemOmit
   studySession?: Prisma.StudySessionOmit
   assessmentAttempt?: Prisma.AssessmentAttemptOmit
   studentGoal?: Prisma.StudentGoalOmit

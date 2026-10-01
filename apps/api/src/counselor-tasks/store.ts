@@ -10,6 +10,7 @@ import type {
   CreateCounselorTaskResult,
   RescheduleCounselorTaskResult,
 } from './types.js'
+import type { ReplaceCurriculumTargetsResult, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
 
 export interface CounselorTaskStore {
   listAssignedStudentTasks(
@@ -32,11 +33,13 @@ export interface CounselorTaskStore {
     counselorUserId: string,
     studentProfileId: string,
     input: CreateCounselorTaskRecordInput,
+    curriculumTargets?: ResolvedCurriculumTarget[],
   ): Promise<CreateCounselorTaskResult>
   createAssignedStudentTasksBatch(
     counselorUserId: string,
     studentProfileId: string,
     inputs: CreateCounselorTaskRecordInput[],
+    curriculumTargetsByTask?: ResolvedCurriculumTarget[][],
   ): Promise<CreateCounselorTaskBatchResult>
   rescheduleAssignedStudentTask(
     counselorUserId: string,
@@ -44,4 +47,10 @@ export interface CounselorTaskStore {
     taskId: string,
     scheduledFor: Date,
   ): Promise<RescheduleCounselorTaskResult>
+  replaceAssignedTaskCurriculumTargets?(
+    counselorUserId: string,
+    studentProfileId: string,
+    taskId: string,
+    targets: ResolvedCurriculumTarget[],
+  ): Promise<ReplaceCurriculumTargetsResult | { ok: false; reason: 'STUDENT_NOT_FOUND' }>
 }

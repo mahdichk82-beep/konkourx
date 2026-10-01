@@ -24,7 +24,7 @@ export * as $Enums from './enums.ts'
 export * from "./enums.ts"
 /**
  * ## Prisma Client
- * 
+ *
  * Type-safe database client for TypeScript
  * @example
  * ```
@@ -34,7 +34,7 @@ export * from "./enums.ts"
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
- * 
+ *
  * Read more in our [docs](https://pris.ly/d/client).
  */
 export const PrismaClient = $Class.getPrismaClientClass()
@@ -86,6 +86,16 @@ export type StudyPlan = Prisma.StudyPlanModel
  * 
  */
 export type DailyTask = Prisma.DailyTaskModel
+/**
+ * Model DailyTaskCurriculumTarget
+ *
+ */
+export type DailyTaskCurriculumTarget = Prisma.DailyTaskCurriculumTargetModel
+/**
+ * Model DailyTaskCurriculumItem
+ *
+ */
+export type DailyTaskCurriculumItem = Prisma.DailyTaskCurriculumItemModel
 /**
  * Model StudySession
  * 

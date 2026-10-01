@@ -5,6 +5,7 @@ import type { AuthService } from '../src/auth/auth-service.js'
 import type { PublicUser } from '../src/auth/types.js'
 import { createStudentCoreServices, type StudentCoreStore } from '../src/student-core/services.js'
 import type { DailyTaskRecord, StudySubjectRecord } from '../src/student-core/types.js'
+import { canonicalCurriculumStore } from '../src/curriculum/artifact.js'
 
 const user: PublicUser = {
   id: 'student-user-1',
@@ -64,7 +65,7 @@ const createApp = (
   environment: 'test',
   logger: false,
   prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
-  studentCore: createStudentCoreServices(studentCoreStore),
+  studentCore: createStudentCoreServices(studentCoreStore, undefined, canonicalCurriculumStore),
 })
 
 test('student subject route returns the standard v1 response contract', async () => {
@@ -734,5 +735,103 @@ test('daily task filters retain authenticated profile scope', async () => {
     status: 'PENDING',
     subjectId,
   })
+  await app.close()
+})
+
+test('student toggles owned Curriculum execution items and receives coverage counts', async () => {
+  const taskId = '00000000-0000-4000-8000-000000000401'
+  const itemId = '00000000-0000-4000-8000-000000000402'
+  let ownerScope: unknown[] = []
+  const task: DailyTaskRecord = {
+    id: taskId,
+    studentProfileId: 'student-profile-1',
+    createdByUserId: user.id,
+    source: 'COUNSELOR',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+    title: 'Assigned Curriculum task',
+    description: null,
+    scheduledFor: new Date('2026-09-30T00:00:00.000Z'),
+    estimatedMinutes: 75,
+    plannedTestCount: 0,
+    status: 'PENDING',
+    completedAt: null,
+    partialAt: null,
+    skipReason: null,
+    skippedAt: null,
+    createdAt: new Date('2026-09-30T00:00:00.000Z'),
+    updatedAt: new Date('2026-09-30T00:00:00.000Z'),
+    curriculumTargets: [{
+      id: '00000000-0000-4000-8000-000000000403',
+      referenceKind: 'NODE',
+      curriculumRefId: 'cn_parent',
+      selectionMode: 'WHOLE',
+      position: 0,
+      labelSnapshot: 'parent',
+      pathSnapshot: ['representation', 'parent'],
+      representationIdSnapshot: 'cr_1',
+      createdAt: new Date('2026-09-30T00:00:00.000Z'),
+      items: [{
+        id: itemId,
+        targetId: '00000000-0000-4000-8000-000000000403',
+        referenceKind: 'NODE',
+        curriculumRefId: 'cn_child',
+        labelSnapshot: 'child',
+        pathSnapshot: ['representation', 'parent', 'child'],
+        position: 0,
+        completedAt: new Date('2026-09-30T12:00:00.000Z'),
+        createdAt: new Date('2026-09-30T00:00:00.000Z'),
+      }],
+    }],
+  }
+  const taskStore: StudentCoreStore = {
+    ...store,
+    toggleTaskCurriculumItem: async (...args) => {
+      ownerScope = args
+      return { ok: true, value: task }
+    },
+  }
+  const app = createApp(taskStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { completed: true },
+    url: `/api/v1/student/daily-tasks/${taskId}/curriculum-items/${itemId}`,
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(ownerScope.slice(0, 3), ['student-profile-1', taskId, itemId])
+  assert.equal(response.json().data.curriculum.completedItemCount, 1)
+  assert.equal(response.json().data.curriculum.totalItemCount, 1)
+  assert.equal(response.json().data.curriculum.remainingItemCount, 0)
+  assert.equal('createdByUserId' in response.json().data, false)
+  await app.close()
+})
+
+test('Curriculum execution and target operations hide foreign tasks and protect counselor planning', async () => {
+  const hiddenStore: StudentCoreStore = {
+    ...store,
+    toggleTaskCurriculumItem: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
+    replacePersonalTaskCurriculumTargets: async () => ({ ok: false, reason: 'TASK_SOURCE_FORBIDDEN' }),
+  }
+  const app = createApp(hiddenStore)
+  const foreign = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { completed: true },
+    url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000411/curriculum-items/00000000-0000-4000-8000-000000000412',
+  })
+  assert.equal(foreign.statusCode, 404)
+  assert.equal(foreign.json().error.code, 'TASK_NOT_FOUND')
+
+  const counselorTargets = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { curriculumTargets: [] },
+    url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000411/curriculum-targets',
+  })
+  assert.equal(counselorTargets.statusCode, 403)
+  assert.equal(counselorTargets.json().error.code, 'TASK_UPDATE_FORBIDDEN')
   await app.close()
 })

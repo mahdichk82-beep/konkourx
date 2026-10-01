@@ -362,6 +362,40 @@ export type EnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaModel = n
   _max?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
 }
 
+export type EnumCurriculumReferenceKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumReferenceKind | Prisma.EnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel> | $Enums.CurriculumReferenceKind
+}
+
+export type EnumCurriculumSelectionModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumSelectionMode | Prisma.EnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel> | $Enums.CurriculumSelectionMode
+}
+
+export type EnumCurriculumReferenceKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumReferenceKind | Prisma.EnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumReferenceKindWithAggregatesFilter<$PrismaModel> | $Enums.CurriculumReferenceKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel>
+}
+
+export type EnumCurriculumSelectionModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumSelectionMode | Prisma.EnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumSelectionModeWithAggregatesFilter<$PrismaModel> | $Enums.CurriculumSelectionMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel>
+}
+
 export type EnumStudentGoalStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.StudentGoalStatus | Prisma.EnumStudentGoalStatusFieldRefInput<$PrismaModel>
   in?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
@@ -734,6 +768,40 @@ export type NestedEnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaMod
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumCurriculumReferenceKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumReferenceKind | Prisma.EnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel> | $Enums.CurriculumReferenceKind
+}
+
+export type NestedEnumCurriculumSelectionModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumSelectionMode | Prisma.EnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel> | $Enums.CurriculumSelectionMode
+}
+
+export type NestedEnumCurriculumReferenceKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumReferenceKind | Prisma.EnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumReferenceKind[] | Prisma.ListEnumCurriculumReferenceKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumReferenceKindWithAggregatesFilter<$PrismaModel> | $Enums.CurriculumReferenceKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCurriculumReferenceKindFilter<$PrismaModel>
+}
+
+export type NestedEnumCurriculumSelectionModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CurriculumSelectionMode | Prisma.EnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  in?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CurriculumSelectionMode[] | Prisma.ListEnumCurriculumSelectionModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCurriculumSelectionModeWithAggregatesFilter<$PrismaModel> | $Enums.CurriculumSelectionMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCurriculumSelectionModeFilter<$PrismaModel>
 }
 
 export type NestedEnumStudentGoalStatusFilter<$PrismaModel = never> = {

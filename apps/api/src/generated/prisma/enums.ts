@@ -48,6 +48,7 @@ export type StudyPlanStatus = (typeof StudyPlanStatus)[keyof typeof StudyPlanSta
 export const DailyTaskStatus = {
   PENDING: 'PENDING',
   COMPLETED: 'COMPLETED',
+  PARTIAL: 'PARTIAL',
   SKIPPED: 'SKIPPED'
 } as const
 
@@ -70,6 +71,22 @@ export const DailyTaskSkipReason = {
 } as const
 
 export type DailyTaskSkipReason = (typeof DailyTaskSkipReason)[keyof typeof DailyTaskSkipReason]
+
+
+export const CurriculumReferenceKind = {
+  NODE: 'NODE',
+  PLACEMENT: 'PLACEMENT'
+} as const
+
+export type CurriculumReferenceKind = (typeof CurriculumReferenceKind)[keyof typeof CurriculumReferenceKind]
+
+
+export const CurriculumSelectionMode = {
+  EXACT: 'EXACT',
+  WHOLE: 'WHOLE'
+} as const
+
+export type CurriculumSelectionMode = (typeof CurriculumSelectionMode)[keyof typeof CurriculumSelectionMode]
 
 
 export const StudentGoalStatus = {

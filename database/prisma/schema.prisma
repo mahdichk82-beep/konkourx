@@ -136,6 +136,7 @@ enum StudyPlanStatus {
 enum DailyTaskStatus {
   PENDING
   COMPLETED
+  PARTIAL
   SKIPPED
 }
 
@@ -149,6 +150,16 @@ enum DailyTaskSkipReason {
   TOO_DIFFICULT
   FORGOT
   OTHER
+}
+
+enum CurriculumReferenceKind {
+  NODE
+  PLACEMENT
+}
+
+enum CurriculumSelectionMode {
+  EXACT
+  WHOLE
 }
 
 model StudySubject {
@@ -224,18 +235,21 @@ model DailyTask {
   plannedTestCount Int                  @default(0)
   status           DailyTaskStatus      @default(PENDING)
   completedAt      DateTime?
+  partialAt        DateTime?
   skipReason       DailyTaskSkipReason?
   skippedAt        DateTime?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 
-  studentProfile     StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  createdBy          User                @relation("DailyTaskCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  studyPlan          StudyPlan?          @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
-  subject            StudySubject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  topic              Topic?              @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  studentProfile     StudentProfile              @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  createdBy          User                        @relation("DailyTaskCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  studyPlan          StudyPlan?                  @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
+  subject            StudySubject?               @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic              Topic?                      @relation(fields: [topicId], references: [id], onDelete: SetNull)
   studySessions      StudySession[]
   assessmentAttempts AssessmentAttempt[]
+  curriculumTargets  DailyTaskCurriculumTarget[]
+  curriculumItems    DailyTaskCurriculumItem[]
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
@@ -244,6 +258,48 @@ model DailyTask {
   @@index([subjectId])
   @@index([topicId])
   @@map("daily_tasks")
+}
+
+model DailyTaskCurriculumTarget {
+  id                       String                  @id @default(uuid()) @db.Uuid
+  dailyTaskId              String                  @db.Uuid
+  referenceKind            CurriculumReferenceKind
+  curriculumRefId          String
+  selectionMode            CurriculumSelectionMode
+  position                 Int
+  labelSnapshot            String
+  pathSnapshot             String[]
+  representationIdSnapshot String?
+  createdAt                DateTime                @default(now())
+
+  dailyTask DailyTask                 @relation(fields: [dailyTaskId], references: [id], onDelete: Cascade)
+  items     DailyTaskCurriculumItem[]
+
+  @@unique([dailyTaskId, position])
+  @@index([dailyTaskId])
+  @@map("daily_task_curriculum_targets")
+}
+
+model DailyTaskCurriculumItem {
+  id              String                  @id @default(uuid()) @db.Uuid
+  targetId        String                  @db.Uuid
+  dailyTaskId     String                  @db.Uuid
+  referenceKind   CurriculumReferenceKind
+  curriculumRefId String
+  labelSnapshot   String
+  pathSnapshot    String[]
+  position        Int
+  completedAt     DateTime?
+  createdAt       DateTime                @default(now())
+
+  target    DailyTaskCurriculumTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  dailyTask DailyTask                 @relation(fields: [dailyTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dailyTaskId, position])
+  @@unique([dailyTaskId, referenceKind, curriculumRefId])
+  @@index([targetId, position])
+  @@index([dailyTaskId, completedAt])
+  @@map("daily_task_curriculum_items")
 }
 
 model StudySession {

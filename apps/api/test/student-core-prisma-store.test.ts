@@ -3,6 +3,13 @@ import test from 'node:test'
 import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createPrismaStudentCoreStore } from '../src/student-core/prisma-store.js'
 
+const curriculumInclude = {
+  curriculumTargets: {
+    orderBy: { position: 'asc' },
+    include: { items: { orderBy: { position: 'asc' } } },
+  },
+}
+
 test('Prisma plan and task queries skip cursor rows and fetch one lookahead row', async () => {
   const planQueries: unknown[] = []
   const taskQueries: unknown[] = []
@@ -44,6 +51,7 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
     where: { studentProfileId: 'student-profile-1', status: 'ACTIVE' },
   })
   assert.deepEqual(taskQueries[0], {
+    include: curriculumInclude,
     cursor: { id: 'task-2' },
     orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
     skip: 1,
@@ -57,6 +65,7 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
     },
   })
   assert.deepEqual(taskQueries[1], {
+    include: curriculumInclude,
     cursor: undefined,
     orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
     skip: undefined,
@@ -96,7 +105,7 @@ test('Prisma task reads and updates always include student ownership', async () 
   assert.equal(found, null)
   assert.equal(updated, null)
   assert.deepEqual(findQueries, [
-    { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
+    { include: curriculumInclude, where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
   ])
   assert.deepEqual(updateQueries, [
     {
@@ -156,7 +165,7 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
   assert.equal(result.ok, true)
   assert.deepEqual(findQueries, [
     { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
-    { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
+    { include: curriculumInclude, where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
   ])
   assert.deepEqual(updateQueries, [{
     data: { scheduledFor },

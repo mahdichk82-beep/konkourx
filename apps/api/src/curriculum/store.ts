@@ -33,7 +33,12 @@ export type CurriculumReadStore = {
   listGradePlacements(): readonly CurriculumGradePlacement[]
   listPlacements(query: CurriculumPlacementQuery): CurriculumPage<CurriculumSubjectPlacement>
   listRepresentations(query: CurriculumPageQuery): CurriculumPage<CurriculumRepresentation>
+  getScope(id: string): CurriculumScope
+  getGradePlacement(id: string): CurriculumGradePlacement
+  getPlacement(id: string): CurriculumSubjectPlacement
+  getRepresentation(id: string): CurriculumRepresentation
   getNode(id: string): CurriculumSourceNode
+  getDirectChildren(id: string): readonly CurriculumSourceNode[]
   listChildren(id: string, query: CurriculumPageQuery): CurriculumPage<CurriculumSourceNode>
   search(query: CurriculumSearchQuery): CurriculumPage<CurriculumSourceNode>
 }
@@ -87,6 +92,10 @@ export const createCurriculumReadStore = (
   assertArtifact(input)
   const artifact = deepFreeze(input)
   const nodesById = new Map(artifact.nodes.map((node) => [node.id, node]))
+  const scopesById = new Map(artifact.scopes.map((scope) => [scope.id, scope]))
+  const gradesById = new Map(artifact.gradePlacements.map((grade) => [grade.id, grade]))
+  const placementsById = new Map(artifact.subjectPlacements.map((placement) => [placement.id, placement]))
+  const representationsById = new Map(artifact.representations.map((representation) => [representation.id, representation]))
   const childrenByParentId = new Map<string, CurriculumSourceNode[]>()
   const normalizedLabels = new Map<string, string>()
 
@@ -119,7 +128,31 @@ export const createCurriculumReadStore = (
       query,
     ),
     listRepresentations: (query) => page(artifact.representations, query),
+    getScope: (id) => {
+      const value = scopesById.get(id)
+      if (!value) throw new ApiError(404, 'CURRICULUM_SCOPE_NOT_FOUND', 'Curriculum scope not found')
+      return value
+    },
+    getGradePlacement: (id) => {
+      const value = gradesById.get(id)
+      if (!value) throw new ApiError(404, 'CURRICULUM_GRADE_NOT_FOUND', 'Curriculum grade placement not found')
+      return value
+    },
+    getPlacement: (id) => {
+      const value = placementsById.get(id)
+      if (!value) throw new ApiError(404, 'CURRICULUM_PLACEMENT_NOT_FOUND', 'Curriculum subject placement not found')
+      return value
+    },
+    getRepresentation: (id) => {
+      const value = representationsById.get(id)
+      if (!value) throw new ApiError(404, 'CURRICULUM_REPRESENTATION_NOT_FOUND', 'Curriculum representation not found')
+      return value
+    },
     getNode,
+    getDirectChildren: (id) => {
+      getNode(id)
+      return childrenByParentId.get(id) ?? []
+    },
     listChildren: (id, query) => {
       getNode(id)
       return page(childrenByParentId.get(id) ?? [], query)

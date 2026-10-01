@@ -15,6 +15,8 @@ import type {
 import { ApiError } from '../src/errors/api-error.js'
 import { buildApp } from '../src/app.js'
 import type { DailyTaskRecord } from '../src/student-core/types.js'
+import { canonicalCurriculumStore } from '../src/curriculum/artifact.js'
+import type { ResolvedCurriculumTarget } from '../src/task-curriculum/types.js'
 
 const ids = {
   counselorA: '10000000-0000-4000-8000-000000000001',
@@ -279,6 +281,38 @@ const createStore = (): CounselorTaskStore & {
       task.updatedAt = timestamp
       return { ok: true as const, value: task }
     },
+    async replaceAssignedTaskCurriculumTargets(
+      counselorUserId: string,
+      studentProfileId: string,
+      taskId: string,
+      targets: ResolvedCurriculumTarget[],
+    ) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+        return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
+      }
+      const task = store.tasks.find((candidate) =>
+        candidate.id === taskId && candidate.studentProfileId === studentProfileId,
+      )
+      if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+      if (task.source !== 'COUNSELOR') return { ok: false as const, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      if (task.status !== 'PENDING') return { ok: false as const, reason: 'TASK_NOT_PENDING' as const }
+      if (task.curriculumTargets?.some((target) => target.items.some((item) => item.completedAt))) {
+        return { ok: false as const, reason: 'CURRICULUM_EXECUTION_STARTED' as const }
+      }
+      task.curriculumTargets = targets.map((target, targetIndex) => ({
+        ...target,
+        id: `70000000-0000-4000-8000-${String(targetIndex + 1).padStart(12, '0')}`,
+        createdAt: timestamp,
+        items: target.items.map((item, itemIndex) => ({
+          ...item,
+          id: `71000000-0000-4000-8000-${String(itemIndex + 1).padStart(12, '0')}`,
+          targetId: `70000000-0000-4000-8000-${String(targetIndex + 1).padStart(12, '0')}`,
+          completedAt: null,
+          createdAt: timestamp,
+        })),
+      }))
+      return { ok: true as const, value: task }
+    },
   }
   return store
 }
@@ -286,7 +320,7 @@ const createStore = (): CounselorTaskStore & {
 const createApp = (store = createStore()) => ({
   app: buildApp({
     auth: createAuth(),
-    counselorTasks: createCounselorTaskServices(store),
+    counselorTasks: createCounselorTaskServices(store, canonicalCurriculumStore),
     environment: 'test',
     logger: false,
     prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
@@ -933,5 +967,87 @@ test('counselor resource selectors expose only active resources for assigned stu
   })
   assert.equal(crossCounselor.statusCode, 404)
   assert.equal(crossCounselor.json().error.code, 'STUDENT_NOT_FOUND')
+  await app.close()
+})
+
+test('assigned counselor reads Curriculum execution coverage and alone may edit pending counselor targets', async () => {
+  const { app, store } = createApp()
+  const taskId = '60000000-0000-4000-8000-000000000091'
+  store.tasks.push(taskRecord(taskId, {
+    source: 'COUNSELOR',
+    createdByUserId: ids.counselorA,
+    curriculumTargets: [{
+      id: '70000000-0000-4000-8000-000000000001',
+      referenceKind: 'NODE',
+      curriculumRefId: 'cn_parent',
+      selectionMode: 'WHOLE',
+      position: 0,
+      labelSnapshot: 'parent',
+      pathSnapshot: ['representation', 'parent'],
+      representationIdSnapshot: 'cr_1',
+      createdAt: timestamp,
+      items: [
+        {
+          id: '71000000-0000-4000-8000-000000000001',
+          targetId: '70000000-0000-4000-8000-000000000001',
+          referenceKind: 'NODE',
+          curriculumRefId: 'cn_child_1',
+          labelSnapshot: 'child 1',
+          pathSnapshot: ['representation', 'parent', 'child 1'],
+          position: 0,
+          completedAt: timestamp,
+          createdAt: timestamp,
+        },
+        {
+          id: '71000000-0000-4000-8000-000000000002',
+          targetId: '70000000-0000-4000-8000-000000000001',
+          referenceKind: 'NODE',
+          curriculumRefId: 'cn_child_2',
+          labelSnapshot: 'child 2',
+          pathSnapshot: ['representation', 'parent', 'child 2'],
+          position: 1,
+          completedAt: null,
+          createdAt: timestamp,
+        },
+      ],
+    }],
+  }))
+
+  const listed = await listRequest(app, ids.studentA, 'counselor-a')
+  assert.equal(listed.statusCode, 200)
+  assert.equal(listed.json().data.items[0].curriculum.completedItemCount, 1)
+  assert.equal(listed.json().data.items[0].curriculum.remainingItemCount, 1)
+
+  const replaced = await app.inject({
+    headers: { authorization: 'Bearer counselor-a' },
+    method: 'PATCH',
+    payload: { curriculumTargets: [] },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/${taskId}/curriculum-targets`,
+  })
+  assert.equal(replaced.statusCode, 409)
+  assert.equal(replaced.json().error.code, 'TASK_CURRICULUM_EXECUTION_STARTED')
+
+  const editableTaskId = '60000000-0000-4000-8000-000000000092'
+  store.tasks.push(taskRecord(editableTaskId, {
+    source: 'COUNSELOR',
+    createdByUserId: ids.counselorA,
+  }))
+  const editable = await app.inject({
+    headers: { authorization: 'Bearer counselor-a' },
+    method: 'PATCH',
+    payload: { curriculumTargets: [] },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/${editableTaskId}/curriculum-targets`,
+  })
+  assert.equal(editable.statusCode, 200)
+  assert.equal(editable.json().data.curriculum.totalItemCount, 0)
+
+  const foreign = await app.inject({
+    headers: { authorization: 'Bearer counselor-b' },
+    method: 'PATCH',
+    payload: { curriculumTargets: [] },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/${taskId}/curriculum-targets`,
+  })
+  assert.equal(foreign.statusCode, 404)
+  assert.equal(foreign.json().error.code, 'STUDENT_NOT_FOUND')
   await app.close()
 })

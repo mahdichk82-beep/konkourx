@@ -30,6 +30,7 @@ export const createPrismaCounselorTaskStore = (
         orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
         select: {
           completedAt: true,
+          partialAt: true,
           createdAt: true,
           description: true,
           estimatedMinutes: true,
@@ -54,6 +55,10 @@ export const createPrismaCounselorTaskStore = (
           title: true,
           topicId: true,
           updatedAt: true,
+          curriculumTargets: {
+            orderBy: { position: 'asc' },
+            include: { items: { orderBy: { position: 'asc' } } },
+          },
         },
         skip: query.cursor ? 1 : undefined,
         take: (query.limit ?? 50) + 1,
@@ -142,7 +147,7 @@ export const createPrismaCounselorTaskStore = (
     })
   },
 
-  async createAssignedStudentTask(counselorUserId, studentProfileId, input) {
+  async createAssignedStudentTask(counselorUserId, studentProfileId, input, curriculumTargets = []) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
         select: { id: true },
@@ -177,11 +182,37 @@ export const createPrismaCounselorTaskStore = (
       }
 
       const task = await transaction.dailyTask.create({ data: input })
-      return { ok: true, value: task }
+      for (const target of curriculumTargets) {
+        await transaction.dailyTaskCurriculumTarget.create({ data: {
+          curriculumRefId: target.curriculumRefId,
+          dailyTaskId: task.id,
+          labelSnapshot: target.labelSnapshot,
+          pathSnapshot: target.pathSnapshot,
+          position: target.position,
+          referenceKind: target.referenceKind,
+          representationIdSnapshot: target.representationIdSnapshot,
+          selectionMode: target.selectionMode,
+          items: { create: target.items.map((item) => ({
+            curriculumRefId: item.curriculumRefId,
+            dailyTaskId: task.id,
+            labelSnapshot: item.labelSnapshot,
+            pathSnapshot: item.pathSnapshot,
+            position: item.position,
+            referenceKind: item.referenceKind,
+          })) },
+        } })
+      }
+      const value = curriculumTargets.length === 0
+        ? { ...task, curriculumTargets: [] }
+        : await transaction.dailyTask.findUniqueOrThrow({
+            include: { curriculumTargets: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } } },
+            where: { id: task.id },
+          })
+      return { ok: true, value }
     })
   },
 
-  async createAssignedStudentTasksBatch(counselorUserId, studentProfileId, inputs) {
+  async createAssignedStudentTasksBatch(counselorUserId, studentProfileId, inputs, curriculumTargetsByTask = []) {
     return prisma.$transaction(async (transaction) => {
       const counselor = await transaction.counselorProfile.findUnique({
         select: { id: true },
@@ -225,7 +256,39 @@ export const createPrismaCounselorTaskStore = (
         }
       }
 
-      const tasks = await transaction.dailyTask.createManyAndReturn({ data: inputs })
+      if (curriculumTargetsByTask.every((targets) => targets.length === 0)) {
+        const tasks = await transaction.dailyTask.createManyAndReturn({ data: inputs })
+        return { ok: true, value: tasks.map((task) => ({ ...task, curriculumTargets: [] })) }
+      }
+
+      const tasks = []
+      for (const [inputIndex, input] of inputs.entries()) {
+        const task = await transaction.dailyTask.create({ data: input })
+        for (const target of curriculumTargetsByTask[inputIndex] ?? []) {
+          await transaction.dailyTaskCurriculumTarget.create({ data: {
+            curriculumRefId: target.curriculumRefId,
+            dailyTaskId: task.id,
+            labelSnapshot: target.labelSnapshot,
+            pathSnapshot: target.pathSnapshot,
+            position: target.position,
+            referenceKind: target.referenceKind,
+            representationIdSnapshot: target.representationIdSnapshot,
+            selectionMode: target.selectionMode,
+            items: { create: target.items.map((item) => ({
+              curriculumRefId: item.curriculumRefId,
+              dailyTaskId: task.id,
+              labelSnapshot: item.labelSnapshot,
+              pathSnapshot: item.pathSnapshot,
+              position: item.position,
+              referenceKind: item.referenceKind,
+            })) },
+          } })
+        }
+        tasks.push(await transaction.dailyTask.findUniqueOrThrow({
+          include: { curriculumTargets: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } } },
+          where: { id: task.id },
+        }))
+      }
       return { ok: true, value: tasks }
     })
   },
@@ -268,10 +331,58 @@ export const createPrismaCounselorTaskStore = (
       }
 
       const task = await transaction.dailyTask.findFirst({
+        include: { curriculumTargets: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } } },
         where: { id: taskId, studentProfileId },
       })
       if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
       return { ok: true, value: task }
+    })
+  },
+
+  async replaceAssignedTaskCurriculumTargets(counselorUserId, studentProfileId, taskId, targets) {
+    return prisma.$transaction(async (transaction) => {
+      const student = await transaction.studentProfile.findFirst({
+        select: { id: true },
+        where: assignedStudentWhere(counselorUserId, studentProfileId),
+      })
+      if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const current = await transaction.dailyTask.findFirst({
+        include: { curriculumItems: { select: { completedAt: true } } },
+        where: { id: taskId, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (current.source !== 'COUNSELOR') return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      if (current.status !== 'PENDING') return { ok: false, reason: 'TASK_NOT_PENDING' as const }
+      if (current.curriculumItems.some((item) => item.completedAt !== null)) {
+        return { ok: false, reason: 'CURRICULUM_EXECUTION_STARTED' as const }
+      }
+      await transaction.dailyTaskCurriculumTarget.deleteMany({ where: { dailyTaskId: taskId } })
+      for (const target of targets) {
+        await transaction.dailyTaskCurriculumTarget.create({ data: {
+          curriculumRefId: target.curriculumRefId,
+          dailyTaskId: taskId,
+          labelSnapshot: target.labelSnapshot,
+          pathSnapshot: target.pathSnapshot,
+          position: target.position,
+          referenceKind: target.referenceKind,
+          representationIdSnapshot: target.representationIdSnapshot,
+          selectionMode: target.selectionMode,
+          items: { create: target.items.map((item) => ({
+            curriculumRefId: item.curriculumRefId,
+            dailyTaskId: taskId,
+            labelSnapshot: item.labelSnapshot,
+            pathSnapshot: item.pathSnapshot,
+            position: item.position,
+            referenceKind: item.referenceKind,
+          })) },
+        } })
+      }
+      const value = await transaction.dailyTask.findUniqueOrThrow({
+        include: { curriculumTargets: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } } },
+        where: { id: taskId },
+      })
+      return { ok: true, value }
     })
   },
 })
