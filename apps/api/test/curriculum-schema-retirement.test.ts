@@ -60,7 +60,7 @@ test('one forward retirement migration follows the four immutable historical mig
   const entries = await readdir(migrationsUrl, { withFileTypes: true })
   const migrationNames = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 
-  assert.equal(migrationNames.length, 20)
+  assert.equal(migrationNames.length, 21)
   for (const historicalMigration of historicalMigrations) {
     assert.ok(migrationNames.includes(historicalMigration), historicalMigration)
   }
@@ -68,6 +68,7 @@ test('one forward retirement migration follows the four immutable historical mig
   const retirementName = '20260930010000_retire_curriculum_governance_schema'
   assert.ok(migrationNames.includes(retirementName))
   assert.ok(migrationNames.includes('20260930020000_add_planning_curriculum_references'))
+  assert.ok(migrationNames.includes('20261001010000_add_daily_task_schedule_window'))
   const sql = await readFile(new URL(`${retirementName}/migration.sql`, migrationsUrl), 'utf8')
   assert.equal((sql.match(/^DROP TABLE /gm) ?? []).length, 14)
   assert.equal((sql.match(/^DROP TYPE /gm) ?? []).length, 17)

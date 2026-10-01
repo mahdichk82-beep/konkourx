@@ -33,6 +33,7 @@ export const createPrismaCounselorTaskStore = (
           partialAt: true,
           createdAt: true,
           description: true,
+          endMinuteOfDay: true,
           estimatedMinutes: true,
           id: true,
           plannedTestCount: true,
@@ -45,6 +46,7 @@ export const createPrismaCounselorTaskStore = (
           skipReason: true,
           skippedAt: true,
           source: true,
+          startMinuteOfDay: true,
           status: true,
           studySessions: {
             select: { cancelledAt: true, endedAt: true, startedAt: true },
@@ -297,7 +299,7 @@ export const createPrismaCounselorTaskStore = (
     counselorUserId,
     studentProfileId,
     taskId,
-    scheduledFor,
+    patch,
   ) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
@@ -317,12 +319,13 @@ export const createPrismaCounselorTaskStore = (
       }
 
       const updated = await transaction.dailyTask.updateMany({
-        data: { scheduledFor },
+        data: patch,
         where: {
           id: taskId,
           source: 'COUNSELOR',
           studentProfileId,
           assessmentAttempts: { none: { invalidatedAt: null } },
+          curriculumItems: { none: { completedAt: { not: null } } },
           studySessions: { none: { cancelledAt: null } },
         },
       })

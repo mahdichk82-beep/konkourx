@@ -1625,6 +1625,8 @@ export const DailyTaskScalarFieldEnum = {
   title: 'title',
   description: 'description',
   scheduledFor: 'scheduledFor',
+  startMinuteOfDay: 'startMinuteOfDay',
+  endMinuteOfDay: 'endMinuteOfDay',
   estimatedMinutes: 'estimatedMinutes',
   plannedTestCount: 'plannedTestCount',
   status: 'status',
@@ -1759,28 +1761,28 @@ export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
  * Reference to a field of type 'String'
  */
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
-    
+
 
 
 /**
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
-    
+
 
 
 /**
  * Reference to a field of type 'UserRole'
  */
 export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
-    
+
 
 
 /**
  * Reference to a field of type 'UserRole[]'
  */
 export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
-    
+
 
 
 /**

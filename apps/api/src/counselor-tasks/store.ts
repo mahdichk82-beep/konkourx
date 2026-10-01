@@ -5,6 +5,7 @@ import type {
   CounselorStudentSubject,
   CounselorTaskPageQuery,
   CounselorTaskStoreQuery,
+  CounselorTaskPlanningPatch,
   CreateCounselorTaskBatchResult,
   CreateCounselorTaskRecordInput,
   CreateCounselorTaskResult,
@@ -45,7 +46,7 @@ export interface CounselorTaskStore {
     counselorUserId: string,
     studentProfileId: string,
     taskId: string,
-    scheduledFor: Date,
+    patch: CounselorTaskPlanningPatch,
   ): Promise<RescheduleCounselorTaskResult>
   replaceAssignedTaskCurriculumTargets?(
     counselorUserId: string,

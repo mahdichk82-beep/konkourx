@@ -202,7 +202,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     })
   },
 
-  async reschedulePersonalTask(studentProfileId, id, scheduledFor) {
+  async reschedulePersonalTask(studentProfileId, id, schedule) {
     return prisma.$transaction(async (transaction) => {
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
       const current = await transaction.dailyTask.findFirst({
@@ -214,11 +214,12 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       }
 
       const updated = await transaction.dailyTask.updateMany({
-        data: { scheduledFor },
+        data: schedule,
         where: {
           id,
           source: 'PERSONAL',
           studentProfileId,
+          curriculumItems: { none: { completedAt: { not: null } } },
           assessmentAttempts: { none: { invalidatedAt: null } },
           studySessions: { none: { cancelledAt: null } },
         },

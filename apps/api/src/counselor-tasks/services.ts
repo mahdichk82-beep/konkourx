@@ -3,6 +3,7 @@ import type { CurriculumReadStore } from '../curriculum/store.js'
 import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
 import type { CurriculumTargetInput } from '../task-curriculum/types.js'
 import { curriculumCoverage } from '../task-curriculum/view.js'
+import { deriveMiniBoxSpan, validateTaskScheduleWindow } from '../task-scheduling/schedule.js'
 import type { DailyTaskRecord } from '../student-core/types.js'
 import type { CounselorTaskStore } from './store.js'
 import type {
@@ -20,6 +21,7 @@ import type {
   CreateCounselorTaskInput,
   CreateCounselorTaskResult,
   RescheduleCounselorTaskResult,
+  UpdateCounselorTaskInput,
 } from './types.js'
 
 const ensureCounselor = (actor: CounselorTaskActor): void => {
@@ -38,6 +40,15 @@ const validDate = (value: string): boolean => {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
 }
 
+const requireValidSchedule = (input: {
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
+}): void => {
+  if (validateTaskScheduleWindow(input) !== null) {
+    throw new ApiError(400, 'TASK_SCHEDULE_INVALID', 'Task time range must be same-day and aligned to 15-minute boundaries')
+  }
+}
+
 const page = <T extends { id: string }>(
   items: T[],
   query: CounselorTaskPageQuery,
@@ -52,6 +63,9 @@ const page = <T extends { id: string }>(
 
 const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): CounselorTaskView => ({
   ...task,
+  startMinuteOfDay: task.startMinuteOfDay ?? null,
+  endMinuteOfDay: task.endMinuteOfDay ?? null,
+  miniBoxSpan: deriveMiniBoxSpan(task),
   partialAt: task.partialAt ?? null,
   curriculum: curriculumCoverage(curriculumTargets),
 })
@@ -66,6 +80,9 @@ const toVisibleTaskView = ({
   ...task
 }: import('./types.js').CounselorVisibleTaskRecord): CounselorVisibleTaskView => ({
   ...task,
+  startMinuteOfDay: task.startMinuteOfDay ?? null,
+  endMinuteOfDay: task.endMinuteOfDay ?? null,
+  miniBoxSpan: deriveMiniBoxSpan(task),
   partialAt: task.partialAt ?? null,
   curriculum: curriculumCoverage(curriculumTargets),
   completedStudySessionCount,
@@ -107,6 +124,7 @@ const throwCreateFailure = (
 
 const throwRescheduleFailure = (
   result: Exclude<RescheduleCounselorTaskResult, { ok: true }>,
+  operation: 'RESCHEDULE' | 'UPDATE' = 'RESCHEDULE',
 ): never => {
   switch (result.reason) {
     case 'STUDENT_NOT_FOUND':
@@ -114,7 +132,11 @@ const throwRescheduleFailure = (
     case 'TASK_NOT_FOUND':
       throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
     case 'TASK_SOURCE_FORBIDDEN':
-      throw new ApiError(403, 'TASK_RESCHEDULE_FORBIDDEN', 'Personal student tasks cannot be rescheduled by counselors')
+      throw new ApiError(
+        403,
+        operation === 'UPDATE' ? 'TASK_UPDATE_FORBIDDEN' : 'TASK_RESCHEDULE_FORBIDDEN',
+        'Personal student tasks cannot be changed by counselors',
+      )
     case 'TASK_EXECUTED':
       throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded execution cannot be rescheduled')
   }
@@ -204,6 +226,7 @@ export const createCounselorTaskServices = (
     if (!validDate(input.scheduledFor)) {
       throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
     }
+    requireValidSchedule(input)
     if (input.topicId && !input.subjectId) {
       throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
     }
@@ -218,6 +241,8 @@ export const createCounselorTaskServices = (
         createdByUserId: actor.id,
         description: input.description ?? null,
         estimatedMinutes: input.estimatedMinutes,
+        startMinuteOfDay: input.startMinuteOfDay ?? null,
+        endMinuteOfDay: input.endMinuteOfDay ?? null,
         plannedTestCount: 0,
         scheduledFor: dateOnly(input.scheduledFor),
         skipReason: null,
@@ -247,6 +272,7 @@ export const createCounselorTaskServices = (
       if (!validDate(task.scheduledFor)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       }
+      requireValidSchedule(task)
       if (task.topicId && !task.subjectId) {
         throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
       }
@@ -261,6 +287,8 @@ export const createCounselorTaskServices = (
           createdByUserId: actor.id,
           description: task.description,
           estimatedMinutes: task.plannedMinutes,
+          startMinuteOfDay: task.startMinuteOfDay ?? null,
+          endMinuteOfDay: task.endMinuteOfDay ?? null,
           plannedTestCount: task.plannedTestCount,
           scheduledFor: dateOnly(task.scheduledFor),
           skipReason: null,
@@ -289,19 +317,55 @@ export const createCounselorTaskServices = (
     actor: CounselorTaskActor,
     studentProfileId: string,
     taskId: string,
-    input: { scheduledFor: string },
+    input: {
+      scheduledFor?: string
+      startMinuteOfDay?: number | null
+      endMinuteOfDay?: number | null
+    },
   ): Promise<CounselorTaskView> {
     ensureCounselor(actor)
-    if (!validDate(input.scheduledFor)) {
+    if (input.scheduledFor !== undefined && !validDate(input.scheduledFor)) {
       throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
     }
+    requireValidSchedule(input)
     const result = await store.rescheduleAssignedStudentTask(
       actor.id,
       studentProfileId,
       taskId,
-      dateOnly(input.scheduledFor),
+      {
+        ...(input.scheduledFor === undefined ? {} : { scheduledFor: dateOnly(input.scheduledFor) }),
+        ...(input.startMinuteOfDay === undefined ? {} : { startMinuteOfDay: input.startMinuteOfDay }),
+        ...(input.endMinuteOfDay === undefined ? {} : { endMinuteOfDay: input.endMinuteOfDay }),
+      },
     )
     if (!result.ok) return throwRescheduleFailure(result)
+    return toTaskView(result.value)
+  },
+  async update(
+    actor: CounselorTaskActor,
+    studentProfileId: string,
+    taskId: string,
+    input: UpdateCounselorTaskInput,
+  ): Promise<CounselorTaskView> {
+    ensureCounselor(actor)
+    if (input.scheduledFor !== undefined && !validDate(input.scheduledFor)) {
+      throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+    }
+    requireValidSchedule(input)
+    const result = await store.rescheduleAssignedStudentTask(
+      actor.id,
+      studentProfileId,
+      taskId,
+      {
+        ...(input.title === undefined ? {} : { title: input.title.trim() }),
+        ...(input.description === undefined ? {} : { description: input.description }),
+        ...(input.estimatedMinutes === undefined ? {} : { estimatedMinutes: input.estimatedMinutes }),
+        ...(input.scheduledFor === undefined ? {} : { scheduledFor: dateOnly(input.scheduledFor) }),
+        ...(input.startMinuteOfDay === undefined ? {} : { startMinuteOfDay: input.startMinuteOfDay }),
+        ...(input.endMinuteOfDay === undefined ? {} : { endMinuteOfDay: input.endMinuteOfDay }),
+      },
+    )
+    if (!result.ok) return throwRescheduleFailure(result, 'UPDATE')
     return toTaskView(result.value)
   },
   async replaceCurriculumTargets(

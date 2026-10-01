@@ -231,6 +231,8 @@ model DailyTask {
   title            String
   description      String?
   scheduledFor     DateTime             @db.Date
+  startMinuteOfDay Int?                 @db.SmallInt
+  endMinuteOfDay   Int?                 @db.SmallInt
   estimatedMinutes Int?
   plannedTestCount Int                  @default(0)
   status           DailyTaskStatus      @default(PENDING)

@@ -55,6 +55,8 @@ export type DailyTaskRecord = {
   title: string
   description: string | null
   scheduledFor: Date
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
   estimatedMinutes: number | null
   plannedTestCount: number
   status: DailyTaskStatus
@@ -67,8 +69,14 @@ export type DailyTaskRecord = {
   curriculumTargets?: CurriculumTargetRecord[]
 }
 
-export type DailyTaskView = Omit<DailyTaskRecord, 'createdByUserId' | 'curriculumTargets'> & {
+export type DailyTaskView = Omit<
+  DailyTaskRecord,
+  'createdByUserId' | 'curriculumTargets' | 'startMinuteOfDay' | 'endMinuteOfDay'
+> & {
   partialAt: Date | null
+  startMinuteOfDay: number | null
+  endMinuteOfDay: number | null
+  miniBoxSpan: number | null
   curriculum: TaskCurriculumCoverage
 }
 
@@ -79,10 +87,24 @@ export type StudentTaskCreateInput = {
   title: string
   description?: string | null
   scheduledFor: string
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
   estimatedMinutes: number | null
   status: DailyTaskStatus
   skipReason?: DailyTaskSkipReason | null
   curriculumTargets?: CurriculumTargetInput[]
+}
+
+export type RescheduleTaskInput = {
+  scheduledFor?: string
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
+}
+
+export type TaskSchedulePatch = {
+  scheduledFor?: Date
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
 }
 
 export type RescheduleStudentTaskResult =

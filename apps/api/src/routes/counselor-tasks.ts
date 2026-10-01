@@ -14,6 +14,7 @@ import {
   listCounselorTaskResourcesSchema,
   listCounselorTasksSchema,
   rescheduleCounselorTaskSchema,
+  updateCounselorTaskSchema,
 } from '../schemas/counselor-tasks.js'
 import { replaceCurriculumTargetsSchema } from '../schemas/task-curriculum.js'
 
@@ -123,6 +124,26 @@ export const registerCounselorTaskRoutes = (
           await options.counselorTasks.createBatch(request.user!, studentProfileId, input),
           request.context.requestId,
         ),
+      )
+    },
+  )
+
+  app.patch(
+    '/counselor/students/:studentProfileId/tasks/:taskId',
+    counselorOnly,
+    async (request) => {
+      const { studentProfileId, taskId } = parseInput(
+        counselorStudentTaskScheduleParamSchema.safeParse(request.params),
+      )
+      const input = parseInput(updateCounselorTaskSchema.safeParse(request.body))
+      return successResponse(
+        await options.counselorTasks.update(
+          request.user!,
+          studentProfileId,
+          taskId,
+          input,
+        ),
+        request.context.requestId,
       )
     },
   )

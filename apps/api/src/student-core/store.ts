@@ -8,6 +8,7 @@ import type {
   StudentProfileRef,
   TopicRecord,
   RescheduleStudentTaskResult,
+  TaskSchedulePatch,
   UpdateTerminalStudentTaskResult,
 } from './types.js'
 import type {
@@ -37,5 +38,5 @@ export interface StudentCoreStore {
   updateTerminalTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'partialAt' | 'skipReason' | 'skippedAt'>>): Promise<UpdateTerminalStudentTaskResult>
   replacePersonalTaskCurriculumTargets?(profileId: string, id: string, targets: ResolvedCurriculumTarget[]): Promise<ReplaceCurriculumTargetsResult>
   toggleTaskCurriculumItem?(profileId: string, taskId: string, itemId: string, completedAt: Date | null): Promise<ToggleCurriculumItemResult>
-  reschedulePersonalTask(profileId: string, id: string, scheduledFor: Date): Promise<RescheduleStudentTaskResult>
+  reschedulePersonalTask(profileId: string, id: string, schedule: TaskSchedulePatch): Promise<RescheduleStudentTaskResult>
 }

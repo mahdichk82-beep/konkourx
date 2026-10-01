@@ -107,6 +107,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       partialAt: true,
       createdAt: true,
       description: true,
+      endMinuteOfDay: true,
       estimatedMinutes: true,
       id: true,
       plannedTestCount: true,
@@ -119,6 +120,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       skipReason: true,
       skippedAt: true,
       source: true,
+      startMinuteOfDay: true,
       status: true,
       studySessions: {
         select: { cancelledAt: true, endedAt: true, startedAt: true },
@@ -231,6 +233,8 @@ test('Prisma counselor task creation validates assignment and relations atomical
       title: 'Review genetics',
       description: null,
       scheduledFor: '2026-09-12',
+      startMinuteOfDay: 945,
+      endMinuteOfDay: 1020,
       estimatedMinutes: 45,
       subjectId: ids.subject,
       topicId: ids.topic,
@@ -260,9 +264,11 @@ test('Prisma counselor task creation validates assignment and relations atomical
     partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
+    endMinuteOfDay: 1020,
     estimatedMinutes: 45,
     plannedTestCount: 0,
     scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
+    startMinuteOfDay: 945,
     skipReason: null,
     skippedAt: null,
     source: 'COUNSELOR',
@@ -275,6 +281,7 @@ test('Prisma counselor task creation validates assignment and relations atomical
   })
   assert.equal(result.source, 'COUNSELOR')
   assert.equal(result.studentProfileId, ids.student)
+  assert.equal(result.miniBoxSpan, 5)
   assert.equal('createdByUserId' in result, false)
 })
 
@@ -386,9 +393,11 @@ test('Prisma counselor batch creation verifies profile, assignment, resources, a
     partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
+    endMinuteOfDay: null,
     estimatedMinutes: 90,
     plannedTestCount: 12,
     scheduledFor: new Date('2026-09-15T00:00:00.000Z'),
+    startMinuteOfDay: null,
     skipReason: null,
     skippedAt: null,
     source: 'COUNSELOR',
@@ -563,7 +572,7 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
     ids.counselor,
     ids.student,
     ids.task,
-    scheduledFor,
+    { scheduledFor, startMinuteOfDay: 945, endMinuteOfDay: 1020 },
   )
 
   assert.equal(result.ok, true)
@@ -591,12 +600,13 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
     },
   ])
   assert.deepEqual(taskUpdateQueries, [{
-    data: { scheduledFor },
+    data: { scheduledFor, startMinuteOfDay: 945, endMinuteOfDay: 1020 },
     where: {
       id: ids.task,
       source: 'COUNSELOR',
       studentProfileId: ids.student,
       assessmentAttempts: { none: { invalidatedAt: null } },
+      curriculumItems: { none: { completedAt: { not: null } } },
       studySessions: { none: { cancelledAt: null } },
     },
   }])

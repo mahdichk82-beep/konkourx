@@ -42,7 +42,7 @@ The Counselor UI may be denser and more operational. It prioritizes fast plannin
 - One educational task may contain multiple Curriculum selections and one execution checklist. The planning display must preserve task unity rather than presenting each selected item as an independent scheduled task.
 - `PARTIAL` is a closed outcome: completed and remaining Curriculum items stay visible, but the original task is not reopened and no make-up task is created automatically.
 
-The approved planning grid is 24 hourly boxes per day with four 15-minute mini-boxes inside each hour. Tasks may span box boundaries; for example, `15:45–17:00` occupies five mini-boxes. Mini-boxes are a visual planning representation, not persisted entities. No Student or Counselor UI for this grid is implemented by the current foundation milestone.
+The approved planning grid is 24 hourly boxes per day with four 15-minute mini-boxes inside each hour. Tasks may span box boundaries; for example, `15:45–17:00` occupies five mini-boxes. Mini-boxes are a visual planning representation, not persisted entities. The backend now persists an optional 15-minute-aligned same-day start/end window and derives the mini-box span, but no Student or Counselor grid UI is implemented by the current P0.5 milestone.
 
 ### Student Principle: Minimum Data Entry
 

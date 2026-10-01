@@ -3,6 +3,7 @@ import type { CurriculumReadStore } from '../curriculum/store.js'
 import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
 import type { CurriculumTargetInput } from '../task-curriculum/types.js'
 import { curriculumCoverage } from '../task-curriculum/view.js'
+import { deriveMiniBoxSpan, validateTaskScheduleWindow } from '../task-scheduling/schedule.js'
 import type { StudentCoreStore } from './store.js'
 import type {
   DailyTaskRecord,
@@ -17,6 +18,7 @@ import type {
   StudySubjectRecord,
   TopicRecord,
   StudentTaskCreateInput,
+  RescheduleTaskInput,
 } from './types.js'
 
 const requireProfile = async (store: StudentCoreStore, actor: DomainStudent) => {
@@ -37,6 +39,9 @@ const page = <T extends { id: string }>(items: T[], query: PageQuery = {}): Page
 const dateOnly = (value: string): Date => new Date(`${value}T00:00:00.000Z`)
 const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): DailyTaskView => ({
   ...task,
+  startMinuteOfDay: task.startMinuteOfDay ?? null,
+  endMinuteOfDay: task.endMinuteOfDay ?? null,
+  miniBoxSpan: deriveMiniBoxSpan(task),
   partialAt: task.partialAt ?? null,
   curriculum: curriculumCoverage(curriculumTargets),
 })
@@ -44,6 +49,14 @@ const validDate = (value: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
   const parsed = dateOnly(value)
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+}
+const requireValidSchedule = (input: {
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
+}): void => {
+  if (validateTaskScheduleWindow(input) !== null) {
+    throw new ApiError(400, 'TASK_SCHEDULE_INVALID', 'Task time range must be same-day and aligned to 15-minute boundaries')
+  }
 }
 const conflict = (error: unknown, code: string, message: string): never => {
   if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') throw new ApiError(409, code, message)
@@ -291,6 +304,7 @@ export const createStudentCoreServices = (
     async create(actor: DomainStudent, input: StudentTaskCreateInput) {
       const profile = await requireProfile(store, actor)
       if (!validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+      requireValidSchedule(input)
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
       if (input.subjectId) {
         const subject = await store.findSubjectById(profile.id, input.subjectId)
@@ -313,6 +327,8 @@ export const createStudentCoreServices = (
         description: input.description ?? null,
         plannedTestCount: 0,
         scheduledFor: dateOnly(input.scheduledFor),
+        startMinuteOfDay: input.startMinuteOfDay ?? null,
+        endMinuteOfDay: input.endMinuteOfDay ?? null,
         source: 'PERSONAL',
         skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null,
         skippedAt: input.status === 'SKIPPED' ? now() : null,
@@ -376,15 +392,20 @@ export const createStudentCoreServices = (
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)
     },
-    async reschedule(actor: DomainStudent, id: string, input: { scheduledFor: string }) {
+    async reschedule(actor: DomainStudent, id: string, input: RescheduleTaskInput) {
       const profile = await requireProfile(store, actor)
-      if (!validDate(input.scheduledFor)) {
+      if (input.scheduledFor !== undefined && !validDate(input.scheduledFor)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       }
+      requireValidSchedule(input)
       const result = await store.reschedulePersonalTask(
         profile.id,
         id,
-        dateOnly(input.scheduledFor),
+        {
+          ...(input.scheduledFor === undefined ? {} : { scheduledFor: dateOnly(input.scheduledFor) }),
+          ...(input.startMinuteOfDay === undefined ? {} : { startMinuteOfDay: input.startMinuteOfDay }),
+          ...(input.endMinuteOfDay === undefined ? {} : { endMinuteOfDay: input.endMinuteOfDay }),
+        },
       )
       if (!result.ok) {
         switch (result.reason) {

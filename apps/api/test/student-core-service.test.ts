@@ -113,7 +113,7 @@ const createStore = (): StudentCoreStore & {
       Object.assign(task, input, { updatedAt: timestamp })
       return { ok: true as const, value: task }
     },
-    async reschedulePersonalTask(profileId: string, id: string, scheduledFor: Date) {
+    async reschedulePersonalTask(profileId: string, id: string, schedule: Partial<DailyTaskRecord>) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
       if (task.source !== 'PERSONAL') {
@@ -122,7 +122,7 @@ const createStore = (): StudentCoreStore & {
       if (store.executedTaskIds.has(id)) {
         return { ok: false as const, reason: 'TASK_EXECUTED' as const }
       }
-      task.scheduledFor = scheduledFor
+      Object.assign(task, schedule)
       task.updatedAt = timestamp
       return { ok: true as const, value: task }
     },

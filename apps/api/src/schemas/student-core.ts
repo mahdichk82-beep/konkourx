@@ -1,5 +1,10 @@
 import { z } from 'zod'
 import { curriculumTargetsSchema } from './task-curriculum.js'
+import {
+  defaultTaskScheduleFields,
+  optionalTaskScheduleFields,
+  refineTaskSchedule,
+} from './task-scheduling.js'
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
@@ -56,11 +61,13 @@ export const createTaskSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: optionalText(2000),
   scheduledFor: dateOnly,
+  ...defaultTaskScheduleFields,
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
   status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional().default('PENDING'),
   skipReason: taskSkipReason.nullable().optional().default(null),
   curriculumTargets: curriculumTargetsSchema,
 }).strict().superRefine((value, context) => {
+  refineTaskSchedule(value, context)
   if (value.skipReason !== null && value.status !== 'SKIPPED') {
     context.addIssue({
       code: 'custom',
@@ -89,7 +96,12 @@ export const updateTaskSchema = z.object({
       })
     }
   })
-export const rescheduleTaskSchema = z.object({ scheduledFor: dateOnly }).strict()
+export const rescheduleTaskSchema = z.object({
+  scheduledFor: dateOnly.optional(),
+  ...optionalTaskScheduleFields,
+}).strict()
+  .refine((value) => Object.keys(value).length > 0, 'At least one scheduling field is required')
+  .superRefine(refineTaskSchedule)
 
 export const uuidParamSchema = z.object({ id: z.string().uuid() }).strict()
 export const subjectIdParamSchema = z.object({ subjectId: z.string().uuid() }).strict()

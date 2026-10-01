@@ -176,6 +176,7 @@ const createStore = (): CounselorTaskStore & {
       counselorUserId: string,
       studentProfileId: string,
       input: CreateCounselorTaskRecordInput,
+      curriculumTargets: ResolvedCurriculumTarget[] = [],
     ) {
       if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
@@ -210,6 +211,18 @@ const createStore = (): CounselorTaskStore & {
         ...input,
         createdAt: timestamp,
         updatedAt: timestamp,
+        curriculumTargets: curriculumTargets.map((target, targetIndex) => ({
+          ...target,
+          id: `72000000-0000-4000-8000-${String(targetIndex + 1).padStart(12, '0')}`,
+          createdAt: timestamp,
+          items: target.items.map((item, itemIndex) => ({
+            ...item,
+            id: `73000000-0000-4000-8000-${String(itemIndex + 1).padStart(12, '0')}`,
+            targetId: `72000000-0000-4000-8000-${String(targetIndex + 1).padStart(12, '0')}`,
+            completedAt: null,
+            createdAt: timestamp,
+          })),
+        })),
       }
       store.tasks.push(record)
       return { ok: true as const, value: record }
@@ -262,7 +275,7 @@ const createStore = (): CounselorTaskStore & {
       counselorUserId: string,
       studentProfileId: string,
       taskId: string,
-      scheduledFor: Date,
+      patch: Partial<DailyTaskRecord>,
     ) {
       if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
@@ -277,7 +290,7 @@ const createStore = (): CounselorTaskStore & {
       if ((store.sessionMinutesByTaskId.get(taskId) ?? []).length > 0) {
         return { ok: false as const, reason: 'TASK_EXECUTED' as const }
       }
-      task.scheduledFor = scheduledFor
+      Object.assign(task, patch)
       task.updatedAt = timestamp
       return { ok: true as const, value: task }
     },
@@ -374,6 +387,19 @@ const scheduleRequest = (
   method: 'PATCH',
   payload,
   url: `/api/v1/counselor/students/${studentProfileId}/tasks/${taskId}/schedule`,
+})
+
+const updateRequest = (
+  app: ReturnType<typeof createApp>['app'],
+  token: string,
+  studentProfileId: string,
+  taskId: string,
+  payload: Record<string, unknown>,
+) => app.inject({
+  headers: { authorization: `Bearer ${token}` },
+  method: 'PATCH',
+  payload,
+  url: `/api/v1/counselor/students/${studentProfileId}/tasks/${taskId}`,
 })
 
 const taskRecord = (
@@ -563,6 +589,53 @@ test('assigned counselor creates a pending counselor task with server-owned prov
   assert.equal(store.tasks[0]?.source, 'COUNSELOR')
   assert.equal(store.tasks[0]?.status, 'PENDING')
   assert.equal(store.tasks[0]?.completedAt, null)
+  await app.close()
+})
+
+test('assigned counselor creates a task with an exact 15-minute schedule', async () => {
+  const { app, store } = createApp()
+  const representation = canonicalCurriculumStore.listRepresentations({ limit: 1, offset: 0 }).items[0]!
+  const response = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'برنامه دقیق زیست',
+    scheduledFor: '2026-10-01',
+    startMinuteOfDay: 15 * 60 + 45,
+    endMinuteOfDay: 17 * 60,
+    curriculumTargets: [{
+      referenceKind: 'NODE',
+      curriculumRefId: representation.rootNodeIds[0],
+      selectionMode: 'EXACT',
+    }],
+  })
+
+  assert.equal(response.statusCode, 201)
+  assert.equal(response.json().data.startMinuteOfDay, 945)
+  assert.equal(response.json().data.endMinuteOfDay, 1020)
+  assert.equal(response.json().data.miniBoxSpan, 5)
+  assert.equal(response.json().data.curriculum.totalItemCount, 1)
+  assert.equal(store.tasks[0]?.startMinuteOfDay, 945)
+  assert.equal(store.tasks[0]?.endMinuteOfDay, 1020)
+  await app.close()
+})
+
+test('task creation rejects incomplete, unaligned, reversed, and cross-midnight schedules', async () => {
+  const { app, store } = createApp()
+  const invalidSchedules = [
+    { startMinuteOfDay: 600 },
+    { startMinuteOfDay: 601, endMinuteOfDay: 660 },
+    { startMinuteOfDay: 660, endMinuteOfDay: 600 },
+    { startMinuteOfDay: 23 * 60 + 45, endMinuteOfDay: 15 },
+  ]
+
+  for (const schedule of invalidSchedules) {
+    const response = await createRequest(app, 'counselor-a', ids.studentA, {
+      title: 'برنامه نامعتبر',
+      scheduledFor: '2026-10-01',
+      ...schedule,
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(store.tasks.length, 0)
   await app.close()
 })
 
@@ -757,6 +830,63 @@ test('assigned counselor reschedules a counselor task without changing ownership
     },
     original,
   )
+  await app.close()
+})
+
+test('assigned counselor updates task schedule and instructions without changing provenance', async () => {
+  const { app, store } = createApp()
+  const task = taskRecord('60000000-0000-4000-8000-000000000035', {
+    createdByUserId: ids.counselorA,
+    source: 'COUNSELOR',
+  })
+  store.tasks.push(task)
+
+  const response = await updateRequest(
+    app,
+    'counselor-a',
+    ids.studentA,
+    task.id,
+    {
+      title: 'برنامه ویرایش‌شده',
+      description: 'دستور جدید',
+      scheduledFor: '2026-10-02',
+      startMinuteOfDay: 480,
+      endMinuteOfDay: 555,
+    },
+  )
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().data.title, 'برنامه ویرایش‌شده')
+  assert.equal(response.json().data.description, 'دستور جدید')
+  assert.equal(response.json().data.startMinuteOfDay, 480)
+  assert.equal(response.json().data.endMinuteOfDay, 555)
+  assert.equal(response.json().data.miniBoxSpan, 5)
+  assert.equal(store.tasks[0]?.source, 'COUNSELOR')
+  assert.equal(store.tasks[0]?.createdByUserId, ids.counselorA)
+  await app.close()
+})
+
+test('counselor task update preserves assignment and ownership authorization', async () => {
+  const { app, store } = createApp()
+  const personal = taskRecord('60000000-0000-4000-8000-000000000036')
+  const foreign = taskRecord('60000000-0000-4000-8000-000000000037', {
+    createdByUserId: ids.counselorB,
+    source: 'COUNSELOR',
+    studentProfileId: ids.studentB,
+  })
+  store.tasks.push(personal, foreign)
+
+  const personalResponse = await updateRequest(
+    app, 'counselor-a', ids.studentA, personal.id, { title: 'غیرمجاز' },
+  )
+  assert.equal(personalResponse.statusCode, 403)
+  assert.equal(personalResponse.json().error.code, 'TASK_UPDATE_FORBIDDEN')
+
+  const foreignResponse = await updateRequest(
+    app, 'counselor-a', ids.studentB, foreign.id, { title: 'غیرمجاز' },
+  )
+  assert.equal(foreignResponse.statusCode, 404)
+  assert.equal(foreignResponse.json().error.code, 'STUDENT_NOT_FOUND')
   await app.close()
 })
 

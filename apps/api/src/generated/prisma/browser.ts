@@ -24,12 +24,12 @@ export * from './enums.ts';
 export type User = Prisma.UserModel
 /**
  * Model AuthSession
- * 
+ *
  */
 export type AuthSession = Prisma.AuthSessionModel
 /**
  * Model StudentProfile
- * 
+ *
  */
 export type StudentProfile = Prisma.StudentProfileModel
 /**

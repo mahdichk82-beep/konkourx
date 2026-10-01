@@ -3,6 +3,7 @@ import type {
   DailyTaskView,
 } from '../student-core/types.js'
 import type { CurriculumTargetInput, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
+import type { TaskSchedulePatch } from '../student-core/types.js'
 
 export type CounselorTaskActor = {
   id: string
@@ -45,6 +46,8 @@ export type CreateCounselorTaskInput = {
   title: string
   description?: string | null
   scheduledFor: string
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
   estimatedMinutes: number | null
   subjectId: string | null
   topicId: string | null
@@ -55,6 +58,8 @@ export type CreateCounselorTaskBatchItemInput = {
   title: string
   description: string | null
   scheduledFor: string
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
   plannedMinutes: number
   plannedTestCount: number
   subjectId: string | null
@@ -75,6 +80,21 @@ export type CreateCounselorTaskRecordInput = Omit<
 export type CounselorTaskCreatePlan = {
   task: CreateCounselorTaskRecordInput
   curriculumTargets: ResolvedCurriculumTarget[]
+}
+
+export type UpdateCounselorTaskInput = {
+  title?: string
+  description?: string | null
+  estimatedMinutes?: number | null
+  scheduledFor?: string
+  startMinuteOfDay?: number | null
+  endMinuteOfDay?: number | null
+}
+
+export type CounselorTaskPlanningPatch = TaskSchedulePatch & {
+  title?: string
+  description?: string | null
+  estimatedMinutes?: number | null
 }
 
 export type AssignedResourceResult<T> =
@@ -134,6 +154,8 @@ export type RescheduleCounselorTaskResult =
         | 'TASK_SOURCE_FORBIDDEN'
         | 'TASK_EXECUTED'
     }
+
+export type UpdateCounselorTaskResult = RescheduleCounselorTaskResult
 
 export type CounselorTaskView = DailyTaskView
 

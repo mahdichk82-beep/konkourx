@@ -159,7 +159,7 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
   const result = await store.reschedulePersonalTask(
     'student-profile-1',
     'task-1',
-    scheduledFor,
+    { scheduledFor, startMinuteOfDay: 480, endMinuteOfDay: 540 },
   )
 
   assert.equal(result.ok, true)
@@ -168,11 +168,12 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
     { include: curriculumInclude, where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
   ])
   assert.deepEqual(updateQueries, [{
-    data: { scheduledFor },
+    data: { scheduledFor, startMinuteOfDay: 480, endMinuteOfDay: 540 },
     where: {
       id: 'task-1',
       source: 'PERSONAL',
       studentProfileId: 'student-profile-1',
+      curriculumItems: { none: { completedAt: { not: null } } },
       assessmentAttempts: { none: { invalidatedAt: null } },
       studySessions: { none: { cancelledAt: null } },
     },

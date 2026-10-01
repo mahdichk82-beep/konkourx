@@ -122,13 +122,13 @@ test('item toggle is task-owner scoped and cannot update a foreign item', async 
   assert.equal(itemUpdateCalled, false)
 })
 
-test('planning migration is the sole new forward migration and only touches approved task structures', async () => {
+test('planning migrations only touch approved DailyTask planning structures', async () => {
   const repoUrl = new URL('../../../', import.meta.url)
   const migrationsUrl = new URL('database/prisma/migrations/', repoUrl)
   const names = (await readdir(migrationsUrl, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-  assert.equal(names.length, 20)
+  assert.equal(names.length, 21)
   const migrationName = '20260930020000_add_planning_curriculum_references'
   assert.ok(names.includes(migrationName))
   const sql = await readFile(new URL(`${migrationName}/migration.sql`, migrationsUrl), 'utf8')
@@ -138,4 +138,16 @@ test('planning migration is the sole new forward migration and only touches appr
   assert.match(sql, /daily_tasks_lifecycle_consistency_check/)
   assert.doesNotMatch(sql, /^(?:DROP|TRUNCATE|DELETE FROM|UPDATE |INSERT INTO)/gm)
   assert.doesNotMatch(sql, /ALTER TABLE "(?!daily_tasks|daily_task_curriculum_targets|daily_task_curriculum_items)/)
+
+  const scheduleMigrationName = '20261001010000_add_daily_task_schedule_window'
+  assert.ok(names.includes(scheduleMigrationName))
+  const scheduleSql = await readFile(
+    new URL(`${scheduleMigrationName}/migration.sql`, migrationsUrl),
+    'utf8',
+  )
+  assert.match(scheduleSql, /ADD COLUMN "startMinuteOfDay" SMALLINT/)
+  assert.match(scheduleSql, /ADD COLUMN "endMinuteOfDay" SMALLINT/)
+  assert.match(scheduleSql, /daily_tasks_schedule_window_check/)
+  assert.doesNotMatch(scheduleSql, /ALTER TABLE "(?!daily_tasks")/)
+  assert.doesNotMatch(scheduleSql, /(?:DROP|TRUNCATE|DELETE FROM|UPDATE |INSERT INTO)/)
 })

@@ -64,6 +64,26 @@ Student checklist execution uses `PATCH /api/v1/student/daily-tasks/:id/curricul
 
 A counselor may later create a separate compensatory task from a partial task's remaining items. Reporting may derive direct coverage, repeated study, last-study time, accumulated duration, and unfinished planned content. Task completion is not mastery. No compensatory workflow, aggregate report, mastery persistence, or UI is implemented here.
 
+## DailyTask planner scheduling
+
+### CURRENT IMPLEMENTED STATE
+
+`scheduledFor` remains the required calendar date (`YYYY-MM-DD`). An exact same-day planner position is represented by the optional paired fields `startMinuteOfDay` and `endMinuteOfDay`. Values are minutes after local midnight: start is from `0` through `1425`, end is from `15` through `1440`, both must be divisible by 15, and end must be greater than start. Consequently `945` to `1020` represents `15:45–17:00`.
+
+Task responses expose both nullable minute fields and derived `miniBoxSpan`. The example above returns `miniBoxSpan: 5`. Date-only legacy tasks return null for all three exact-time values; the API does not invent historical times.
+
+Student personal-task creation, counselor single/batch creation, and both existing schedule mutations accept the optional paired time fields. The date-only schedule body remains compatible. Passing only one time, an unaligned time, an end not after its start, or a cross-midnight range is rejected. `24:00` is permitted only as the same-day end boundary.
+
+Counselors may update the title, nullable description, nullable estimated minutes, date, and exact time of an assigned counselor-created task through:
+
+```text
+PATCH /api/v1/counselor/students/:studentProfileId/tasks/:taskId
+```
+
+The existing focused `/schedule` route remains available. Both mutations preserve server-owned ownership and provenance and reject personal, foreign, or already-executed tasks. Curriculum targets continue to use their separate mutation and retain their existing execution/terminal immutability rules.
+
+The 24 hourly boxes and 96 fifteen-minute mini-boxes remain a UI/time-grid model. No MiniBox persistence exists. This scheduling contract unblocks, but does not implement, the Counselor planning interface.
+
 ## Counselor batch task creation
 
 `POST /api/v1/counselor/students/:studentProfileId/tasks/batch`
@@ -80,6 +100,8 @@ Request body:
       "subjectId": "40000000-0000-4000-8000-000000000001",
       "topicId": "50000000-0000-4000-8000-000000000001",
       "scheduledFor": "2026-09-15",
+      "startMinuteOfDay": 945,
+      "endMinuteOfDay": 1020,
       "plannedMinutes": 90,
       "plannedTestCount": 0,
       "description": ""
@@ -89,6 +111,7 @@ Request body:
 ```
 
 - `title` and a real `YYYY-MM-DD` `scheduledFor` date are required.
+- `startMinuteOfDay` and `endMinuteOfDay` are optional as a pair and follow the same 15-minute schedule rules described above.
 - `plannedMinutes` is a non-negative integer up to 1440 and maps to the existing `DailyTask.estimatedMinutes` field. It defaults to `0` when omitted.
 - `plannedTestCount` is a non-negative integer persisted on `DailyTask` and defaults to `0`.
 - `subjectId`, `topicId`, and `description` are optional. A topic requires a subject and must be an active topic belonging to that active student-owned subject.

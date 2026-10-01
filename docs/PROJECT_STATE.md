@@ -12,7 +12,7 @@ Konkourix is a specialized exam-preparation ecosystem with independent public en
 
 ## Current Phase
 
-**PLANNING CURRICULUM REFERENCE FOUNDATION** is the current implemented milestone in the working tree. It connects existing DailyTask planning and student execution to the deterministic, file-backed, read-only Canonical Curriculum without adding Curriculum persistence or changing either frontend.
+**P0.5 — SCHEDULING CONTRACT UNBLOCK FOR COUNSELOR PLANNING** is the current implemented milestone in the working tree. It adds the minimal exact-time persistence and API contract required by the approved Counselor 24×4 planning experience without implementing that UI.
 
 Phase 2 Milestone 19 — AssessmentAttempt Foundation remains the clean runtime comparison baseline at commit `76bc4d77dd015ef458e898d974fa23537de85948`. Historically completed core milestones remain valid. Authentication, independent browser application shells, account settings, student planning and task lifecycle, student-owned subject/topic management, study execution and recovery, completed assessment-attempt recording, assigned-student counselor access, and counselor task creation are verified foundations; later capabilities are not implied complete.
 
@@ -37,7 +37,9 @@ Recovery is being performed through forward corrective commits. Applied migratio
 - A DailyTask may contain multiple `NODE` or `PLACEMENT` targets. `EXACT` selects the referenced item; `WHOLE` on a node expands only direct children (or the leaf itself). `WHOLE` on a placement and duplicate/overlapping item expansion are rejected.
 - Task execution items are student-toggleable while the task is pending. Responses expose completed, total, and remaining item counts. Counselor task reads expose this same coverage for actively assigned students.
 - `PARTIAL` is a server-timestamped terminal task outcome requiring at least one completed and one unfinished Curriculum item. It preserves unfinished coverage without reopening the task or automatically creating a compensatory task.
-- The local development database has all 20 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 retirement migration and the task-reference planning migration.
+- `DailyTask.scheduledFor` remains the calendar date. Nullable `startMinuteOfDay` and `endMinuteOfDay` provide an exact same-day planner window for new tasks; legacy date-only tasks remain valid without fabricated times. API responses derive `miniBoxSpan`, and database/API validation enforces paired, ordered, 15-minute-aligned values within `00:00–24:00`.
+- Counselor creation, batch creation, focused rescheduling, and the assigned-task planning update contract support exact time windows. Student personal-task creation and rescheduling remain backward compatible and may also carry the optional exact window.
+- The local development database has all 21 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 retirement migration, task-reference planning migration, and exact schedule-window migration.
 - The Prisma schema and generated client no longer expose historical Curriculum governance/import/review/mapping/capability models.
 - PostgreSQL contains no Canonical Curriculum persistence and no historical Curriculum governance tables, triggers, functions, or enum types.
 - Product loop: **Plan → Execute → Measure → Improve**.
@@ -54,6 +56,7 @@ Recovery is being performed through forward corrective commits. Applied migratio
 - Runtime Curriculum is a projection used for student/counselor planning, progress measurement, reporting, and future question linking; it is not educational authority.
 - A future Question Bank remains separate from Curriculum authority.
 - Product scope and experience direction are governed by [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md), [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md), [UX_PRINCIPLES.md](UX_PRINCIPLES.md), [BRAND_IDENTITY.md](BRAND_IDENTITY.md), and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+- P1 Counselor Planning Experience may now render and edit the approved 96-position daily grid using the exact-time task contract. P0.5 does not implement that frontend.
 
 ### EXPLORATORY / DEFERRED
 
