@@ -1,14 +1,25 @@
 # Konkourix Design System Direction
 
 **Status:** APPROVED DESIGN DIRECTION
-**Product Owner decision:** 2026-09-30
+**Product Owner decision:** 2026-10-01
 
-This document locks the approved design direction. It does not claim that the current applications already implement it and does not authorize UI work outside an approved milestone.
+This document is the visual/design-system source of truth. Product behavior and scope come from [PRODUCT_MAP.md](PRODUCT_MAP.md), sequencing comes from [ROADMAP.md](ROADMAP.md), and implemented reality comes from [PROJECT_STATE.md](PROJECT_STATE.md). Design guidance must not redefine those documents or authorize UI work outside an approved milestone.
+
+## Visual Source of Truth
+
+Only Product Owner-approved reference images for a specific surface are that surface's visual specification, not loose inspiration. Historical references must not be applied indiscriminately to every page. Scoped implementation should converge toward the applicable references' composition, information density, layout hierarchy, card system, navigation, top bars, chart presentation, X/wordmark presence, blue/violet/cyan accents, premium light mode, professional navy dark mode, and responsive product quality.
+
+Implementation must interpret the references responsively and accessibly rather than mechanically copying pixels. It must not replace the approved direction with generic developer-designed dashboards.
+
+The Public Web, Student, Counselor, future School, and future Admin surfaces belong to the same Konkourix brand family and token system. Their navigation, hierarchy, and density may differ by role and purpose.
+
+External educational products may be used for capability benchmarking, information-architecture study, and competitive research. They are not the Konkourix visual identity source.
 
 ## Foundation
 
 - Persian-first RTL.
 - In Persian layouts, the primary sidebar is on the right.
+- On mobile, primary navigation uses a hamburger and right-side drawer. A main bottom-navigation replacement is not approved.
 - Full light and dark theme support.
 - Modern educational SaaS: professional, optimistic, student-friendly, premium, and approachable.
 - Restrained glassmorphism; readability and operational clarity take priority.
@@ -89,11 +100,11 @@ Any unapproved Student-facing capability, workflow, or major visual or interacti
 
 ### CURRENT IMPLEMENTED STATE
 
-Light/dark and RTL foundations exist, but conformance to these tokens and role-specific rules has not been audited or implemented by this documentation milestone.
+Light/dark and RTL foundations exist. The current working tree contains ongoing Student/Counselor shell convergence, but full conformance to the approved references, tokens, role-specific rules, and responsive quality has not been established by this documentation milestone.
 
 ### APPROVED FUTURE STATE
 
-The rules and tokens in this document are approved for future scoped UI milestones.
+The reference-image authority, rules, tokens, surface-family relationship, and mobile navigation direction in this document are approved for future scoped UI milestones.
 
 ### EXPLORATORY / DEFERRED
 

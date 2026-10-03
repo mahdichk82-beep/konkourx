@@ -26,9 +26,29 @@ These rules apply to every human or automated implementation agent working in th
 
 Documentation must not present an approved future design as implemented or an exploratory direction as approved.
 
+## Canonical Document Precedence
+
+10. When repository documents conflict, use this order:
+
+    1. `docs/PRODUCT_MAP.md` defines intended product behavior and scope: **what KonkourX is meant to become**.
+    2. `docs/ROADMAP.md` defines approved implementation sequencing: **in what order KonkourX should be built**.
+    3. `docs/DESIGN_SYSTEM.md` defines approved visual and design-system rules.
+    4. `docs/PROJECT_STATE.md` defines what is actually implemented in the repository today.
+    5. Technical, API, security, architecture, and Curriculum-specific documents define detailed truth only inside their domains and may not redefine product behavior or roadmap order.
+
+`cori.docx` and `docs/CURRICULUM_SOURCE_OF_TRUTH.md` retain exclusive authority over Curriculum educational content. Historical and supporting product documents do not override the canonical documents above.
+
+## Product Vision Anti-Drift
+
+11. No milestone may redefine Konkourix as only the feature or surface currently implemented. The current implementation scope and the complete approved future product vision must always be documented separately.
+12. A capability being deferred does not remove it from the approved future product vision.
+13. Approved future product vision is not implementation authorization. Every implementation still requires an explicitly approved milestone and any applicable Student UX Decision Gate.
+14. Roadmap position, architecture compatibility, historical code, reference material, or provider research does not authorize implementation or resolve an open Product Owner decision.
+15. Do not silently change behavior defined by `docs/PRODUCT_MAP.md` during implementation. New user-facing behavior not already defined there must return to the Product Owner as a Decision Gate before implementation.
+
 ## Milestone Closeout
 
-10. Every milestone report must end with all of the following, including `NONE` where applicable:
+16. Every milestone report must end with all of the following, including `NONE` where applicable:
 
     - changed files;
     - database and migrations;
