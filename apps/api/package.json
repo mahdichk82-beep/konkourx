@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "curriculum:build-artifact": "tsx src/scripts/build-curriculum-artifact.ts",
+    "curriculum:bootstrap-identities": "tsx src/scripts/bootstrap-curriculum-identities.ts",
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "seed": "tsx src/scripts/seed-domain.ts",

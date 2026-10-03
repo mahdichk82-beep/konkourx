@@ -11,6 +11,16 @@ const leaf = canonicalCurriculumArtifact.nodes.find((node) => node.childrenCount
 if (!leaf) throw new Error('Canonical Curriculum test fixture requires a leaf')
 const placement = canonicalCurriculumArtifact.subjectPlacements[0]
 if (!placement) throw new Error('Canonical Curriculum test fixture requires a placement')
+const humanitiesArabic = canonicalCurriculumStore
+  .listTrackCatalog('HUMANITIES')
+  .find(({ title }) => title === 'عربی انسانی')
+if (!humanitiesArabic) throw new Error('Canonical Curriculum test fixture requires Humanities Arabic')
+const navigationGroup = canonicalCurriculumStore
+  .listCatalogRoots('HUMANITIES', humanitiesArabic.id)
+  .find((item) => item.itemKind === 'GROUP')
+if (!navigationGroup || navigationGroup.itemKind !== 'GROUP') {
+  throw new Error('Canonical Curriculum test fixture requires a navigation group')
+}
 
 test('task Curriculum resolver supports multiple targets and exact source snapshots', () => {
   const targets = resolveCurriculumTargets(canonicalCurriculumStore, [
@@ -53,6 +63,12 @@ test('placement WHOLE, invalid references, duplicates, and overlapping expansion
   assert.throws(
     () => resolveCurriculumTargets(canonicalCurriculumStore, [
       { referenceKind: 'NODE', curriculumRefId: 'unknown', selectionMode: 'EXACT' },
+    ]),
+    (error: unknown) => error instanceof ApiError && error.code === 'CURRICULUM_NODE_NOT_FOUND',
+  )
+  assert.throws(
+    () => resolveCurriculumTargets(canonicalCurriculumStore, [
+      { referenceKind: 'NODE', curriculumRefId: navigationGroup.id, selectionMode: 'EXACT' },
     ]),
     (error: unknown) => error instanceof ApiError && error.code === 'CURRICULUM_NODE_NOT_FOUND',
   )

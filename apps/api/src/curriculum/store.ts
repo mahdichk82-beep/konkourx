@@ -1,8 +1,13 @@
 import { createHash } from 'node:crypto'
 import { ApiError } from '../errors/api-error.js'
 import {
+  createCurriculumCatalogReadStore,
+  type CurriculumCatalogReadStore,
+} from './catalog-store.js'
+import {
   CURRICULUM_FORMAT_VERSION,
   type CurriculumArtifact,
+  type CurriculumCatalogArtifact,
   type CurriculumGradePlacement,
   type CurriculumPage,
   type CurriculumRepresentation,
@@ -27,7 +32,7 @@ export type CurriculumSearchQuery = CurriculumPageQuery & {
   q: string
 }
 
-export type CurriculumReadStore = {
+export type CurriculumReadStore = CurriculumCatalogReadStore & {
   artifactIdentity(): CurriculumArtifact['source'] & CurriculumArtifact['counts']
   listScopes(): readonly CurriculumScope[]
   listGradePlacements(): readonly CurriculumGradePlacement[]
@@ -88,6 +93,7 @@ const assertArtifact = (artifact: CurriculumArtifact): void => {
 }
 export const createCurriculumReadStore = (
   input: CurriculumArtifact,
+  catalogInput: CurriculumCatalogArtifact,
 ): CurriculumReadStore => {
   assertArtifact(input)
   const artifact = deepFreeze(input)
@@ -118,6 +124,7 @@ export const createCurriculumReadStore = (
   }
 
   return {
+    ...createCurriculumCatalogReadStore(artifact, catalogInput),
     artifactIdentity: () => ({ ...artifact.source, ...artifact.counts }),
     listScopes: () => artifact.scopes,
     listGradePlacements: () => artifact.gradePlacements,

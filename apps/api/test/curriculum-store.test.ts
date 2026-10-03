@@ -1,13 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { canonicalCurriculumArtifact } from '../src/curriculum/artifact.js'
+import {
+  canonicalCurriculumArtifact,
+  canonicalCurriculumCatalogArtifact,
+} from '../src/curriculum/artifact.js'
 import {
   createCurriculumReadStore,
   normalizeCurriculumSearch,
 } from '../src/curriculum/store.js'
 
 test('read store exposes immutable placements and representations in source order', () => {
-  const store = createCurriculumReadStore(structuredClone(canonicalCurriculumArtifact))
+  const store = createCurriculumReadStore(
+    structuredClone(canonicalCurriculumArtifact),
+    structuredClone(canonicalCurriculumCatalogArtifact),
+  )
   const scopes = store.listScopes()
   const gradePlacements = store.listGradePlacements()
 
@@ -34,7 +40,10 @@ test('read store exposes immutable placements and representations in source orde
 })
 
 test('read store resolves nodes, direct children, and unknown IDs', () => {
-  const store = createCurriculumReadStore(structuredClone(canonicalCurriculumArtifact))
+  const store = createCurriculumReadStore(
+    structuredClone(canonicalCurriculumArtifact),
+    structuredClone(canonicalCurriculumCatalogArtifact),
+  )
   const parent = canonicalCurriculumArtifact.nodes.find((node) => node.childrenCount > 0)!
   const children = store.listChildren(parent.id, { limit: 100, offset: 0 })
 
@@ -52,7 +61,10 @@ test('read store resolves nodes, direct children, and unknown IDs', () => {
 })
 
 test('search is normalized, bounded by the caller, raw-label preserving, and deterministic', () => {
-  const store = createCurriculumReadStore(structuredClone(canonicalCurriculumArtifact))
+  const store = createCurriculumReadStore(
+    structuredClone(canonicalCurriculumArtifact),
+    structuredClone(canonicalCurriculumCatalogArtifact),
+  )
   assert.equal(normalizeCurriculumSearch('  كيان  '), 'کیان')
 
   const first = store.search({ q: 'فیزیک', limit: 7, offset: 0 })

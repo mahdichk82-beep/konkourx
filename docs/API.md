@@ -11,6 +11,15 @@ This file documents the currently implemented HTTP contract, including student-o
 The following authenticated routes are readable by `STUDENT`, `COUNSELOR`, and `ADMIN`:
 
 ```text
+GET /api/v1/curriculum/tracks
+GET /api/v1/curriculum/tracks/:track/catalog
+GET /api/v1/curriculum/tracks/:track/catalog/:entryId
+GET /api/v1/curriculum/tracks/:track/catalog/:entryId/roots
+GET /api/v1/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId
+GET /api/v1/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId/children
+GET /api/v1/curriculum/tracks/:track/search?q=...
+
+# Compatibility representation APIs
 GET /api/v1/curriculum/scopes
 GET /api/v1/curriculum/placements
 GET /api/v1/curriculum/representations
@@ -19,11 +28,19 @@ GET /api/v1/curriculum/nodes/:id/children
 GET /api/v1/curriculum/search?q=...
 ```
 
-The runtime loads the checked-in deterministic artifact generated from `docs/curriculum/CANONICAL_CURRICULUM.md`. It exposes four source scopes, twelve scope/grade placements, all 74 subject placements, and 67 independent detailed source representations. Detailed nodes retain exact raw labels, source locators and order, source-visible depth, nullable source marker metadata, and direct-child counts. Representation metadata does not assert that a detailed tree belongs to a high-level placement unless the source states that relationship unambiguously.
+The primary navigation contract is `TRACK -> SUBJECT / SUBJECT VIEW -> ARBITRARY CANONICAL TREE`. The three stable track values are `EXPERIMENTAL`, `MATHEMATICS`, and `HUMANITIES`. A catalog entry is a navigation identity, not a task-target kind. Book-based and thematic entries are siblings. Shared entries retain one catalog ID and the same canonical representation/node IDs in every explicitly permitted track.
+
+The `:track` path value is filtering context only. It is not user-to-track authorization, and the same authenticated Student, Counselor, or Admin may currently request any of the three catalogs. No profile lookup or track permission is performed by these routes.
+
+Catalog lists contain resolved entries only. Roots are canonical nodes or non-selectable navigation groups. Groups contain existing canonical node IDs, cannot be submitted as task targets, and do not create synthetic educational nodes. Entry-scoped node and child responses include the requested track, entry, ambiguity codes, and a breadcrumb containing track, entry, optional navigation group, and canonical node ancestors. Track search is bounded to nodes mounted by resolved entries in that track; it never falls back to the global representation inventory.
+
+Humanities Arabic is a distinct Humanities-only catalog entry whose `دهم`, `یازدهم`, and `دوازدهم` groups mount existing Arabic lesson nodes. Biology is a resolved Experimental entry; `BIOLOGY_SEQUENCE_GRADE_ASSIGNMENT_UNRESOLVED` records only the unresolved internal sequence-to-grade mapping. Chemistry is shared between Experimental and Mathematics only while its explicit source statement and paired source-tree structures agree. A structural mismatch quarantines Chemistry as `CHEMISTRY_EQUIVALENCE_MISMATCH` without aborting unrelated catalogs.
+
+The runtime loads the checked-in deterministic base artifact and additive catalog overlay generated from `docs/curriculum/CANONICAL_CURRICULUM.md` plus the explicit catalog manifest. A generated identity registry preserves all 5,641 pre-catalog runtime IDs and never reassigns tombstoned IDs. The base exposes four source scopes, twelve scope/grade placements, all 74 subject placements, 67 independent detailed source representations, and 5,484 detailed nodes. Detailed nodes retain exact raw labels, source locators and order, source-visible depth, nullable source marker metadata, and direct-child counts. Compatibility representation metadata still does not assert a placement relationship unless explicitly mapped by the catalog manifest.
 
 Placement and representation lists use `limit` and `offset`. Node children and search use the same bounded pagination. Limits are 1 through 100, offsets are 0 through 10,000, and search text is required with a maximum length of 100 characters. Search normalization never replaces the returned raw label, and results remain in deterministic source order. Unknown well-formed node IDs return `CURRICULUM_NODE_NOT_FOUND`; malformed IDs and invalid bounds return `VALIDATION_ERROR`.
 
-There is no Curriculum write endpoint, admin Curriculum endpoint, authoring operation, import operation, publication/version workflow, or separate Curriculum permission system.
+There is no Curriculum write endpoint, admin Curriculum endpoint, authoring operation, import operation, publication/version workflow, separate Curriculum permission system, database migration, or frontend change in this milestone.
 
 ### CURRENT DATABASE BOUNDARY
 
@@ -31,13 +48,17 @@ Historical Prisma Curriculum governance models and PostgreSQL objects were retir
 
 ### APPROVED FUTURE STATE
 
-Additional product records and a future Question Bank may link to existing Curriculum nodes in separately approved milestones. Such links remain separate from Curriculum authority.
+The remaining authoritative track-enforcement gate requires `StudentProfile.track`. Student access will resolve the track from the authenticated Student's profile. Counselor access will resolve it from the selected authorized and assigned Student's profile. Until that separately approved gate is implemented, request-supplied track remains temporary filtering context only.
+
+A future Question Bank contract may link `Question` and `CurriculumNode` many-to-many. Those links are human-tagged, may span book-based views, thematic views, and multiple grades, and perform no automatic semantic mapping. This is compatibility direction only and is not implemented by this milestone.
 
 ## DailyTask Curriculum planning and execution
 
 ### CURRENT IMPLEMENTED STATE
 
 Student personal-task creation, counselor single-task creation, and counselor batch-task creation accept an optional `curriculumTargets` array. Each target has `referenceKind` (`NODE` or `PLACEMENT`), `curriculumRefId`, and `selectionMode` (`EXACT` or `WHOLE`). References are checked against the file-backed Canonical Curriculum before persistence.
+
+`CATALOG_ENTRY` and catalog navigation groups are not task-target kinds. Canonical nodes mounted below an entry remain selectable through the existing `NODE` contract; group IDs submitted as nodes return `CURRICULUM_NODE_NOT_FOUND`.
 
 - `NODE + EXACT` creates one execution item for the selected node.
 - `NODE + WHOLE` creates one execution item per direct child; a leaf creates one item for itself. Descendants below the direct children are not recursively flattened.

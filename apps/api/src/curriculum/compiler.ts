@@ -1,8 +1,18 @@
 import { createHash } from 'node:crypto'
 import {
+  createCurriculumIdentityRegistry,
+  reconcileCurriculumIdentityRegistry,
+} from './identity-registry.js'
+import { representationDefinitions } from './representation-definitions.js'
+import {
   CURRICULUM_FORMAT_VERSION,
   type CurriculumArtifact,
+  type CurriculumBaseCompilation,
   type CurriculumGradePlacement,
+  type CurriculumIdentityCandidate,
+  type CurriculumIdentityKind,
+  type CurriculumIdentityRecord,
+  type CurriculumIdentityRegistry,
   type CurriculumRepresentation,
   type CurriculumScope,
   type CurriculumSourceHeadingMetadata,
@@ -28,26 +38,9 @@ const EXPECTED_DETAILED_NODE_COUNT = 5_484
 // One-based entry locators in the locked SOURCE_TREE block. These boundaries only
 // separate source-authored trees; they assign no subject, grade, or scope meaning.
 // The three unlabelled Biology sequences start at entries 1629, 1780, and 1940.
-const REPRESENTATION_START_ENTRIES = [
-  1, 204, 381, 487,
-  847, 946, 1043, 1141,
-  1211, 1296, 1369,
-  1434, 1496, 1545, 1594,
-  1629, 1780, 1940,
-  2098, 2170, 2241, 2387,
-  2468, 2629, 2813,
-  3025, 3168, 3302, 3420,
-  3743, 3744, 3910, 4093,
-  4335, 4401, 4479,
-  4543, 4618, 4811, 4950, 5032,
-  5104, 5176, 5247, 5393, 5394,
-  5395, 5465, 5539, 5612,
-  5693, 5728, 5760,
-  5780, 5817, 5854,
-  5879, 5962, 6055,
-  6114, 6161, 6222,
-  6259, 6317, 6392, 6465, 6525,
-] as const
+const REPRESENTATION_START_ENTRIES = representationDefinitions.map(
+  ({ startEntry }) => startEntry,
+)
 
 const sha256 = (value: string | Buffer): string =>
   createHash('sha256').update(value).digest('hex')
@@ -331,7 +324,7 @@ const assertProjection = (artifact: Omit<CurriculumArtifact, 'payloadSha256'>): 
   }
 }
 
-export const compileCanonicalCurriculum = (sourceMarkdown: string): CurriculumArtifact => {
+const compileLegacyCanonicalCurriculum = (sourceMarkdown: string): CurriculumArtifact => {
   const markdown = normalizeNewlines(sourceMarkdown)
   const canonicalMarkdownSha256 = sha256(markdown)
   if (canonicalMarkdownSha256 !== CANONICAL_MARKDOWN_SHA256) {
@@ -379,6 +372,267 @@ export const compileCanonicalCurriculum = (sourceMarkdown: string): CurriculumAr
   return {
     ...payload,
     payloadSha256: sha256(JSON.stringify(payload)),
+  }
+}
+
+type StructuralIdentityProjection = {
+  candidates: readonly CurriculumIdentityCandidate[]
+  scopeKeys: readonly string[]
+  gradeKeys: readonly string[]
+  placementKeys: readonly string[]
+  representationKeys: readonly string[]
+  nodeKeys: readonly string[]
+}
+
+const occurrenceSegment = (
+  rawLabel: string,
+  occurrences: Map<string, number>,
+): string => {
+  const occurrence = (occurrences.get(rawLabel) ?? 0) + 1
+  occurrences.set(rawLabel, occurrence)
+  return `${JSON.stringify(rawLabel)}#${occurrence}`
+}
+
+const identityFingerprint = (
+  kind: CurriculumIdentityKind,
+  logicalKey: string,
+  rawLabel: string,
+): string => sha256(JSON.stringify({ kind, logicalKey, rawLabel }))
+
+const identityCandidate = (
+  kind: CurriculumIdentityKind,
+  prefix: string,
+  logicalKey: string,
+  rawLabel: string,
+): CurriculumIdentityCandidate => ({
+  kind,
+  prefix,
+  logicalKey,
+  fingerprint: identityFingerprint(kind, logicalKey, rawLabel),
+})
+
+const structuralIdentityProjection = (
+  artifact: CurriculumArtifact,
+): StructuralIdentityProjection => {
+  const candidates: CurriculumIdentityCandidate[] = []
+  const scopeKeys: string[] = []
+  const gradeKeys: string[] = []
+  const placementKeys: string[] = []
+  const representationKeys: string[] = []
+  const nodeKeys: string[] = []
+  const scopeKeyById = new Map<string, string>()
+  const gradeKeyById = new Map<string, string>()
+  const representationKeyById = new Map<string, string>()
+  const nodeKeyById = new Map<string, string>()
+
+  const scopeOccurrences = new Map<string, number>()
+  for (const scope of artifact.scopes) {
+    const key = `scope/${occurrenceSegment(scope.rawLabel, scopeOccurrences)}`
+    scopeKeys.push(key)
+    scopeKeyById.set(scope.id, key)
+    candidates.push(identityCandidate('SCOPE', 'cs', key, scope.rawLabel))
+  }
+
+  const gradeOccurrencesByScope = new Map<string, Map<string, number>>()
+  for (const grade of artifact.gradePlacements) {
+    const scopeKey = scopeKeyById.get(grade.scopeId)
+    if (!scopeKey) throw new Error(`Missing structural scope for ${grade.sourceLocator}`)
+    const occurrences = gradeOccurrencesByScope.get(scopeKey) ?? new Map<string, number>()
+    gradeOccurrencesByScope.set(scopeKey, occurrences)
+    const key = `${scopeKey}/grade/${occurrenceSegment(grade.rawLabel, occurrences)}`
+    gradeKeys.push(key)
+    gradeKeyById.set(grade.id, key)
+    candidates.push(identityCandidate('GRADE', 'cg', key, grade.rawLabel))
+  }
+
+  const placementOccurrencesByGrade = new Map<string, Map<string, number>>()
+  for (const placement of artifact.subjectPlacements) {
+    const gradeKey = gradeKeyById.get(placement.gradePlacementId)
+    if (!gradeKey) throw new Error(`Missing structural grade for ${placement.sourceLocator}`)
+    const occurrences = placementOccurrencesByGrade.get(gradeKey) ?? new Map<string, number>()
+    placementOccurrencesByGrade.set(gradeKey, occurrences)
+    const key = `${gradeKey}/placement/${occurrenceSegment(placement.rawLabel, occurrences)}`
+    placementKeys.push(key)
+    candidates.push(identityCandidate('PLACEMENT', 'cp', key, placement.rawLabel))
+  }
+
+  for (const [index, representation] of artifact.representations.entries()) {
+    const definition = representationDefinitions[index]
+    if (!definition) throw new Error(`Missing representation definition at index ${index}`)
+    const key = `representation/${definition.key}`
+    representationKeys.push(key)
+    representationKeyById.set(representation.id, key)
+    candidates.push(
+      identityCandidate('REPRESENTATION', 'cr', key, representation.sourceHeading),
+    )
+  }
+
+  const siblingOccurrences = new Map<string, Map<string, number>>()
+  for (const node of artifact.nodes) {
+    const representationKey = representationKeyById.get(node.representationId)
+    if (!representationKey) {
+      throw new Error(`Missing structural representation for ${node.sourceLocator}`)
+    }
+    const parentKey = node.parentId ? nodeKeyById.get(node.parentId) : representationKey
+    if (!parentKey) throw new Error(`Missing structural parent for ${node.sourceLocator}`)
+    const occurrences = siblingOccurrences.get(parentKey) ?? new Map<string, number>()
+    siblingOccurrences.set(parentKey, occurrences)
+    const key = `${parentKey}/node/${occurrenceSegment(node.rawLabel, occurrences)}`
+    nodeKeys.push(key)
+    nodeKeyById.set(node.id, key)
+    candidates.push(identityCandidate('NODE', 'cn', key, node.rawLabel))
+  }
+
+  return {
+    candidates,
+    scopeKeys,
+    gradeKeys,
+    placementKeys,
+    representationKeys,
+    nodeKeys,
+  }
+}
+
+const baseEntityKinds = new Set<CurriculumIdentityKind>([
+  'SCOPE',
+  'GRADE',
+  'PLACEMENT',
+  'REPRESENTATION',
+  'NODE',
+])
+
+export const bootstrapCurriculumIdentityRegistry = (
+  sourceMarkdown: string,
+  legacyArtifact: CurriculumArtifact,
+): CurriculumIdentityRegistry => {
+  const compiledLegacyArtifact = compileLegacyCanonicalCurriculum(sourceMarkdown)
+  if (JSON.stringify(compiledLegacyArtifact) !== JSON.stringify(legacyArtifact)) {
+    throw new Error('Legacy Curriculum artifact does not match the protected source')
+  }
+
+  const projection = structuralIdentityProjection(compiledLegacyArtifact)
+  const legacyEntities = [
+    ...legacyArtifact.scopes,
+    ...legacyArtifact.gradePlacements,
+    ...legacyArtifact.subjectPlacements,
+    ...legacyArtifact.representations,
+    ...legacyArtifact.nodes,
+  ]
+  if (legacyEntities.length !== projection.candidates.length) {
+    throw new Error('Legacy Curriculum identity count mismatch')
+  }
+
+  const records: CurriculumIdentityRecord[] = projection.candidates.map(
+    (candidate, index) => ({
+      ...candidate,
+      id: legacyEntities[index]!.id,
+      generation: 0,
+      status: 'ACTIVE',
+    }),
+  )
+  return createCurriculumIdentityRegistry(records)
+}
+
+const requireIdentity = (ids: ReadonlyMap<string, string>, key: string): string => {
+  const id = ids.get(key)
+  if (!id) throw new Error(`Missing active Curriculum identity: ${key}`)
+  return id
+}
+
+export const compileCanonicalCurriculum = (
+  sourceMarkdown: string,
+  registry: CurriculumIdentityRegistry,
+): CurriculumBaseCompilation => {
+  const legacyArtifact = compileLegacyCanonicalCurriculum(sourceMarkdown)
+  const projection = structuralIdentityProjection(legacyArtifact)
+  const resolution = reconcileCurriculumIdentityRegistry(
+    registry,
+    projection.candidates,
+    baseEntityKinds,
+  )
+  const ids = resolution.idsByLogicalKey
+
+  const scopeIdMap = new Map(
+    legacyArtifact.scopes.map((scope, index) => [
+      scope.id,
+      requireIdentity(ids, projection.scopeKeys[index]!),
+    ]),
+  )
+  const gradeIdMap = new Map(
+    legacyArtifact.gradePlacements.map((grade, index) => [
+      grade.id,
+      requireIdentity(ids, projection.gradeKeys[index]!),
+    ]),
+  )
+  const placementIdMap = new Map(
+    legacyArtifact.subjectPlacements.map((placement, index) => [
+      placement.id,
+      requireIdentity(ids, projection.placementKeys[index]!),
+    ]),
+  )
+  const representationIdMap = new Map(
+    legacyArtifact.representations.map((representation, index) => [
+      representation.id,
+      requireIdentity(ids, projection.representationKeys[index]!),
+    ]),
+  )
+  const nodeIdMap = new Map(
+    legacyArtifact.nodes.map((node, index) => [
+      node.id,
+      requireIdentity(ids, projection.nodeKeys[index]!),
+    ]),
+  )
+
+  const payload: Omit<CurriculumArtifact, 'payloadSha256'> = {
+    ...legacyArtifact,
+    scopes: legacyArtifact.scopes.map((scope) => ({
+      ...scope,
+      id: scopeIdMap.get(scope.id)!,
+      gradePlacementIds: scope.gradePlacementIds.map((id) => gradeIdMap.get(id)!),
+    })),
+    gradePlacements: legacyArtifact.gradePlacements.map((grade) => ({
+      ...grade,
+      id: gradeIdMap.get(grade.id)!,
+      scopeId: scopeIdMap.get(grade.scopeId)!,
+      subjectPlacementIds: grade.subjectPlacementIds.map((id) => placementIdMap.get(id)!),
+    })),
+    subjectPlacements: legacyArtifact.subjectPlacements.map((placement) => ({
+      ...placement,
+      id: placementIdMap.get(placement.id)!,
+      scopeId: scopeIdMap.get(placement.scopeId)!,
+      gradePlacementId: gradeIdMap.get(placement.gradePlacementId)!,
+    })),
+    representations: legacyArtifact.representations.map((representation) => ({
+      ...representation,
+      id: representationIdMap.get(representation.id)!,
+      rootNodeIds: representation.rootNodeIds.map((id) => nodeIdMap.get(id)!),
+    })),
+    nodes: legacyArtifact.nodes.map((node) => ({
+      ...node,
+      id: nodeIdMap.get(node.id)!,
+      representationId: representationIdMap.get(node.representationId)!,
+      parentId: node.parentId ? nodeIdMap.get(node.parentId)! : null,
+    })),
+  }
+  delete (payload as Partial<CurriculumArtifact>).payloadSha256
+  assertProjection(payload)
+  const artifact: CurriculumArtifact = {
+    ...payload,
+    payloadSha256: sha256(JSON.stringify(payload)),
+  }
+
+  return {
+    artifact,
+    identityRegistry: resolution.registry,
+    representationIdsByKey: new Map(
+      representationDefinitions.map((definition, index) => [
+        definition.key,
+        requireIdentity(ids, projection.representationKeys[index]!),
+      ]),
+    ),
+    nodeIdsByKey: new Map(
+      projection.nodeKeys.map((key) => [key, requireIdentity(ids, key)]),
+    ),
   }
 }
 

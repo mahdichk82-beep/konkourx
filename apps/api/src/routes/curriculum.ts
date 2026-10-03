@@ -6,10 +6,14 @@ import type { CurriculumReadStore } from '../curriculum/store.js'
 import { ApiError } from '../errors/api-error.js'
 import { authenticateRequest } from '../plugins/authentication.js'
 import {
+  curriculumCatalogEntryParamsSchema,
+  curriculumCatalogNodeParamsSchema,
   curriculumNodeParamsSchema,
   curriculumPageQuerySchema,
   curriculumPlacementQuerySchema,
   curriculumSearchQuerySchema,
+  curriculumTrackParamsSchema,
+  curriculumTrackSearchQuerySchema,
 } from '../schemas/curriculum.js'
 
 type CurriculumRouteOptions = {
@@ -37,6 +41,80 @@ export const registerCurriculumRoutes = (
       requireRoles('STUDENT', 'COUNSELOR', 'ADMIN'),
     ],
   }
+
+  app.get('/curriculum/tracks', curriculumReader, async (request) =>
+    successResponse(options.curriculum.listTracks(), request.context.requestId),
+  )
+
+  app.get('/curriculum/tracks/:track/catalog', curriculumReader, async (request) => {
+    const { track } = parseInput(curriculumTrackParamsSchema.safeParse(request.params))
+    return successResponse(
+      options.curriculum.listTrackCatalog(track),
+      request.context.requestId,
+    )
+  })
+
+  app.get('/curriculum/tracks/:track/catalog/:entryId', curriculumReader, async (request) => {
+    const { track, entryId } = parseInput(
+      curriculumCatalogEntryParamsSchema.safeParse(request.params),
+    )
+    return successResponse(
+      options.curriculum.getTrackCatalogEntry(track, entryId),
+      request.context.requestId,
+    )
+  })
+
+  app.get('/curriculum/tracks/:track/catalog/:entryId/roots', curriculumReader, async (request) => {
+    const { track, entryId } = parseInput(
+      curriculumCatalogEntryParamsSchema.safeParse(request.params),
+    )
+    return successResponse(
+      options.curriculum.listCatalogRoots(track, entryId),
+      request.context.requestId,
+    )
+  })
+
+  app.get(
+    '/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId',
+    curriculumReader,
+    async (request) => {
+      const { track, entryId, nodeId } = parseInput(
+        curriculumCatalogNodeParamsSchema.safeParse(request.params),
+      )
+      return successResponse(
+        options.curriculum.getCatalogNode(track, entryId, nodeId),
+        request.context.requestId,
+      )
+    },
+  )
+
+  app.get(
+    '/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId/children',
+    curriculumReader,
+    async (request) => {
+      const { track, entryId, nodeId } = parseInput(
+        curriculumCatalogNodeParamsSchema.safeParse(request.params),
+      )
+      return successResponse(
+        options.curriculum.listCatalogChildren(
+          track,
+          entryId,
+          nodeId,
+          parseInput(curriculumPageQuerySchema.safeParse(request.query)),
+        ),
+        request.context.requestId,
+      )
+    },
+  )
+
+  app.get('/curriculum/tracks/:track/search', curriculumReader, async (request) => {
+    const { track } = parseInput(curriculumTrackParamsSchema.safeParse(request.params))
+    const query = parseInput(curriculumTrackSearchQuerySchema.safeParse(request.query))
+    return successResponse(
+      options.curriculum.searchTrack({ track, ...query }),
+      request.context.requestId,
+    )
+  })
 
   app.get('/curriculum/scopes', curriculumReader, async (request) =>
     successResponse(

@@ -23,3 +23,27 @@ export const curriculumSearchQuerySchema = z.object({
   ...pagination,
   q: z.string().trim().min(1).max(100),
 }).strict()
+
+const curriculumTrack = z.enum(['EXPERIMENTAL', 'MATHEMATICS', 'HUMANITIES'])
+const catalogEntryId = z.string().regex(/^ce_[a-f0-9]{32}$/)
+const canonicalNodeId = z.string().regex(/^cn_[a-f0-9]{32}$/)
+
+export const curriculumTrackParamsSchema = z.object({
+  track: curriculumTrack,
+}).strict()
+
+export const curriculumCatalogEntryParamsSchema = z.object({
+  track: curriculumTrack,
+  entryId: catalogEntryId,
+}).strict()
+
+export const curriculumCatalogNodeParamsSchema = z.object({
+  track: curriculumTrack,
+  entryId: catalogEntryId,
+  nodeId: canonicalNodeId,
+}).strict()
+
+export const curriculumTrackSearchQuerySchema = z.object({
+  ...pagination,
+  q: z.string().trim().min(1).max(100),
+}).strict()

@@ -1,0 +1,2563 @@
+{
+  "formatVersion": "konkourx-curriculum-catalog/v1",
+  "source": {
+    "basePayloadSha256": "681bf26a3f328d54b26885a8b3e0a099fc1f55ab0d708d92b371fc61b1e22ea6",
+    "manifestSha256": "e174bd6d9108e4f9f8f7f868150c093d267dbe51652a056971a54c8a64ab4ffc",
+    "identityRegistrySha256": "01e7c5ff0de9cc2ae94b902299a79bf939bc018bee6c57526fe3f1e663f654c4"
+  },
+  "counts": {
+    "trackCount": 3,
+    "resolvedEntryCount": 29,
+    "groupCount": 3,
+    "unresolvedInventoryCount": 3
+  },
+  "tracks": [
+    {
+      "id": "EXPERIMENTAL",
+      "title": "علوم تجربی",
+      "sourceOrder": 1,
+      "entryIds": [
+        "ce_55d06a5d7a2d09d942be0c6654dec89b",
+        "ce_6ba67d486dfe634fcdc154ec586f4385",
+        "ce_9be107e6137fcaa53300d12d0336c9c6",
+        "ce_08956e667e37839881414a75d0d3977d",
+        "ce_dd831c35c1fd7d844f7910c976b0e2ae",
+        "ce_1369e67f9bc62b02ba0cbe3d9f96094c",
+        "ce_6ce14432c667da63a06066faf3b91437",
+        "ce_0db7463aac655aefc771e6bbbdad080b",
+        "ce_046bcffd4d14e2b56bb650ffa803ffcd",
+        "ce_058110e421bae47261be8333e07fd23c",
+        "ce_d93ba65acf76b803b413e89ea05928bb",
+        "ce_38d319c9ef94e576f03953d2b6d7ec38"
+      ]
+    },
+    {
+      "id": "MATHEMATICS",
+      "title": "ریاضی و فیزیک",
+      "sourceOrder": 2,
+      "entryIds": [
+        "ce_55d06a5d7a2d09d942be0c6654dec89b",
+        "ce_6ba67d486dfe634fcdc154ec586f4385",
+        "ce_9be107e6137fcaa53300d12d0336c9c6",
+        "ce_08956e667e37839881414a75d0d3977d",
+        "ce_dd831c35c1fd7d844f7910c976b0e2ae",
+        "ce_1369e67f9bc62b02ba0cbe3d9f96094c",
+        "ce_6ce14432c667da63a06066faf3b91437",
+        "ce_bef74678c2f3028f89980d17f61b5735",
+        "ce_7d96969a4976bde7c8e1b4e423abbedf",
+        "ce_12b8c7299dce1519809bf09dce9d00f9",
+        "ce_d410481ee015f4ee93f94237dda3914a",
+        "ce_b3e953c175cd94a0baa2d985818f3d14",
+        "ce_af887764e8ad67bc5d87c9c9b14dbe64",
+        "ce_38d319c9ef94e576f03953d2b6d7ec38"
+      ]
+    },
+    {
+      "id": "HUMANITIES",
+      "title": "علوم انسانی",
+      "sourceOrder": 3,
+      "entryIds": [
+        "ce_55d06a5d7a2d09d942be0c6654dec89b",
+        "ce_6ba67d486dfe634fcdc154ec586f4385",
+        "ce_812893cdbdb0ff4073ef148b765f237c",
+        "ce_dd831c35c1fd7d844f7910c976b0e2ae",
+        "ce_1369e67f9bc62b02ba0cbe3d9f96094c",
+        "ce_6ce14432c667da63a06066faf3b91437",
+        "ce_4fa40fb35809d3b37a37db3033ee281e",
+        "ce_95ecdd53435aac7f5d9282547b4e348f",
+        "ce_636babaa44eb4f42bf40363f47cab95c",
+        "ce_d9c1f826c5d261e79fa4dbde5aaff4be",
+        "ce_dbbb6a6e78539f741cf03e54e470d5be",
+        "ce_7c09d8ebb83199f003a287bf47bd914b",
+        "ce_bc83e5fc5efd7b8a47ab1a11591dfb19",
+        "ce_90e88fb99e6dafed99cca293ba1693e9",
+        "ce_451695bf0d073ae2feac3caaf5c999fc",
+        "ce_3c8bda4487a68e8a3c6f3e75343c67ac"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "ce_55d06a5d7a2d09d942be0c6654dec89b",
+      "key": "persian",
+      "title": "فارسی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS",
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_409a17f00d80b35f0aa19e8c3e78b3d6",
+        "cr_61c4acfba6daf96e1222f435324bd248",
+        "cr_8d9886c831e752e9c1cb2960a0b0880d"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_97b6af7f59127eb66fe7d7b534c0654e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0089b247d08876861c6144e53e606031"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bd08cb19ead4a50837c91fad45eb95a7"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_404505baa82bc6d5a9c2d679ce367061"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0243e3cf936a5c29a0976a7bda486022"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9266cca25349838bc12f68959ac3dad5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e0b08e6684a0b08cb60052f6ff4c6d3c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cc16b07e7ab8bf5777dbf4326315514a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d51c9cdfdf8250036a25ae71c1579768"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7ed900830c42cf63c30f1358fa311e8e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_546a78df57dc8fbeba6612060b7c0c4f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d4ce9b4decd2cbf0aaeab58edf65890e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7c74734b715afaffe8642b55c6f62a08"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d21478f02f3bda7303a46ec88bb1bf7b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_caf34252dadc594895085230b7990d1f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1517c57e875c664b1ad37f518df59f0c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_eb331da7d4cfdcd5c861c723cacb3040"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_66aea10c7a69ddf134784a53ca57e8fe"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f933ec170b90080ed0a5f42da151168c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8508479e7212d1db6d335d3ccbc71e86"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_23c7663e4a85f7b6842b415341aa525a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a74d58faaba1b653ca3bd7a67296852f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3401c5411904405ca861e3afd024e8cd"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_4432fefb4f5b3319c33b8503426a0be7"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_47fadf6ed5cb33a60871d3b0ce6a5e07"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8fd25f3a676078d84cb62b4333b90d88"
+        }
+      ],
+      "nodeCount": 237,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "persian-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "persian-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "persian-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_6ba67d486dfe634fcdc154ec586f4385",
+      "key": "persian-thematic",
+      "title": "فارسی موضوعی",
+      "kind": "THEMATIC",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS",
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_bbca7866a6b77afc0e18f9accfab6b5f"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a34ebe707b9e4f5134c791073234a22e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a5fa457d29e0bf94d562f5731f1ee609"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_15af9d6ed2ed397a4ea4f04178c935df"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d56402b10ded4c7ef266dc4b60d52da3"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2013b3b37cac98f9a72556aac0b45e42"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_26879df4865c4c2d010d9ee1811f7d49"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_537ab13ecd0c3f18218e806cbd2395ba"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e855ad5c3d73c40f4c96cf20ec75c3b9"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_030acb09ebb93cfd49e63113a5da0431"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_09e87cb0b576a9ca133e8eb0fcb54e43"
+        }
+      ],
+      "nodeCount": 62,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "persian-thematic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_9be107e6137fcaa53300d12d0336c9c6",
+      "key": "arabic-general",
+      "title": "عربی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_ac217c49a83ab4b5ed1235085a890d73",
+        "cr_094d00faf7dd2cda7840c39cab2a953b",
+        "cr_266863c73454d7fbfba92a475ec3cd0d"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_68aa84a496a95888152d143bb1f0f5b1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5f7f5f61d1b3c2a3afcc8e689f098996"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ffe23a7f3d0d6a2e41accea1b123e070"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_336bac45a6ea26cc832783fb5cced9e5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_54f043e4c17d315faa9cc4752c1b0887"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5d0d560032012b6ada1d1566e48ad464"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5ce0002d87491a4916407413dba4963d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_87f4b4185f4e7fab92ce8b99466e86b0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a16a71c69a569887675956d66dddae29"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8fccdda3aa07eda2bc2d80e19b85a21a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_de5e5f0a6406e230a962b04df17cadaa"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8312b5a81ca834329f56e624d46f190d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ac3c56633ebf612ca2d327ffbee53a68"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fd1ee241cf98f9d45cc8d0bb27d27683"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3d1510ba4eaa17bfa391de957d3adbe0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5f270c25e2cb5d23b1999b214f86c21a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bbadd0d01156861f2e1deec27ccd24a8"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_91cbbc2cb9425e067fb4df9489699861"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_add9e220995ef73b188f8c01a5af7cd3"
+        }
+      ],
+      "nodeCount": 403,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_08956e667e37839881414a75d0d3977d",
+      "key": "arabic-thematic",
+      "title": "عربی موضوعی",
+      "kind": "THEMATIC",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_983145a24e432768d8a2cf8d84290414"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a8813442820bddd77cb7b2f0a5193d65"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6da9576bf8d0173c7528c1c190916e36"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_631ac581ed15ea7ba6f5fa33402f291b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_88cfe19848c35bbd460f87d398440bc2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bed38cf7d96ac6ae627d4c477591608f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_00af82239bb1b1028a65f0ad850d9209"
+        }
+      ],
+      "nodeCount": 318,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-thematic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_dd831c35c1fd7d844f7910c976b0e2ae",
+      "key": "religion",
+      "title": "دین و زندگی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS",
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_1bfd9ee8121832a37a46631d93ff9488",
+        "cr_4958ebbd7a3b698007ec0e1b4bb38456",
+        "cr_001071ca9567c4ea9bc80392b17f22c2"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e4ab25abeacd177f679e3acf5e8d4a14"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_721f263ce866ab3bd9d5d7071289fbf2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_653df7133374b1d62ece0d3548878de6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7056bde827b7e99dccd2e8435024cd75"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9cfdc4e22944f63680d019f0bb381d15"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_79eb8b00d13519dd18239892977a13cc"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_23e290877623fea0bd4736cf9dec21b3"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7981d5501edd733447de02b423e89983"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_aae34064934d76f35ca9374ee825a6a8"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9f91722952e264fe35b6539da533ba5b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ac00f6d735a7edf94fcafafaa12fbc33"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_31b66d27ae34986534dca80b1847591c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_50b7199a52de132f1f309b22eac5f564"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e197726f93d657820bc94557bfee1ca3"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fb39efb08da5baf9558a9f1961ff1bb2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_aac219429b77f1f4ced4bbd1ee36b538"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8a36af1c0d2cc1f94734078af272ab9b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9f53b0a0a75434b15e27066a8c6a36c5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1608975b42e4765931f04d26b34d5f80"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bfe77b1e074723f7fcd4642b132d4f14"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7b66b1dd91cf1fb1f3580eec0ba1fc3f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_4203efdcd5219ecdfc2a382b8e823c56"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b180683a663eb46a6ca8561a08a2f258"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_66cc9d08d1b00936ce24dad89ef23009"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_906be160695d540db9b4fdfb91e40d1d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b6380c8e981a566fbd78ab98a04ea211"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_57190b0fcacd67c2d7952b7fcbb51f02"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_113934d9e1feaaf489cbec2fc8085f1d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_efd4874efacdd070544dc882579e6cc6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b7a296aeaed70e8694fefd7174de7bdf"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_48e5fa0f32a2c064910b7f1fa02b68de"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d68f4484ae81257575b61bf72c924da6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5045cc719d7f0b0bb25dffeda9bca435"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_777430111e020cd74fc07f2c85a2b131"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6807b02a62a33c8e467a73589bf7f464"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_78e7a63cbe5fb39852845b5859e234a5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ae26664214824fc9aa494116f6662f41"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_94ae5700e28c9c561e175fad0ac6b647"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7d36819389f48671a3a7edaedfc777ca"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fbb3f2ffa6cb66f5c72b42eb38d28177"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_80540680289c4be9e3c729eedc902226"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0988feb23929d84bcd8e295506e12353"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_61bfe9fc486ca09d4c83e5d663cc6b43"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2aaf3cd3b901605180e72efcacd126c8"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1b6ed787f88871076df6927eee797d24"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6e05b04fef475e0268505bd4ab3a6f1c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ac59b1f169de59402a95f31a0413ec57"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6cfe46a503eb3cc694a69445c6e982fa"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cdbfdea2f4eb34a15d097be3e6db8248"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0bb4d2374e7f308b3b60265c5563ee90"
+        }
+      ],
+      "nodeCount": 182,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "religion-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "religion-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "religion-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_1369e67f9bc62b02ba0cbe3d9f96094c",
+      "key": "english",
+      "title": "زبان انگلیسی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS",
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_76542ad6e5e69efb4e2f51e762a2c6c5",
+        "cr_bedffc57c7103145a9285736499edab3",
+        "cr_972b4bfee4ed9d1bf87cf59d35044aac"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_34ad42c666e65f05bc3d19958c208c51"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8fb30ac2bcd50bfa99fa5f412498a3ae"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_44a3b366bb8bdd6c9e81241cbcc53514"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_af78ff5ab614bc9cc4b113ce720da48d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_19fdff5147aac2009fbd6834cf108516"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fd605131dd0012b0bd33d7bde8e46233"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1f672693e0ceed175b7b2e193e8609ed"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9d0a58e524d2462f3234cd109dbe3add"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_68ed6ac56d767cec2b682c3150af1fec"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_160a342e5dc0c6e55184bdacb62916be"
+        }
+      ],
+      "nodeCount": 117,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "english-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "english-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "english-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_6ce14432c667da63a06066faf3b91437",
+      "key": "english-thematic",
+      "title": "زبان انگلیسی موضوعی",
+      "kind": "THEMATIC",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS",
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_b761abf03b4a64308f34ddc1da3aafbd"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_198e8833732de2c59db6086397aebb59"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_495ddf740daca953a296c97dc2d33785"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_982b505c4d1dce9b8b4370cf1f6e0f06"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_040e8b3e86b985f3a41c781a9b14140a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_32db9656c98caf58ad716ed9441d4fb1"
+        }
+      ],
+      "nodeCount": 29,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "english-thematic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_0db7463aac655aefc771e6bbbdad080b",
+      "key": "experimental-mathematics",
+      "title": "ریاضی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL"
+      ],
+      "representationIds": [
+        "cr_3cb5cf023e8000bc5f7ca5f190e773b8",
+        "cr_b23843ba6064bf64d22381604b9d9634",
+        "cr_58995a3017abb45075bd9db5a4120b14"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5d1e0fa89eb4e3fd7534efe6bf27e1cb"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b81507fe388a9ca0c95cfda976da8717"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_66f0e3dc96fdc521b08c2c28d1d9fb14"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d5c3991cb14c0ddc2b196475e0062720"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f29d89065e9875bcb4599c2e37029c7d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2139b77b97c3fb133b1f55c6d374ceb3"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b47b7f60db4ef22a5dcaa6556458139c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_95e6f5e1ac7005a372f4a242b58af5a4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e04c442f1f8700a7112ed455e43f9415"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f6758f3f4befe89bdf40b4758c35cae1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_529ae284b94724c821042747de75b9bb"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bf1b3d06ec6ae208de84829fe0a05b33"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_61ed25ff454817bb45a3d8390e7e3223"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bf9bfbffa2919d019262458ec08b3a41"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_988af4ff20d42699365b0302095a06b0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f80679237930ef3eb2474f8eb8c82650"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_88e33af28f0089e40790de3746ebd346"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_df8265fc5f1b5049337ddeabbc2b2313"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_096660497bbabbe7c49635a97261f163"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_341b348e55acceb04723eefd9a890f41"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_efa10dc86918ae4df8c3ad9e070a8688"
+        }
+      ],
+      "nodeCount": 332,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-math-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-math-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-math-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_046bcffd4d14e2b56bb650ffa803ffcd",
+      "key": "experimental-mathematics-thematic",
+      "title": "ریاضی موضوعی",
+      "kind": "THEMATIC",
+      "visibleInTracks": [
+        "EXPERIMENTAL"
+      ],
+      "representationIds": [
+        "cr_d194fa555c3346d5e5ab2085d196d662"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d50f11c3777f66b11967b811c93a69f0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c841f8a4b4ddeef59ca7020d04cad259"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b7dea6f3b73b4f35cd6f00145241a4b6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1173b87c7f1421c96364fdf2b72d8758"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7f8140e113dc4e5bd2f989f2d4ea7ed4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0a36a2219b01af57430482511e29edfb"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_176644e6d09260ff3b8ab1618ff84336"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d316c65add6227cc26d2b947331a5860"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8e280b02e31658d67629ab3d36b7f5b4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_06e4bc7db9f4380fef245a51e72829a5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_21ce64c28fb4074ab9bcfb1d4f5d2076"
+        }
+      ],
+      "nodeCount": 266,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-math-thematic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_058110e421bae47261be8333e07fd23c",
+      "key": "biology",
+      "title": "زیست",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL"
+      ],
+      "representationIds": [
+        "cr_2e380b3b2307d5c9419de504672f5b9b",
+        "cr_a241149c15eeab751cf04450e57117c9",
+        "cr_47398397f783bc630f21e61b1d09aaef"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5271c0c70564c979dc84fb7980390ed0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_14db8c777a6671b1df2e33389001856a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c0122649399eeefacba043459f0e5c77"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1d6026449cbc76764003346bd099205a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2909a7b4318a0de86d0b5ea5120dee01"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_81fd1fc291fbc72d9a701f5b1094d89f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_18e48b01e329f914aafd9caa79a35cf7"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_4ed089a0f7336b43c19e5fc3447dff20"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a0f2483bd993f728a7e2a5da35289534"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bf3fa86937261b1bed2685cb125065ed"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b2074465064904911cd074f38c55327b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bd2fa6b883fa56f4f45c72600b02284a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cecd389cae48005014ed11a60d9b4a13"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f2051c0a5c4fe1b68fc5e9bdb81b1903"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_404da9718ad7771fb0c6da8b4b1f097a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c64c91a910930507d57769a7728c760e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_aa715535744f709c28499ca6fc6f6c31"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_57947074ac572daadb9862fe29a5f6d5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_30584dfeb01501e913d88ea42696f543"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1f6d272eba950d072d77f137841df703"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_72e68acf710694e487f2286359452b56"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_657910fb656bf247ef0876a417c82f7b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_80e0bf66ea63f321c6d2cb105c4e0c4f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0719b152775c22a5d2c82f091d5d847f"
+        }
+      ],
+      "nodeCount": 400,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [
+        "BIOLOGY_SEQUENCE_GRADE_ASSIGNMENT_UNRESOLVED"
+      ],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "biology-sequence-1"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "biology-sequence-2"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "biology-sequence-3"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_d93ba65acf76b803b413e89ea05928bb",
+      "key": "experimental-physics",
+      "title": "فیزیک تجربی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL"
+      ],
+      "representationIds": [
+        "cr_5a3ba933df345f67383eda9e1d94a9a1",
+        "cr_b48400868174c07f627e3c17845cddb0",
+        "cr_290982f0c4431a7e2fdb3ba8effb86e2"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f36674e60b4e891cea83d4614fbccc2e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fceb096a224057a055b3139184f24899"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_57ab9f8529fc93e0484d69dad3c9f9a3"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1f4ce9e31c2dca1dd6cdfbcc239c2839"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_89a0cef2584bf96892e9b027bd7e7a05"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2f5cf0369f62dbf832678b1c60dfd26c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cd07099c663208c7b757fb456edb9451"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f79b79c3dc221bda5d5421d774519263"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9f12f297580d931b02803bf304de9514"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fceb648e54a041b18bbc09cbffa9888b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cff758fa6b724ed46ea94a4c68324f15"
+        }
+      ],
+      "nodeCount": 472,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-physics-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-physics-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "experimental-physics-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_38d319c9ef94e576f03953d2b6d7ec38",
+      "key": "chemistry",
+      "title": "شیمی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "EXPERIMENTAL",
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_38a7ce84a53c788042870b6155d526e7",
+        "cr_e3af163ee95c96414e629d29c4120d55",
+        "cr_a3b5ad2a4b1ea6e339e113c16712d1ae"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ffb20aceb0641277083d4f64a8114721"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d56dac6c5ca423907fe3694a15c133a2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_dd0e58c5046aab4e7919cb4ac674d2ea"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7542496eba2410cd5da77e797d617a6b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f78b23ad9463d679756003234627f449"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e530fecc0b49d64b660e398f4e41ee42"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7f092ddf5a8df1fa906b548e143388b4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_dcf19fc26abaee24554f8cc4d259dfad"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7d50bfb98517effebe1513832f8fe580"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6567e332f4546c2cfa7620da520e5a44"
+        }
+      ],
+      "nodeCount": 239,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "chemistry-10-primary"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "chemistry-11-primary"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "chemistry-12-primary"
+        },
+        {
+          "kind": "SOURCE_STATEMENT",
+          "reference": "chemistry-secondary-heading: shared between Experimental and Mathematics"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_bef74678c2f3028f89980d17f61b5735",
+      "key": "mathematics",
+      "title": "ریاضی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_07ed3191a010fd9ea48a2421fc762825"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3615b826d7bb5ac646b533e618e71c75"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e284b6cbb866ca5c32ee73f4a86cc4f6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_03374a1f82e0611932f33e2666972271"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0bb9a93524f7fc17cbe4e2af8664ab85"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ccf3348f81661dc647fc9cf406f4c95f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1133c84af801343d64eca43e28dd6e66"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_71c3359550c917eab932d6319e96ada3"
+        }
+      ],
+      "nodeCount": 57,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "mathematics-10"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_7d96969a4976bde7c8e1b4e423abbedf",
+      "key": "calculus",
+      "title": "حسابان",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_5c2600a1992d33284cd54dfd4d9845d9",
+        "cr_0f3453a860197e7579d7f235ae9fa749"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_76a292325898ce12bd92bd9fe2eb5df7"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6860910c97cbffbf5a628648ae747e7b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ac5a1ef4b9ff306a0a62a1606a2defbd"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5a3eb4743f1a2eb48cd4b8a071ea3fd4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ec58765caf03332c88071b7987c8648b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_517a5841cf95142037fb7d6773f36a82"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_488c488ab74a6b93cd07657a20758c34"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d0fbe50911a8911dcea6fc861ab30040"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_886b9a08599312efd919df0546734b46"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ba48a609f5074d491054bb51b4680e1e"
+        }
+      ],
+      "nodeCount": 286,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "calculus-1"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "calculus-2"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_12b8c7299dce1519809bf09dce9d00f9",
+      "key": "geometry",
+      "title": "هندسه",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_fa32de979ba4af859d85afd0c7a6fb47",
+        "cr_9c9e6aaae0bee920db72cabc9f44b6a7",
+        "cr_baebc33f4ec703445e2ea4ccf155026e"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6f2521cf1c2eed6b8e365c5eae454af2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_11ef0f5140ca00741f1422daa22e5e8d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_40f31ff454019fc52e93153f23ec19fd"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_85f0e91b90331e75c1ea4ed58ca1cf7f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f28a716ec9b3544defcb86454a5d0159"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8dbb0c5d01ad6face6555ecb832c37b6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e2fc8b46234c29a73bab14fb775ff4fa"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_24ca0b4cb9e9832db8f3a104986eee69"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_069284b813cadcef4ea8c1f74a2c7f00"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_069b9ee5dd051b0378b8cbdbb20ff6c5"
+        }
+      ],
+      "nodeCount": 171,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geometry-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geometry-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geometry-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_d410481ee015f4ee93f94237dda3914a",
+      "key": "statistics-and-probability",
+      "title": "آمار و احتمال",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_e136873aa5a342cca4c7084afd8de21b"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a8fb86c3ce1bc7d04fa6dede9982870f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_67ba1d19016b21b8de2b7968f16d77c6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a35bb1f0129ec2c3c841d8f5240ca461"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_297558041a21b5b39008746844228b23"
+        }
+      ],
+      "nodeCount": 66,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "statistics-and-probability"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_b3e953c175cd94a0baa2d985818f3d14",
+      "key": "discrete-mathematics",
+      "title": "ریاضیات گسسته",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_5daad20441e4a181be6e5031b0362c20"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_28bcd1e1d56755eff086ce6820e448e1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c231f0fb6a4201b4b990f958cfaf9af2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_967df0603c758aa82c743389e6aa0ec1"
+        }
+      ],
+      "nodeCount": 61,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "discrete-mathematics"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_af887764e8ad67bc5d87c9c9b14dbe64",
+      "key": "mathematics-physics",
+      "title": "فیزیک ریاضی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "MATHEMATICS"
+      ],
+      "representationIds": [
+        "cr_e89749a6ac6b10ea380b865b0e7d9adc",
+        "cr_aef81ba92102e2bc43f5c35b51c7f3ed",
+        "cr_0b5bcfb7d7ad722aa3b99a1dab481f78"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b4e31677303d618dfe749b798fac02da"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_631cb20416eece427070d07c85c447a2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6548fb94ae62ba36b042b31545beee2e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5037725ede47dc229b508e92fae149ca"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b133e62cbd911b114905cfca10d601f1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0ffa0b2691b1d332d8936576c82bd802"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_595d5d549284e42ee0d79b031ed242c6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9799969d027cdb59a03fa132be9e7798"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a7dc9ed819cdb961cc59847efca14efc"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_624197ef71df3ef9adba0c0e7702535e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_48f5d4b33df28e469ce553728aed420d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8963955c7b1eef4434f0b8abf8d82e82"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ee8077a74f1b18a3d60f0dd4ba934b4d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9af5e85f72056b6345145fdf46c2cd37"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c8a6b6105a2ae7cc03b98b8363328c9d"
+        }
+      ],
+      "nodeCount": 508,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "mathematics-physics-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "mathematics-physics-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "mathematics-physics-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_812893cdbdb0ff4073ef148b765f237c",
+      "key": "humanities-arabic",
+      "title": "عربی انسانی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_ac217c49a83ab4b5ed1235085a890d73",
+        "cr_094d00faf7dd2cda7840c39cab2a953b",
+        "cr_266863c73454d7fbfba92a475ec3cd0d"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "GROUP",
+          "id": "cm_cf0fba1497d4a157542251c790d5a659",
+          "label": "دهم",
+          "selectable": false,
+          "childNodeIds": [
+            "cn_68aa84a496a95888152d143bb1f0f5b1",
+            "cn_5f7f5f61d1b3c2a3afcc8e689f098996",
+            "cn_ffe23a7f3d0d6a2e41accea1b123e070",
+            "cn_336bac45a6ea26cc832783fb5cced9e5",
+            "cn_54f043e4c17d315faa9cc4752c1b0887",
+            "cn_5d0d560032012b6ada1d1566e48ad464",
+            "cn_5ce0002d87491a4916407413dba4963d",
+            "cn_87f4b4185f4e7fab92ce8b99466e86b0"
+          ],
+          "provenance": [
+            {
+              "kind": "PRODUCT_OWNER_APPROVAL",
+              "reference": "2026-10-03 catalog reframe approval"
+            }
+          ]
+        },
+        {
+          "itemKind": "GROUP",
+          "id": "cm_ba3dd2f80949ef338cd5dc3fd2dc0bcb",
+          "label": "یازدهم",
+          "selectable": false,
+          "childNodeIds": [
+            "cn_a16a71c69a569887675956d66dddae29",
+            "cn_8fccdda3aa07eda2bc2d80e19b85a21a",
+            "cn_de5e5f0a6406e230a962b04df17cadaa",
+            "cn_8312b5a81ca834329f56e624d46f190d",
+            "cn_ac3c56633ebf612ca2d327ffbee53a68",
+            "cn_fd1ee241cf98f9d45cc8d0bb27d27683",
+            "cn_3d1510ba4eaa17bfa391de957d3adbe0"
+          ],
+          "provenance": [
+            {
+              "kind": "PRODUCT_OWNER_APPROVAL",
+              "reference": "2026-10-03 catalog reframe approval"
+            }
+          ]
+        },
+        {
+          "itemKind": "GROUP",
+          "id": "cm_3dfa3228fbde7ae8f59a12f56be6e339",
+          "label": "دوازدهم",
+          "selectable": false,
+          "childNodeIds": [
+            "cn_5f270c25e2cb5d23b1999b214f86c21a",
+            "cn_bbadd0d01156861f2e1deec27ccd24a8",
+            "cn_91cbbc2cb9425e067fb4df9489699861",
+            "cn_add9e220995ef73b188f8c01a5af7cd3"
+          ],
+          "provenance": [
+            {
+              "kind": "PRODUCT_OWNER_APPROVAL",
+              "reference": "2026-10-03 catalog reframe approval"
+            }
+          ]
+        }
+      ],
+      "nodeCount": 403,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "arabic-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_4fa40fb35809d3b37a37db3033ee281e",
+      "key": "literary-sciences",
+      "title": "علوم و فنون ادبی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_10011889c3b320bd37c965a4e284bc79",
+        "cr_de58fe3d641f14d710ac619bf386eaab",
+        "cr_f537e276dd94a5ee27872ed58f6d561c"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_37df95e8491a9ae8bf9281afe6fb56bb"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3c5ee5224a9760a3e25f78bb0010125d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a2dcab9b89d5e242eadabfcb25502a59"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6d960fc0cd2de4613f03210d45301f21"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_716f76a8b924fffd3427187d266a4eae"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6278d51507223ed21f03884ca438c268"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5544a4daf80926059522e38c7649e651"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_42b40978b68998bf7b37495cfe81c177"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_811eb41e3f4781995b9ee08ae1e77bd8"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ad66685adb5bf74a7e8260866f344abc"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6a04eeb9301ccd879b605c1b0fc349f9"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ff2c9a814ee66938c7b9c2dab760770e"
+        }
+      ],
+      "nodeCount": 178,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "literary-sciences-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "literary-sciences-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "literary-sciences-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_95ecdd53435aac7f5d9282547b4e348f",
+      "key": "literary-sciences-thematic",
+      "title": "علوم و فنون ادبی موضوعی",
+      "kind": "THEMATIC",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_ea107f6933d16514a4479935ffb9902f"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b497fc678cca50d298eb916156e0d724"
+        }
+      ],
+      "nodeCount": 69,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "literary-sciences-thematic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_636babaa44eb4f42bf40363f47cab95c",
+      "key": "sociology",
+      "title": "جامعه‌شناسی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_b0a16fb9022b6b07928361916d513c46",
+        "cr_13e20fc8f7906601f525570c52b6c80e",
+        "cr_e5700fe68c5ae97d5bde4433b9b95a1a"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d8af3669d703758893a22e1dd77b7e17"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_515c1eb960813ae344fbc08a0d6fff51"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_43f9013f5b9bfe28ceae648ec8590ea1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_dadea47837cfd155b3bd73e62401b26c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_818923603890107d35d299bcbcb173c8"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ba5c1f4715da650ab622dd709ac13320"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_581ae3eead9fd435b3490d4a6957f220"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_05c7b73a11101bc36e739181eb92a1f5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c50b37dd45e0f1a182973ed9d494aaf5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3e3966027429ffaa0623b7558910606f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_390e12bcdec6188cd146976015de2e83"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_52d32a4aedef56cb6738c67b20ecb6c5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_421b4af4adb6e46d654df2a58a610875"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_20bc8dac6c098f1b4db2bb9291287a93"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_4fc50d5970460383e6fddba616d29928"
+        }
+      ],
+      "nodeCount": 45,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "sociology-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "sociology-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "sociology-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_d9c1f826c5d261e79fa4dbde5aaff4be",
+      "key": "humanities-mathematics-statistics",
+      "title": "ریاضی و آمار",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_e02d19ec2e52dfbee41ab3a098a05316",
+        "cr_a850846e345c418311476eb82c71c62b",
+        "cr_0cbd36485203e7f647f35a254ade1b03"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1eace6d18b8e46bb5baf8d95c9e6de0e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ebe04d8d43f5dd66de172d9e0afc73a2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1e6e1c8cfee2154c2b5b2a7039f6a77a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9d673ed4be02d3eafa3126acb1e6b83d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8479348a2b24d7be65c605f8ab0e18e5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_cf74fb554e9aeb6073227e8e53d41b1d"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bb56755123ae216cce97a330b81a78d7"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_53755718ada541bde5ad064c4e82c071"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_993657909348d02010c788d62fc549e4"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3e4395b9c3cc8e705ce957be2852a767"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_874ad3bf6278957565f0b2fdf5e80c28"
+        }
+      ],
+      "nodeCount": 198,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "humanities-math-statistics-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "humanities-math-statistics-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "humanities-math-statistics-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_dbbb6a6e78539f741cf03e54e470d5be",
+      "key": "economics",
+      "title": "اقتصاد",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_07a8c8965d1b0b83afe1e07462cfafed"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fbbda18734a2b0ba845d717f55abd5fb"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_0497ae44da96345aa199523148033cd6"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_13700ad52c0376b90a2d5ee18a1f5092"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_88f05e93bd3a6fcd736f72c6d68955be"
+        }
+      ],
+      "nodeCount": 60,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "economics"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_7c09d8ebb83199f003a287bf47bd914b",
+      "key": "logic",
+      "title": "منطق",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_a630964f5649ba361170ccee5d464056"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_56cef6dae2c413fb69d48866ae2bb480"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_9f6e87ebd0d1fee36a71c357a9590020"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c105aa0bf4ca37dc3ef2e741e0c780dd"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_d6db9730a925782c714357ec6747462a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7b13ccbc3a9102605f85bfd76ba34ece"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_ffd08831eeffda2162e6eb8e8a53012c"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_1c29bd9ec288589bb4b35712297b617b"
+        }
+      ],
+      "nodeCount": 47,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "logic"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_bc83e5fc5efd7b8a47ab1a11591dfb19",
+      "key": "philosophy",
+      "title": "فلسفه",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_0748a9e4bcbcc60275324abdd5ee7943",
+        "cr_c4772de92a3e7430bdd36a98cd847970"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b49d15fa3f2c129e077b4b1420c71980"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_99fe9f6f8dbf1faf39ce6a3ea6d3bdd9"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a5a2687696044878a713b971f8b7a37f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e42df7c621d5c2fde0daa6965997093a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_7d7ffec821a1c2f76bd60e1a07b106ae"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_afef639a216b8f9fe83be2c018a1e3cb"
+        }
+      ],
+      "nodeCount": 99,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "philosophy-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "philosophy-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_90e88fb99e6dafed99cca293ba1693e9",
+      "key": "psychology",
+      "title": "روان‌شناسی",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_b197e953b21f42ab05a3aacd3a778b07"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_201344d80642e09e2d2726af972d7009"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_79833fa809dbde447dd7b7763ea09e14"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c25364a9127928188d8d881200db53de"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_698a6f334413da26826893510a64c965"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a97195bad851d54967b03c7b0245e7e0"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_fe97fbbd72dc569579d251019cfff3c5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_70337501b5ef4765471a2be9cfa6cfce"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_f9c20fd30b54e8a5c7cb0742fa2ce4e5"
+        }
+      ],
+      "nodeCount": 40,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "psychology"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_451695bf0d073ae2feac3caaf5c999fc",
+      "key": "history",
+      "title": "تاریخ",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_0dc770bee210ceb835a3759b0ac0c5d9",
+        "cr_b5b0653272062fabac007765c3392732",
+        "cr_4ae0c8c04477535afe4482ec23fbb64b"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2d2c9506474e56e51d6725cb2a7d9969"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8ef8709e178a3a3c0f8481b764199aa1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_11dbffc28cbe26f08a802437cca339dc"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_bdb9aa2100a3e2fb5bc7696be5f79c25"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_45f438834ed8903d039afa28cd9e98ea"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_3594c37830fec2cd05b9edcbfe62a973"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_76685816f4f4cedba0f291c5839a1192"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5652a7d0298605d10282b2be542d1b68"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_70458c2407c80e417135cdd22cd830ce"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b8f59789f68a0336f12b9aeeb0a1ac56"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_2319e5e6830b3206aeb1ab6ce1deb29e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_52554faf9028e00aa9a4194e0548ce60"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_62d891c82da9cf0b944e306c029b0b3a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_587e2a9311c8072e3fa67b358c9a2006"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_362d134358aa975bb4fe798b2eeb6612"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_115580a485cee3fbad1f9f7871670df5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_e8e3d05a8f18d200673a83cea3e09b16"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_22f6a5648cde569c7570111d0c860146"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_05db96c5a2d6b75d302eb037e15e584e"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_540ae70acd0c563106946080d2d179bd"
+        }
+      ],
+      "nodeCount": 53,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "history-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "history-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "history-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "id": "ce_3c8bda4487a68e8a3c6f3e75343c67ac",
+      "key": "geography",
+      "title": "جغرافیا",
+      "kind": "BOOK_BASED",
+      "visibleInTracks": [
+        "HUMANITIES"
+      ],
+      "representationIds": [
+        "cr_f95e4a671f8d0867ad72759cd9f8a1b6",
+        "cr_507b2df9aef5f581498b2ca227534db7",
+        "cr_a96a879c3da712b5ade32e4f3af6c359"
+      ],
+      "rootItems": [
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_215666782a577e557b3e881b63393ba1"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_95fff562422a89f0f746c58e923595d5"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_adc2ade508395584c34c4f6f166ca0cc"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_aef5bc9daa3772f6bb19bfa80b154221"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_5dae82c613681a12f950dc84b5c15974"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_a1b31a33c32307b6ab502561ff26cc9a"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_76d4728e8c81c17cc8ecc4c091024324"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_8b3a9a2a48fcb5a0e5e43811d1478cf2"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_c2945d494690aa69429dd2cb9775457b"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_6d1a73049e5a63253ff2baedcf74d02f"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_52062d4b34abd919d25106edf22c3947"
+        },
+        {
+          "itemKind": "NODE",
+          "nodeId": "cn_b78a40c9b443cd22afbc7554adcb4636"
+        }
+      ],
+      "nodeCount": 115,
+      "resolutionStatus": "RESOLVED",
+      "ambiguityCodes": [],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geography-10"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geography-11"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "geography-12"
+        },
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    }
+  ],
+  "unresolvedInventory": [
+    {
+      "key": "placement-only-subjects",
+      "title": "High-level placements without detailed source trees",
+      "representationIds": [],
+      "resolutionStatus": "UNRESOLVED",
+      "ambiguityCodes": [
+        "NO_DETAILED_SOURCE_TREE"
+      ],
+      "provenance": [
+        {
+          "kind": "PRODUCT_OWNER_APPROVAL",
+          "reference": "2026-10-03 catalog reframe approval"
+        }
+      ]
+    },
+    {
+      "key": "standalone-source-markers",
+      "title": "Standalone track marker representations",
+      "representationIds": [
+        "cr_83e8c6e0cdbfe4deae7f06f4b52d88b4",
+        "cr_075b7b1b4b99c029d5eb12de63ccc48f"
+      ],
+      "resolutionStatus": "UNRESOLVED",
+      "ambiguityCodes": [
+        "NON_EDUCATIONAL_SOURCE_MARKER"
+      ],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "mathematics-track-marker"
+        },
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "humanities-track-marker"
+        }
+      ]
+    },
+    {
+      "key": "chemistry-supplemental-source-material",
+      "title": "Chemistry supplemental source material",
+      "representationIds": [
+        "cr_746951971c2f5b74b3f4870cf599003e"
+      ],
+      "resolutionStatus": "AMBIGUOUS",
+      "ambiguityCodes": [
+        "CHEMISTRY_SUPPLEMENTAL_MOUNT_UNRESOLVED"
+      ],
+      "provenance": [
+        {
+          "kind": "SOURCE_REPRESENTATION",
+          "reference": "chemistry-skills"
+        }
+      ]
+    }
+  ],
+  "payloadSha256": "e40a48649bb7aa12f092075cd08d4451d1354e0a3c3a15ab204818ecd47b109e"
+}

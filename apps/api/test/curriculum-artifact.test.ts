@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { canonicalCurriculumArtifact } from '../src/curriculum/artifact.js'
 import {
+  bootstrapCurriculumIdentityRegistry,
   compileCanonicalCurriculum,
   serializeCurriculumArtifact,
 } from '../src/curriculum/compiler.js'
+import { representationDefinitions } from '../src/curriculum/representation-definitions.js'
 
 const canonicalPath = new URL('../../../docs/curriculum/CANONICAL_CURRICULUM.md', import.meta.url)
 const artifactPath = new URL(
@@ -39,8 +41,13 @@ test('canonical artifact generation is byte-for-byte deterministic', async () =>
     readFile(canonicalPath, 'utf8'),
     readFile(artifactPath, 'utf8'),
   ])
-  const first = serializeCurriculumArtifact(compileCanonicalCurriculum(source))
-  const second = serializeCurriculumArtifact(compileCanonicalCurriculum(source))
+  const registry = bootstrapCurriculumIdentityRegistry(source, canonicalCurriculumArtifact)
+  const first = serializeCurriculumArtifact(
+    compileCanonicalCurriculum(source, registry).artifact,
+  )
+  const second = serializeCurriculumArtifact(
+    compileCanonicalCurriculum(source, registry).artifact,
+  )
 
   assert.equal(first, second)
   assert.equal(first, checkedInArtifact)
@@ -102,6 +109,62 @@ test('artifact node IDs and parent references form valid acyclic representation 
       ancestor = ancestor.parentId ? nodesById.get(ancestor.parentId) : undefined
     }
   }
+})
+
+test('bootstraps exactly 5641 existing identities from the current artifact', async () => {
+  const source = await readFile(canonicalPath, 'utf8')
+  const registry = bootstrapCurriculumIdentityRegistry(source, canonicalCurriculumArtifact)
+
+  assert.equal(registry.records.length, 5_641)
+  assert.equal(registry.records.every((record) => record.status === 'ACTIVE'), true)
+  assert.equal(new Set(registry.records.map((record) => record.id)).size, 5_641)
+})
+
+test('registry-backed compilation preserves every current ID', async () => {
+  const source = await readFile(canonicalPath, 'utf8')
+  const registry = bootstrapCurriculumIdentityRegistry(source, canonicalCurriculumArtifact)
+  const compiled = compileCanonicalCurriculum(source, registry).artifact
+
+  for (const key of [
+    'scopes',
+    'gradePlacements',
+    'subjectPlacements',
+    'representations',
+    'nodes',
+  ] as const) {
+    assert.deepEqual(
+      compiled[key].map((entry) => entry.id),
+      canonicalCurriculumArtifact[key].map((entry) => entry.id),
+      `${key} IDs changed`,
+    )
+  }
+})
+
+test('registry-backed base serialization remains byte-for-byte identical', async () => {
+  const [source, checkedInArtifact] = await Promise.all([
+    readFile(canonicalPath, 'utf8'),
+    readFile(artifactPath, 'utf8'),
+  ])
+  const registry = bootstrapCurriculumIdentityRegistry(source, canonicalCurriculumArtifact)
+  const compiled = compileCanonicalCurriculum(source, registry)
+
+  assert.equal(serializeCurriculumArtifact(compiled.artifact), checkedInArtifact)
+})
+
+test('representation keys are unique and cover all 67 source trees', () => {
+  assert.equal(representationDefinitions.length, 67)
+  assert.equal(new Set(representationDefinitions.map(({ key }) => key)).size, 67)
+  assert.deepEqual(
+    representationDefinitions.map(({ startEntry }) => startEntry),
+    [
+      1, 204, 381, 487, 847, 946, 1043, 1141, 1211, 1296, 1369, 1434, 1496,
+      1545, 1594, 1629, 1780, 1940, 2098, 2170, 2241, 2387, 2468, 2629, 2813,
+      3025, 3168, 3302, 3420, 3743, 3744, 3910, 4093, 4335, 4401, 4479, 4543,
+      4618, 4811, 4950, 5032, 5104, 5176, 5247, 5393, 5394, 5395, 5465, 5539,
+      5612, 5693, 5728, 5760, 5780, 5817, 5854, 5879, 5962, 6055, 6114, 6161,
+      6222, 6259, 6317, 6392, 6465, 6525,
+    ],
+  )
 })
 test('ambiguous and thematic source structures remain independent and uninterpreted', () => {
   const headings = canonicalCurriculumArtifact.representations.map(

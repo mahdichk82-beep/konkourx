@@ -1,18 +1,34 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records current implemented reality, approved direction, and retained historical checkpoints; it is not a claim of overall product completion.
+This document is the canonical operational memory for what is actually implemented in the Konkourix repository. It records current repository reality and retained historical checkpoints; it is not the product-definition or sequencing source. [PRODUCT_MAP.md](PRODUCT_MAP.md) defines intended product behavior, and [ROADMAP.md](ROADMAP.md) defines build order.
 
 ## Project
 
-Konkourix is a specialized exam-preparation ecosystem with independent public entry points:
+Konkourix is a comprehensive Persian educational SaaS / EdTech platform. Its currently implemented core is a specialized Student ↔ Counselor exam-preparation ecosystem; that current implementation does not define the whole approved product.
+
+Current independent application entry points are:
 
 - Student application: `app.konkourix.ir`
 - Counselor application: `counselor.konkourix.ir`
 - API: `api.konkourix.ir`
 
+The approved surface family also includes Public Web, Content/SEO, future School Web, future Admin, and a future provider-abstracted Classroom layer. These future surfaces are not implied implemented by this inventory.
+
 ## Current Phase
 
-**P0.5 — SCHEDULING CONTRACT UNBLOCK FOR COUNSELOR PLANNING** is the current implemented milestone in the working tree. It adds the minimal exact-time persistence and API contract required by the approved Counselor 24×4 planning experience without implementing that UI.
+**PHASE 2C — STUDENT + COUNSELOR DASHBOARD / SHELL REBUILD** is technically implemented. Product Owner visual approval remains pending; the checkpoint status is **VISUAL FAIL / REBUILD UNDER REVIEW** and must not be described as visually passed.
+
+The working tree remains intentionally dirty with earlier documentation consolidation and visual work. Phase 2C preserves those changes and substantially rebuilds the approved Student and Counselor dashboard, shell, and login presentation without adding domain behavior. The Student dashboard is Today/action-first; the Counselor dashboard is attention/work-first; both use honest compact unavailable states instead of fabricated tasks, analytics, alerts, or counts. The result is **READY FOR PRODUCT OWNER VISUAL REVIEW**, not visually approved.
+
+Checkpoint validation on 2026-10-03:
+
+- Student Web tests: **27/27 PASS**
+- Counselor Web tests: **9/9 PASS**
+- API regression tests: **231/231 PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Production frontend builds used a validation-only HTTPS API origin to satisfy the existing production-origin guard; no environment file was changed.
+- Headless browser inspection at 1440px, 900px, and 390px: **EXECUTED** for both dashboards and logins, including Light/Dark dashboard surfaces, Counselor Students empty state, and Counselor Planning shell. No horizontal overflow was detected. This is technical QA only and is not Product Owner visual approval.
 
 Phase 2 Milestone 19 — AssessmentAttempt Foundation remains the clean runtime comparison baseline at commit `76bc4d77dd015ef458e898d974fa23537de85948`. Historically completed core milestones remain valid. Authentication, independent browser application shells, account settings, student planning and task lifecycle, student-owned subject/topic management, study execution and recovery, completed assessment-attempt recording, assigned-student counselor access, and counselor task creation are verified foundations; later capabilities are not implied complete.
 
@@ -30,16 +46,25 @@ Recovery is being performed through forward corrective commits. Applied migratio
 ### CURRENT IMPLEMENTED STATE
 
 - Runtime comparison baseline: `76bc4d77dd015ef458e898d974fa23537de85948` (`feat: add assessment attempt foundation`).
-- The active API registers only authenticated read endpoints for Canonical Curriculum scopes, placements, detailed representations, nodes, children, and search.
+- The active API registers authenticated primary track-scoped Canonical Curriculum reads plus the existing compatibility endpoints for scopes, placements, detailed representations, nodes, children, and global search. The primary navigation contract is `TRACK -> SUBJECT / SUBJECT VIEW -> ARBITRARY CANONICAL TREE`.
 - Rejected import/bootstrap commands, taxonomy/content/Knowledge Package modules, review runtime, package data, and their behavior tests are removed.
-- The runtime is generated from `docs/curriculum/CANONICAL_CURRICULUM.md` into a checked-in deterministic JSON artifact included in the API production image. It contains 4 scopes, 12 scope/grade placements, 74 subject placements, 67 detailed source representations, and 5,484 label-bearing source nodes covering the locked 6,588-entry detailed source block.
-- Canonical Curriculum has no database persistence, write/admin API, governance, authoring, import, or publication/version workflow. DailyTask stores validated opaque Curriculum runtime IDs and historical label/path snapshots only; these task references do not make PostgreSQL authoritative over Curriculum.
+- The runtime is generated from `docs/curriculum/CANONICAL_CURRICULUM.md` into the unchanged checked-in base artifact plus an additive deterministic catalog overlay. An explicit manifest is the sole mapping authority, and a generated stable identity registry preserves all 5,641 pre-catalog runtime IDs. The base contains 4 scopes, 12 scope/grade placements, 74 subject placements, 67 detailed source representations, and 5,484 label-bearing source nodes covering the locked 6,588-entry detailed source block.
+- The catalog exposes three ordered track inventories. Book-based Subjects and thematic Subject Views are sibling entries. Explicitly shared entries retain one identity across permitted tracks; track path values are filtering context only and are not current account authorization.
+- Humanities Arabic is a distinct Humanities-only entry using non-selectable `دهم`/`یازدهم`/`دوازدهم` navigation groups over existing canonical lesson nodes. Biology is resolved for Experimental while only sequence-to-grade assignment remains ambiguity metadata. Chemistry is shared only when its explicit source statement and paired structures agree; mismatch quarantines Chemistry without aborting the catalog build.
+- Placement-only subjects, standalone source markers, and Chemistry supplemental skills remain explicit unresolved inventory rather than inferred catalog mappings. Structurally equivalent duplicate Chemistry trees remain available only through compatibility representation APIs and are not mislabeled as unresolved. No protected educational source was changed.
+- Catalog verification passed 50/50 focused Curriculum/task tests and 255/255 complete API tests; API typecheck and repeated deterministic regeneration passed. The base artifact SHA-256 remains `60f3d3f454bf39f5dcd0a3c098d5dc2ed8dc6de741579eab52efcf34f4ba9374`.
+- Canonical Curriculum has no database persistence, write/admin API, governance, authoring, import, or publication/version workflow. This catalog milestone changes no Prisma schema, migration, database state, Student frontend, or Counselor frontend. DailyTask stores validated opaque Curriculum runtime IDs and historical label/path snapshots only; these task references do not make PostgreSQL authoritative over Curriculum.
 - A DailyTask may contain multiple `NODE` or `PLACEMENT` targets. `EXACT` selects the referenced item; `WHOLE` on a node expands only direct children (or the leaf itself). `WHOLE` on a placement and duplicate/overlapping item expansion are rejected.
+- Catalog entries and non-selectable navigation groups are not new task-target kinds. Existing canonical nodes below catalog entries remain selectable through `NODE`; a group ID submitted as `NODE` is not found.
 - Task execution items are student-toggleable while the task is pending. Responses expose completed, total, and remaining item counts. Counselor task reads expose this same coverage for actively assigned students.
 - `PARTIAL` is a server-timestamped terminal task outcome requiring at least one completed and one unfinished Curriculum item. It preserves unfinished coverage without reopening the task or automatically creating a compensatory task.
 - `DailyTask.scheduledFor` remains the calendar date. Nullable `startMinuteOfDay` and `endMinuteOfDay` provide an exact same-day planner window for new tasks; legacy date-only tasks remain valid without fabricated times. API responses derive `miniBoxSpan`, and database/API validation enforces paired, ordered, 15-minute-aligned values within `00:00–24:00`.
 - Counselor creation, batch creation, focused rescheduling, and the assigned-task planning update contract support exact time windows. Student personal-task creation and rescheduling remain backward compatible and may also carry the optional exact window.
 - The local development database has all 21 tracked migration directories applied. The four additive historical Curriculum migrations remain immutable history, followed by the RF4 retirement migration, task-reference planning migration, and exact schedule-window migration.
+- Student and Counselor login screens now use the approved `konkourX / کنکوریکس` identity, the existing checked-in X artwork, the approved tagline and secondary brand line, consistent theme controls, and responsive role-specific presentation. No licensed font binary was added.
+- Authenticated Student and Counselor shells now use a persistent right desktop sidebar, polished top header, selected-navigation state, accessible theme control, skip link, and a right-side mobile drawer with Escape handling, focus containment/restoration, and background-scroll locking. The former mobile bottom navigation is no longer rendered.
+- The Student shell is calmer and action-first; its dashboard leads with Today/current action and honest empty states instead of generic KPI cards, and actions link only to already implemented routes. The Counselor shell is denser and attention/work-first; dashboard, assigned-student list, settings, reports placeholder, and student-detail surfaces inherit the converged design system without fabricated operational counts.
+- Counselor `/planning` now presents a polished, honest planner-ready workspace shell and the existing 24×4 time-grid context. It does not implement drag selection, Curriculum picking, or task editing.
 - The Prisma schema and generated client no longer expose historical Curriculum governance/import/review/mapping/capability models.
 - PostgreSQL contains no Canonical Curriculum persistence and no historical Curriculum governance tables, triggers, functions, or enum types.
 - Product loop: **Plan → Execute → Measure → Improve**.
@@ -52,17 +77,19 @@ Recovery is being performed through forward corrective commits. Applied migratio
 
 ### APPROVED FUTURE STATE
 
-- `cori.docx` is the authoritative educational source. Multiple source-defined organizations and unequal depths are preserved without invented intermediate levels.
-- Runtime Curriculum is a projection used for student/counselor planning, progress measurement, reporting, and future question linking; it is not educational authority.
-- A future Question Bank remains separate from Curriculum authority.
-- Product scope and experience direction are governed by [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md), [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md), [UX_PRINCIPLES.md](UX_PRINCIPLES.md), [BRAND_IDENTITY.md](BRAND_IDENTITY.md), and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
-- P1 Counselor Planning Experience may now render and edit the approved 96-position daily grid using the exact-time task contract. P0.5 does not implement that frontend.
+- Future product behavior is intentionally not duplicated here. It is governed by [PRODUCT_MAP.md](PRODUCT_MAP.md).
+- Future implementation order is governed by [ROADMAP.md](ROADMAP.md).
+- `cori.docx` remains authoritative educational truth under [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md); runtime Curriculum remains a projection.
+- The implemented exact-time contract and planner-ready shell can support a future functional Counselor planner only through a separately approved roadmap milestone.
+- Authoritative track enforcement remains a separate gate requiring `StudentProfile.track`: Student access must resolve from the authenticated Student profile, while Counselor access must resolve from the selected authorized and assigned Student profile. Request-supplied track remains temporary filtering context until that gate is implemented.
+- A future Question Bank may use human-tagged many-to-many `Question <-> CurriculumNode` links spanning book-based views, thematic views, and multiple grades, with no automatic semantic mapping. This contract is not implemented here.
 
 ### EXPLORATORY / DEFERRED
 
 - Additional product-record reference integration remains deferred. Any Product Owner-approved source change requires explicit reference migration and ID-stability planning for stored task references.
 - A counselor-created compensatory task from unfinished `PARTIAL` items is approved future behavior but has no automatic task generation or UI in the current milestone.
 - Mastery is approved as a future five-level model with separate student self-rating, counselor rating, and system-estimated signals. It has no persistence or UI yet.
+- Product-level future Decision Gates are maintained in [PRODUCT_MAP.md](PRODUCT_MAP.md) and [ROADMAP.md](ROADMAP.md), not in this implementation inventory.
 - Historical Knowledge Package, scientific review, taxonomy, and content-production designs below are not approved future state.
 
 Historical milestone sections below are preserved as records of their time. When historical text conflicts with the source and scope locks above, the current locks govern.
@@ -1134,19 +1161,24 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Known Product Work Not Implemented
 
-This is an implementation-status inventory, not an authorization list. [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md) governs whether an area is in scope; an approved architect milestone is still required before implementation.
+This is an implementation-status inventory, not an authorization list. [PRODUCT_MAP.md](PRODUCT_MAP.md) governs whether an area is in scope; [ROADMAP.md](ROADMAP.md) governs sequencing, and an approved architect milestone is still required before implementation.
 
 - Full student product UI
 - Full counselor product UI
+- Public Web acquisition, SEO landing, product/feature, counseling, planning, pricing, company, FAQ, Blog, article, and educational-publishing surfaces
 - Advanced profile and account-recovery workflows
 - Complete task/planning UX beyond the current today/weekly views and subject/topic slices
-- Approved runtime projection of the canonical Curriculum and any transition from student-owned subjects/topics
+- Additional product-record integration with the existing Canonical Curriculum runtime and any transition from student-owned subjects/topics
 - Curriculum-linked student progress behavior; its exact model is not approved by this document
 - Counselor planning revisions and historical visibility for the original counselor plan
 - Explicit practice-activity classification and full task-level learning-result feedback
 - Fast professional block-planning workflows, repeat/copy operations, and canonical curriculum assignment
-- Future Question Bank with authorized submission, admin review, difficulty, and existing-Curriculum linkage; exact link cardinality remains a Product Owner decision
+- Future central Question Bank with authorized submission, Admin review, difficulty, and decided many-to-many Curriculum linkage
 - Live assessment execution, question-level attempts, and exam sessions
+- Educational articles, lessons, documents/resources, video, recorded classes, and course/learning collections
+- Provider-abstracted live classrooms, including scheduling, participation, media/collaboration, attendance, recording, and archive capabilities
+- School / Institute workspace
+- Admin/CMS/business operations beyond existing backend role compatibility
 - Pomodoro, pause/resume, focus modes, and timer product expansion beyond the live elapsed display
 - Goals, habits, and focus capabilities within the approved product scope
 - Persian calendar and daily evaluations
@@ -1154,17 +1186,19 @@ This is an implementation-status inventory, not an authorization list. [PRODUCT_
 - Exams and comparisons
 - Messaging and notifications
 - Communication, contextual tickets, and messages
-- Future admin capabilities
+- Future Admin UI and CMS workflows
 - Private Counselor Notes
 - File uploads and storage integration
 - Subscriptions and payment readiness
 - Production deployment, hardening, and operational verification
 
-The following remain explicitly **not currently implemented**: an approved consumer-integrated canonical Curriculum projection, Curriculum-linked progress, reports/analytics, a Question Bank, online exams, subscriptions, and several communication and administration capabilities. In-scope status does not imply implementation authorization. AI Educational Review, Human Scientific Review Workflow, Knowledge Packages, formula/scientific approval engines, question-pattern or skill taxonomies, curriculum-as-knowledge-graph, and educational content-production machinery are explicitly out of scope.
+The following remain explicitly **not currently implemented**: complete Public Web/SEO/content, an approved consumer-integrated canonical Curriculum projection, Curriculum-linked progress, reports/analytics, a Question Bank, online exams, richer learning delivery, live classrooms, School, Admin/CMS expansion, subscriptions/payments, and several communication capabilities. In-scope future status does not imply implementation authorization. AI Educational Review, Human Scientific Review Workflow, Knowledge Packages, formula/scientific approval engines, question-pattern or skill taxonomies, Curriculum-as-knowledge-graph, and Curriculum-centered educational content-production machinery are explicitly out of scope.
 
 ## Current Safety Rules
 
 - Follow root [AGENTS.md](../AGENTS.md) for decision authority, scope boundaries, and milestone reporting.
+- Never redefine Konkourix as only the currently implemented feature or current roadmap step. Keep current implementation and complete approved future vision separate.
+- Deferral does not remove a domain from approved future scope, and approved future scope never authorizes implementation without a milestone.
 - Treat `cori.docx` as authoritative educational truth; do not alter Curriculum content without explicit Product Owner approval.
 - Return ambiguous product behavior and unapproved Student-facing UX to the Product Owner as a Decision Gate.
 - Never reset or clean a working tree without first reviewing and preserving all tracked and untracked work.
@@ -1190,7 +1224,7 @@ The following remain explicitly **not currently implemented**: an approved consu
 
 ## Historical Post-Checkpoint Curriculum Direction — Superseded
 
-The entries from the 2026-09-17 documentation checkpoint through Knowledge Phase 7.3A are retained as implementation history and recovery evidence. They do not describe approved product direction. Educational structures copied from the authoritative source remain protected; the over-engineered governance, knowledge-package, taxonomy, content-production, and scientific/AI review direction is rejected. No status label inside this historical block overrides [PRODUCT_SCOPE.md](PRODUCT_SCOPE.md) or [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md).
+The entries from the 2026-09-17 documentation checkpoint through Knowledge Phase 7.3A are retained as implementation history and recovery evidence. They do not describe approved product direction. Educational structures copied from the authoritative source remain protected; the over-engineered governance, knowledge-package, taxonomy, content-production, and scientific/AI review direction is rejected. No status label inside this historical block overrides [PRODUCT_MAP.md](PRODUCT_MAP.md), [ROADMAP.md](ROADMAP.md), or [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md).
 
 ### 2026-09-17 Documentation Design Checkpoint
 
