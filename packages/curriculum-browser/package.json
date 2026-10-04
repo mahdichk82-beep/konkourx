@@ -1,0 +1,23 @@
+{
+  "name": "@konkourx/curriculum-browser",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "test": "node --test src/state.test.ts src/view-model.test.ts src/component-contract.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "~6.0.2"
+  }
+}

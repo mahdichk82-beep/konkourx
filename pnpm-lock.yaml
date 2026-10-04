@@ -60,6 +60,9 @@ importers:
 
   apps/counselor-web:
     dependencies:
+      '@konkourx/curriculum-browser':
+        specifier: workspace:*
+        version: link:../../packages/curriculum-browser
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -91,6 +94,9 @@ importers:
 
   apps/student-web:
     dependencies:
+      '@konkourx/curriculum-browser':
+        specifier: workspace:*
+        version: link:../../packages/curriculum-browser
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -119,6 +125,18 @@ importers:
       vite:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/curriculum-browser:
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.2.18
+      react:
+        specifier: ^19.2.0
+        version: 19.2.8
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
 
 packages:
 

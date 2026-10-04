@@ -8,9 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/students/batch-task-form.test.ts"
+    "test": "node --test src/students/batch-task-form.test.ts src/curriculum/curriculum-client.test.ts src/curriculum/curriculum-page.test.ts"
   },
   "dependencies": {
+    "@konkourx/curriculum-browser": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

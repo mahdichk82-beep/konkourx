@@ -14,12 +14,14 @@ import { TodayPlanningPage } from './pages/TodayPlanningPage'
 import { WeeklyPlanningPage } from './pages/WeeklyPlanningPage'
 import { useBrowserRouter } from './routing/useBrowserRouter'
 import { useTheme } from './theme/useTheme'
+import { StudentCurriculumPage } from './curriculum/StudentCurriculumPage'
 import './App.css'
 
 const navigation: NavigationItem[] = [
   { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
   { icon: 'planning', label: 'برنامه‌ریزی', mobileLabel: 'برنامه', path: '/planning' },
   { icon: 'study', label: 'درس‌ها و مباحث', mobileLabel: 'درس‌ها', path: '/study' },
+  { icon: 'study', label: 'برنامهٔ درسی رسمی', mobileLabel: 'مباحث', path: '/curriculum' },
   { icon: 'assessment', label: 'آزمون‌ها', mobileLabel: 'آزمون', path: '/assessments' },
   { icon: 'reports', label: 'گزارش‌ها', mobileLabel: 'گزارش', path: '/reports' },
   { icon: 'settings', label: 'تنظیمات', mobileLabel: 'تنظیمات', path: '/settings' },
@@ -30,6 +32,7 @@ const routeMeta: Record<string, { description: string; title: string }> = {
   '/planning': { title: 'برنامه امروز', description: 'ساخت و پیگیری کارهای شخصی امروز' },
   '/planning/weekly': { title: 'برنامه هفتگی', description: 'نمای هفت‌روزه کارهای برنامه‌ریزی‌شده' },
   '/study': { title: 'درس‌ها و مباحث', description: 'ساخت و مدیریت ساختار شخصی مطالعه' },
+  '/curriculum': { title: 'مباحث درسی', description: 'مرور و انتخاب از ساختار رسمی برنامهٔ درسی رشتهٔ شما' },
   '/assessments': { title: 'آزمون‌ها', description: 'ثبت و مرور نتیجه خام آزمون‌های پایان‌یافته' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور روند و پیشرفت' },
   '/settings': { title: 'تنظیمات', description: 'ترجیحات پایه محیط دانش‌آموزی' },
@@ -55,6 +58,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
   else if (path === '/planning') content = <TodayPlanningPage navigate={navigate} />
   else if (path === '/planning/weekly') content = <WeeklyPlanningPage navigate={navigate} />
   else if (path === '/study') content = <SubjectTopicsPage />
+  else if (path === '/curriculum') content = <StudentCurriculumPage />
   else if (path === '/assessments') content = <AssessmentAttemptsPage />
   else if (path === '/settings') content = <SettingsPage onThemeChange={setTheme} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />

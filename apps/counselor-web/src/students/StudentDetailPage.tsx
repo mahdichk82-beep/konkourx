@@ -95,6 +95,7 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
     <div className="page-stack student-detail">
       <div className="student-detail__toolbar">
         <Button onClick={() => navigate('/students')} variant="ghost">بازگشت به دانش‌آموزان</Button>
+        <Button onClick={() => navigate(`/students/${student.id}/curriculum`)} variant="secondary">انتخاب مبحث درسی</Button>
       </div>
       <Card className="student-profile-card">
         <div className="student-profile-card__heading">
