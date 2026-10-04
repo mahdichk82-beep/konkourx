@@ -1538,6 +1538,7 @@ export type AuthSessionScalarFieldEnum = (typeof AuthSessionScalarFieldEnum)[key
 export const StudentProfileScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  track: 'track',
   educationLevel: 'educationLevel',
   schoolName: 'schoolName',
   createdAt: 'createdAt',
@@ -1811,6 +1812,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
     
+
+
+/**
+ * Reference to a field of type 'StudentTrack'
+ */
+export type EnumStudentTrackFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentTrack'>
+
+
+
+/**
+ * Reference to a field of type 'StudentTrack[]'
+ */
+export type ListEnumStudentTrackFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentTrack[]'>
+
 
 
 /**

@@ -8,6 +8,7 @@ import {
 import { hashPassword, verifyPassword } from './password.js'
 import { generateRefreshToken, hashRefreshToken } from './refresh-token.js'
 import type { AuthStore, AuthUserRecord, CreateSessionInput } from './store.js'
+import type { CurriculumTrackId } from '../curriculum/types.js'
 import type {
   AuthRequestMeta,
   AuthResult,
@@ -17,7 +18,12 @@ import type {
 
 export type AuthService = {
   register(
-    input: { email: string | null; phone: string | null; password: string },
+    input: {
+      email: string | null
+      phone: string | null
+      password: string
+      track?: CurriculumTrackId
+    },
     meta: AuthRequestMeta,
   ): Promise<AuthResult>
   login(identifier: string, password: string, meta: AuthRequestMeta): Promise<AuthResult>
@@ -131,7 +137,12 @@ export const createAuthService = ({
       let user: AuthUserRecord
 
       try {
-        user = await store.createStudentUser({ email, passwordHash, phone })
+        user = await store.createStudentUser({
+          email,
+          passwordHash,
+          phone,
+          track: input.track,
+        })
       } catch (error) {
         if (isUniqueConstraintError(error)) {
           throw new ApiError(409, 'AUTH_CONFLICT', 'Account already exists')

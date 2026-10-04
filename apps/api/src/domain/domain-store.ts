@@ -1,4 +1,5 @@
 import type {
+  AssignedStudentTrackRecord,
   CounselorProfileInput,
   CounselorProfileRecord,
   CounselorStudentPage,
@@ -41,4 +42,8 @@ export interface DomainStore {
     counselorId: string,
     studentProfileId: string,
   ): Promise<CounselorStudentRecord | null>
+  findAssignedStudentTrack(
+    counselorId: string,
+    studentProfileId: string,
+  ): Promise<AssignedStudentTrackRecord | null>
 }

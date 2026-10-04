@@ -55,6 +55,7 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
       registerCurriculumRoutes(app, {
         auth: options.auth,
         curriculum: options.curriculum,
+        domain: options.domain,
       })
     }
 

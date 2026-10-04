@@ -1,5 +1,6 @@
 import type { AuthRole } from './access-token.js'
 import type { AuthStatus } from './types.js'
+import type { CurriculumTrackId } from '../curriculum/types.js'
 
 export type AuthUserRecord = {
   id: string
@@ -41,6 +42,7 @@ export interface AuthStore {
     email: string | null
     phone: string | null
     passwordHash: string
+    track?: CurriculumTrackId
   }): Promise<AuthUserRecord>
   createSession(input: CreateSessionInput): Promise<AuthSessionRecord>
   findSessionByTokenHash(tokenHash: string): Promise<AuthSessionRecord | null>

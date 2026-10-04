@@ -116,6 +116,7 @@ export type AuthSessionScalarFieldEnum = (typeof AuthSessionScalarFieldEnum)[key
 export const StudentProfileScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  track: 'track',
   educationLevel: 'educationLevel',
   schoolName: 'schoolName',
   createdAt: 'createdAt',

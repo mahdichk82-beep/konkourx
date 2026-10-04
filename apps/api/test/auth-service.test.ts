@@ -23,6 +23,7 @@ const config: AuthServiceConfig = {
 class InMemoryAuthStore implements AuthStore {
   users: AuthUserRecord[] = []
   sessions: AuthSessionRecord[] = []
+  studentCreations: Array<{ track?: 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES' }> = []
   rotationConflict = false
 
   async findUserByIdentifier(identifier: string) {
@@ -41,7 +42,9 @@ class InMemoryAuthStore implements AuthStore {
     email: string | null
     phone: string | null
     passwordHash: string
+    track?: 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES'
   }) {
+    this.studentCreations.push({ track: input.track })
     const user: AuthUserRecord = {
       id: randomUUID(),
       email: input.email,
@@ -157,6 +160,35 @@ test('registration creates an active student and an authenticated session', asyn
   assert.equal(store.users[0]?.passwordHash.startsWith('scrypt$v1$'), true)
   assert.equal(store.sessions.length, 1)
   assert.equal(result.refreshToken.length > 20, true)
+})
+
+test('registration persists each supplied canonical track and keeps omission compatible', async () => {
+  for (const track of ['EXPERIMENTAL', 'MATHEMATICS', 'HUMANITIES'] as const) {
+    const store = new InMemoryAuthStore()
+    const service = serviceFor(store)
+
+    await service.register(
+      {
+        email: `${track.toLowerCase()}@example.com`,
+        password: 'strong password',
+        phone: null,
+        track,
+      },
+      {},
+    )
+
+    assert.deepEqual(store.studentCreations, [{ track }])
+  }
+
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  const result = await service.register(
+    { email: 'unassigned@example.com', password: 'strong password', phone: null },
+    {},
+  )
+
+  assert.equal(result.user.email, 'unassigned@example.com')
+  assert.deepEqual(store.studentCreations, [{ track: undefined }])
 })
 
 test('login rejects invalid credentials without exposing account existence', async () => {

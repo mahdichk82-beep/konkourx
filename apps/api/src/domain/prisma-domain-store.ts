@@ -53,8 +53,14 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
 
   async upsertStudentProfile(userId: string, input: StudentProfileInput) {
     const profile = await prisma.studentProfile.upsert({
-      create: { userId, educationLevel: input.educationLevel ?? null, schoolName: input.schoolName ?? null },
+      create: {
+        userId,
+        track: input.track ?? null,
+        educationLevel: input.educationLevel ?? null,
+        schoolName: input.schoolName ?? null,
+      },
       update: {
+        ...(input.track === undefined ? {} : { track: input.track }),
         ...(input.educationLevel === undefined ? {} : { educationLevel: input.educationLevel }),
         ...(input.schoolName === undefined ? {} : { schoolName: input.schoolName }),
       },
@@ -168,5 +174,19 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
     })
 
     return profile ? toCounselorStudent(profile) : null
+  },
+
+  async findAssignedStudentTrack(counselorId, studentProfileId) {
+    return prisma.studentProfile.findFirst({
+      select: { track: true },
+      where: {
+        id: studentProfileId,
+        user: {
+          studentRelationships: {
+            some: { counselorId, status: 'ACTIVE' },
+          },
+        },
+      },
+    })
   },
 })

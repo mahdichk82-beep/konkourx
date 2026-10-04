@@ -9,6 +9,7 @@ test('profile PATCH upserts preserve omitted fields and apply supplied nulls', a
   let studentProfile: StudentProfileRecord = {
     id: 'student-profile-1',
     userId: 'student-user-1',
+    track: null,
     educationLevel: '12',
     schoolName: 'Konkourix Academy',
     createdAt: timestamp,
@@ -27,8 +28,8 @@ test('profile PATCH upserts preserve omitted fields and apply supplied nulls', a
   const prisma = {
     studentProfile: {
       async upsert(input: {
-        create: { userId: string; educationLevel: string | null; schoolName: string | null }
-        update: { educationLevel?: string | null; schoolName?: string | null }
+        create: { userId: string; track: string | null; educationLevel: string | null; schoolName: string | null }
+        update: { track?: string | null; educationLevel?: string | null; schoolName?: string | null }
       }) {
         studentUpdates.push(input.update)
         studentProfile = { ...studentProfile, ...input.update }
@@ -67,6 +68,11 @@ test('profile PATCH upserts preserve omitted fields and apply supplied nulls', a
   assert.equal(studentExplicitNull.educationLevel, '12')
   assert.equal(studentExplicitNull.schoolName, null)
 
+  const studentTrack = await store.upsertStudentProfile('student-user-1', {
+    track: 'HUMANITIES',
+  })
+  assert.equal(studentTrack.track, 'HUMANITIES')
+
   const counselorSingleField = await store.upsertCounselorProfile('counselor-user-1', {
     bio: 'Updated bio',
   })
@@ -90,6 +96,7 @@ test('profile PATCH upserts preserve omitted fields and apply supplied nulls', a
     { educationLevel: '11' },
     { educationLevel: '12', schoolName: 'New School' },
     { schoolName: null },
+    { track: 'HUMANITIES' },
   ])
   assert.deepEqual(counselorUpdates, [
     { bio: 'Updated bio' },
@@ -103,8 +110,10 @@ test('counselor student store scopes list and detail queries to active assignmen
   const studentProfileId = '30000000-0000-4000-8000-000000000001'
   const listQueries: unknown[] = []
   const detailQueries: unknown[] = []
+  const trackQueries: unknown[] = []
   const profile = {
     id: studentProfileId,
+    track: 'MATHEMATICS',
     educationLevel: 'دوازدهم',
     schoolName: 'دبیرستان نمونه',
     user: { status: 'ACTIVE' },
@@ -116,6 +125,18 @@ test('counselor student store scopes list and detail queries to active assignmen
         return [profile]
       },
       async findFirst(input: unknown) {
+        if (
+          typeof input === 'object'
+          && input !== null
+          && 'select' in input
+          && typeof input.select === 'object'
+          && input.select !== null
+          && 'track' in input.select
+          && Object.keys(input.select).length === 1
+        ) {
+          trackQueries.push(input)
+          return { track: profile.track }
+        }
         detailQueries.push(input)
         return profile
       },
@@ -125,6 +146,7 @@ test('counselor student store scopes list and detail queries to active assignmen
 
   const list = await store.listAssignedStudents(counselorId, { limit: 25 })
   const detail = await store.findAssignedStudent(counselorId, studentProfileId)
+  const track = await store.findAssignedStudentTrack(counselorId, studentProfileId)
 
   assert.deepEqual(list, {
     items: [{
@@ -137,6 +159,7 @@ test('counselor student store scopes list and detail queries to active assignmen
     nextCursor: null,
   })
   assert.deepEqual(detail, list.items[0])
+  assert.deepEqual(track, { track: 'MATHEMATICS' })
   assert.deepEqual(listQueries, [{
     cursor: undefined,
     orderBy: { id: 'asc' },
@@ -163,6 +186,17 @@ test('counselor student store scopes list and detail queries to active assignmen
       schoolName: true,
       user: { select: { status: true } },
     },
+    where: {
+      id: studentProfileId,
+      user: {
+        studentRelationships: {
+          some: { counselorId, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+  assert.deepEqual(trackQueries, [{
+    select: { track: true },
     where: {
       id: studentProfileId,
       user: {

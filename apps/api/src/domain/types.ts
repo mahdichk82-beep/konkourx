@@ -1,6 +1,7 @@
 export type DomainRole = 'STUDENT' | 'COUNSELOR' | 'ADMIN'
 export type DomainStatus = 'ACTIVE' | 'SUSPENDED' | 'DISABLED'
 export type StudentCounselorStatus = 'ACTIVE' | 'INACTIVE'
+export type StudentTrack = 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES'
 
 export type DomainUser = {
   id: string
@@ -11,6 +12,7 @@ export type DomainUser = {
 export type StudentProfileRecord = {
   id: string
   userId: string
+  track: StudentTrack | null
   educationLevel: string | null
   schoolName: string | null
   createdAt: Date
@@ -38,6 +40,7 @@ export type StudentCounselorRecord = {
 }
 
 export type StudentProfileInput = {
+  track?: StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
 }
@@ -53,6 +56,10 @@ export type CounselorStudentRecord = {
   educationLevel: string | null
   schoolName: string | null
   status: DomainStatus
+}
+
+export type AssignedStudentTrackRecord = {
+  track: StudentTrack | null
 }
 
 export type CounselorStudentPageQuery = {

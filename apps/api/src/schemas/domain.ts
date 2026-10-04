@@ -6,6 +6,7 @@ export const studentProfileSchema = z
   .object({
     educationLevel: optionalText(100),
     schoolName: optionalText(200),
+    track: z.enum(['EXPERIMENTAL', 'MATHEMATICS', 'HUMANITIES']).nullable().optional(),
   })
   .strict()
 

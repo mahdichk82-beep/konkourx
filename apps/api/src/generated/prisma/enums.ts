@@ -35,6 +35,15 @@ export const StudentCounselorStatus = {
 export type StudentCounselorStatus = (typeof StudentCounselorStatus)[keyof typeof StudentCounselorStatus]
 
 
+export const StudentTrack = {
+  EXPERIMENTAL: 'EXPERIMENTAL',
+  MATHEMATICS: 'MATHEMATICS',
+  HUMANITIES: 'HUMANITIES'
+} as const
+
+export type StudentTrack = (typeof StudentTrack)[keyof typeof StudentTrack]
+
+
 export const StudyPlanStatus = {
   DRAFT: 'DRAFT',
   ACTIVE: 'ACTIVE',

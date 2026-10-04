@@ -8,9 +8,27 @@ This file documents the currently implemented HTTP contract, including student-o
 
 ### CURRENT IMPLEMENTED STATE
 
-The following authenticated routes are readable by `STUDENT`, `COUNSELOR`, and `ADMIN`:
+#### Primary authoritative Curriculum access
+
+Student-bound Curriculum navigation derives its track only from the authenticated Student's `StudentProfile.track`. Counselor-bound Curriculum navigation first authorizes the selected Student through the existing active assignment and then derives the track from that Student's profile. A Student- or Counselor-supplied track value is not authoritative and cannot override either profile-derived track.
 
 ```text
+GET /api/v1/student/curriculum/catalog
+GET /api/v1/student/curriculum/catalog/:entryId
+GET /api/v1/student/curriculum/catalog/:entryId/roots
+GET /api/v1/student/curriculum/catalog/:entryId/nodes/:nodeId
+GET /api/v1/student/curriculum/catalog/:entryId/nodes/:nodeId/children
+GET /api/v1/student/curriculum/search?q=...
+
+# Counselor access to an actively assigned StudentProfile
+GET /api/v1/counselor/students/:studentId/curriculum/catalog
+GET /api/v1/counselor/students/:studentId/curriculum/catalog/:entryId
+GET /api/v1/counselor/students/:studentId/curriculum/catalog/:entryId/roots
+GET /api/v1/counselor/students/:studentId/curriculum/catalog/:entryId/nodes/:nodeId
+GET /api/v1/counselor/students/:studentId/curriculum/catalog/:entryId/nodes/:nodeId/children
+GET /api/v1/counselor/students/:studentId/curriculum/search?q=...
+
+# ADMIN-only explicit-track inspection
 GET /api/v1/curriculum/tracks
 GET /api/v1/curriculum/tracks/:track/catalog
 GET /api/v1/curriculum/tracks/:track/catalog/:entryId
@@ -18,8 +36,15 @@ GET /api/v1/curriculum/tracks/:track/catalog/:entryId/roots
 GET /api/v1/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId
 GET /api/v1/curriculum/tracks/:track/catalog/:entryId/nodes/:nodeId/children
 GET /api/v1/curriculum/tracks/:track/search?q=...
+```
 
-# Compatibility representation APIs
+These profile-bound routes are the primary Student/Counselor Curriculum browser and picker contract. The generic explicit-track catalog routes are reserved for `ADMIN` inspection and administration.
+
+#### Legacy compatibility reads
+
+The existing scope, placement, representation, global-node, and global-search endpoints retain their existing authorization behavior for compatibility. They read the global Canonical Curriculum representation inventory, do not make a request-supplied track authoritative, and are not the primary Student/Counselor Curriculum picker contract.
+
+```text
 GET /api/v1/curriculum/scopes
 GET /api/v1/curriculum/placements
 GET /api/v1/curriculum/representations
@@ -30,7 +55,9 @@ GET /api/v1/curriculum/search?q=...
 
 The primary navigation contract is `TRACK -> SUBJECT / SUBJECT VIEW -> ARBITRARY CANONICAL TREE`. The three stable track values are `EXPERIMENTAL`, `MATHEMATICS`, and `HUMANITIES`. A catalog entry is a navigation identity, not a task-target kind. Book-based and thematic entries are siblings. Shared entries retain one catalog ID and the same canonical representation/node IDs in every explicitly permitted track.
 
-The `:track` path value is filtering context only. It is not user-to-track authorization, and the same authenticated Student, Counselor, or Admin may currently request any of the three catalogs. No profile lookup or track permission is performed by these routes.
+For Students, the backend resolves the authenticated user's `StudentProfile.track`. For Counselors, it first applies the existing active `StudentCounselor` assignment predicate to the selected `StudentProfile`, then resolves that profile's track. Query or path values supplied by a Student or Counselor never select a track. A missing profile track returns HTTP `409` with stable code `STUDENT_TRACK_NOT_SET`; Counselor assignment failures retain the existing hidden `STUDENT_NOT_FOUND` response. `ADMIN` may inspect an explicit track through the generic routes without a StudentProfile.
+
+`POST /api/v1/auth/register` accepts optional `track` with one of `EXPERIMENTAL`, `MATHEMATICS`, or `HUMANITIES`. Omission creates a valid StudentProfile with `track: null`; no default or inference is applied. The existing self-scoped `PATCH /api/v1/me/student-profile` accepts an optional enum value or `null`, so this milestone does not impose a permanent or irreversible track-change policy. Existing request bodies that omit `track` remain valid.
 
 Catalog lists contain resolved entries only. Roots are canonical nodes or non-selectable navigation groups. Groups contain existing canonical node IDs, cannot be submitted as task targets, and do not create synthetic educational nodes. Entry-scoped node and child responses include the requested track, entry, ambiguity codes, and a breadcrumb containing track, entry, optional navigation group, and canonical node ancestors. Track search is bounded to nodes mounted by resolved entries in that track; it never falls back to the global representation inventory.
 
@@ -40,15 +67,15 @@ The runtime loads the checked-in deterministic base artifact and additive catalo
 
 Placement and representation lists use `limit` and `offset`. Node children and search use the same bounded pagination. Limits are 1 through 100, offsets are 0 through 10,000, and search text is required with a maximum length of 100 characters. Search normalization never replaces the returned raw label, and results remain in deterministic source order. Unknown well-formed node IDs return `CURRICULUM_NODE_NOT_FOUND`; malformed IDs and invalid bounds return `VALIDATION_ERROR`.
 
-There is no Curriculum write endpoint, admin Curriculum endpoint, authoring operation, import operation, publication/version workflow, separate Curriculum permission system, database migration, or frontend change in this milestone.
+There is no Curriculum write endpoint, authoring operation, import operation, publication/version workflow, separate Curriculum permission system, Curriculum database persistence, task-target change, or frontend change in this milestone.
 
 ### CURRENT DATABASE BOUNDARY
 
-Historical Prisma Curriculum governance models and PostgreSQL objects were retired by the RF4 forward migration. Canonical Curriculum itself remains file-backed and has no PostgreSQL persistence. DailyTask planning stores only validated runtime IDs and historical display snapshots; these task references do not make PostgreSQL authoritative over Curriculum.
+Historical Prisma Curriculum governance models and PostgreSQL objects were retired by the RF4 forward migration. Canonical Curriculum itself remains file-backed and has no PostgreSQL persistence. `StudentProfile.track` is a nullable PostgreSQL enum field used only as the authoritative catalog-selection boundary. The additive migration creates the enum and nullable column without a default or row backfill. DailyTask planning stores only validated runtime IDs and historical display snapshots; these task references do not make PostgreSQL authoritative over Curriculum.
 
 ### APPROVED FUTURE STATE
 
-The remaining authoritative track-enforcement gate requires `StudentProfile.track`. Student access will resolve the track from the authenticated Student's profile. Counselor access will resolve it from the selected authorized and assigned Student's profile. Until that separately approved gate is implemented, request-supplied track remains temporary filtering context only.
+The Shared Curriculum Browser / Picker remains a separate frontend milestone. It must consume the Student-bound or Counselor-bound routes above rather than make track selection authoritative in either browser application.
 
 A future Question Bank contract may link `Question` and `CurriculumNode` many-to-many. Those links are human-tagged, may span book-based views, thematic views, and multiple grades, and perform no automatic semantic mapping. This is compatibility direction only and is not implemented by this milestone.
 

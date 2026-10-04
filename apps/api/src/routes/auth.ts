@@ -70,6 +70,7 @@ export const registerAuthRoutes = (
         email: input.email ?? null,
         password: input.password,
         phone: input.phone ?? null,
+        track: input.track,
       },
       requestMeta(request),
     )

@@ -27,6 +27,7 @@ export type AggregateStudentProfile = {
 export type StudentProfileMinAggregateOutputType = {
   id: string | null
   userId: string | null
+  track: $Enums.StudentTrack | null
   educationLevel: string | null
   schoolName: string | null
   createdAt: Date | null
@@ -36,6 +37,7 @@ export type StudentProfileMinAggregateOutputType = {
 export type StudentProfileMaxAggregateOutputType = {
   id: string | null
   userId: string | null
+  track: $Enums.StudentTrack | null
   educationLevel: string | null
   schoolName: string | null
   createdAt: Date | null
@@ -45,6 +47,7 @@ export type StudentProfileMaxAggregateOutputType = {
 export type StudentProfileCountAggregateOutputType = {
   id: number
   userId: number
+  track: number
   educationLevel: number
   schoolName: number
   createdAt: number
@@ -56,6 +59,7 @@ export type StudentProfileCountAggregateOutputType = {
 export type StudentProfileMinAggregateInputType = {
   id?: true
   userId?: true
+  track?: true
   educationLevel?: true
   schoolName?: true
   createdAt?: true
@@ -65,6 +69,7 @@ export type StudentProfileMinAggregateInputType = {
 export type StudentProfileMaxAggregateInputType = {
   id?: true
   userId?: true
+  track?: true
   educationLevel?: true
   schoolName?: true
   createdAt?: true
@@ -74,6 +79,7 @@ export type StudentProfileMaxAggregateInputType = {
 export type StudentProfileCountAggregateInputType = {
   id?: true
   userId?: true
+  track?: true
   educationLevel?: true
   schoolName?: true
   createdAt?: true
@@ -156,6 +162,7 @@ export type StudentProfileGroupByArgs<ExtArgs extends runtime.Types.Extensions.I
 export type StudentProfileGroupByOutputType = {
   id: string
   userId: string
+  track: $Enums.StudentTrack | null
   educationLevel: string | null
   schoolName: string | null
   createdAt: Date
@@ -186,6 +193,7 @@ export type StudentProfileWhereInput = {
   NOT?: Prisma.StudentProfileWhereInput | Prisma.StudentProfileWhereInput[]
   id?: Prisma.UuidFilter<"StudentProfile"> | string
   userId?: Prisma.UuidFilter<"StudentProfile"> | string
+  track?: Prisma.EnumStudentTrackNullableFilter<"StudentProfile"> | $Enums.StudentTrack | null
   educationLevel?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   schoolName?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
@@ -202,6 +210,7 @@ export type StudentProfileWhereInput = {
 export type StudentProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  track?: Prisma.SortOrderInput | Prisma.SortOrder
   educationLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   schoolName?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -221,6 +230,7 @@ export type StudentProfileWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.StudentProfileWhereInput | Prisma.StudentProfileWhereInput[]
   OR?: Prisma.StudentProfileWhereInput[]
   NOT?: Prisma.StudentProfileWhereInput | Prisma.StudentProfileWhereInput[]
+  track?: Prisma.EnumStudentTrackNullableFilter<"StudentProfile"> | $Enums.StudentTrack | null
   educationLevel?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   schoolName?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
@@ -237,6 +247,7 @@ export type StudentProfileWhereUniqueInput = Prisma.AtLeast<{
 export type StudentProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  track?: Prisma.SortOrderInput | Prisma.SortOrder
   educationLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   schoolName?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -252,6 +263,7 @@ export type StudentProfileScalarWhereWithAggregatesInput = {
   NOT?: Prisma.StudentProfileScalarWhereWithAggregatesInput | Prisma.StudentProfileScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"StudentProfile"> | string
   userId?: Prisma.UuidWithAggregatesFilter<"StudentProfile"> | string
+  track?: Prisma.EnumStudentTrackNullableWithAggregatesFilter<"StudentProfile"> | $Enums.StudentTrack | null
   educationLevel?: Prisma.StringNullableWithAggregatesFilter<"StudentProfile"> | string | null
   schoolName?: Prisma.StringNullableWithAggregatesFilter<"StudentProfile"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StudentProfile"> | Date | string
@@ -260,6 +272,7 @@ export type StudentProfileScalarWhereWithAggregatesInput = {
 
 export type StudentProfileCreateInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -276,6 +289,7 @@ export type StudentProfileCreateInput = {
 export type StudentProfileUncheckedCreateInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -290,6 +304,7 @@ export type StudentProfileUncheckedCreateInput = {
 
 export type StudentProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -306,6 +321,7 @@ export type StudentProfileUpdateInput = {
 export type StudentProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -321,6 +337,7 @@ export type StudentProfileUncheckedUpdateInput = {
 export type StudentProfileCreateManyInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -329,6 +346,7 @@ export type StudentProfileCreateManyInput = {
 
 export type StudentProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -338,6 +356,7 @@ export type StudentProfileUpdateManyMutationInput = {
 export type StudentProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -352,6 +371,7 @@ export type StudentProfileNullableScalarRelationFilter = {
 export type StudentProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  track?: Prisma.SortOrder
   educationLevel?: Prisma.SortOrder
   schoolName?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -361,6 +381,7 @@ export type StudentProfileCountOrderByAggregateInput = {
 export type StudentProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  track?: Prisma.SortOrder
   educationLevel?: Prisma.SortOrder
   schoolName?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -370,6 +391,7 @@ export type StudentProfileMaxOrderByAggregateInput = {
 export type StudentProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  track?: Prisma.SortOrder
   educationLevel?: Prisma.SortOrder
   schoolName?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -411,6 +433,10 @@ export type StudentProfileUncheckedUpdateOneWithoutUserNestedInput = {
   delete?: Prisma.StudentProfileWhereInput | boolean
   connect?: Prisma.StudentProfileWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutUserInput, Prisma.StudentProfileUpdateWithoutUserInput>, Prisma.StudentProfileUncheckedUpdateWithoutUserInput>
+}
+
+export type NullableEnumStudentTrackFieldUpdateOperationsInput = {
+  set?: $Enums.StudentTrack | null
 }
 
 export type StudentProfileCreateNestedOneWithoutStudySubjectsInput = {
@@ -499,6 +525,7 @@ export type StudentProfileUpdateOneRequiredWithoutGoalsNestedInput = {
 
 export type StudentProfileCreateWithoutUserInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -513,6 +540,7 @@ export type StudentProfileCreateWithoutUserInput = {
 
 export type StudentProfileUncheckedCreateWithoutUserInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -543,6 +571,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutUserInput = {
 
 export type StudentProfileUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -557,6 +586,7 @@ export type StudentProfileUpdateWithoutUserInput = {
 
 export type StudentProfileUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -571,6 +601,7 @@ export type StudentProfileUncheckedUpdateWithoutUserInput = {
 
 export type StudentProfileCreateWithoutStudySubjectsInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -586,6 +617,7 @@ export type StudentProfileCreateWithoutStudySubjectsInput = {
 export type StudentProfileUncheckedCreateWithoutStudySubjectsInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -615,6 +647,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutStudySubjectsInput = {
 
 export type StudentProfileUpdateWithoutStudySubjectsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -630,6 +663,7 @@ export type StudentProfileUpdateWithoutStudySubjectsInput = {
 export type StudentProfileUncheckedUpdateWithoutStudySubjectsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -643,6 +677,7 @@ export type StudentProfileUncheckedUpdateWithoutStudySubjectsInput = {
 
 export type StudentProfileCreateWithoutStudyPlansInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -658,6 +693,7 @@ export type StudentProfileCreateWithoutStudyPlansInput = {
 export type StudentProfileUncheckedCreateWithoutStudyPlansInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -687,6 +723,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutStudyPlansInput = {
 
 export type StudentProfileUpdateWithoutStudyPlansInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -702,6 +739,7 @@ export type StudentProfileUpdateWithoutStudyPlansInput = {
 export type StudentProfileUncheckedUpdateWithoutStudyPlansInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -715,6 +753,7 @@ export type StudentProfileUncheckedUpdateWithoutStudyPlansInput = {
 
 export type StudentProfileCreateWithoutDailyTasksInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -730,6 +769,7 @@ export type StudentProfileCreateWithoutDailyTasksInput = {
 export type StudentProfileUncheckedCreateWithoutDailyTasksInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -759,6 +799,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutDailyTasksInput = {
 
 export type StudentProfileUpdateWithoutDailyTasksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -774,6 +815,7 @@ export type StudentProfileUpdateWithoutDailyTasksInput = {
 export type StudentProfileUncheckedUpdateWithoutDailyTasksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -787,6 +829,7 @@ export type StudentProfileUncheckedUpdateWithoutDailyTasksInput = {
 
 export type StudentProfileCreateWithoutStudySessionsInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -802,6 +845,7 @@ export type StudentProfileCreateWithoutStudySessionsInput = {
 export type StudentProfileUncheckedCreateWithoutStudySessionsInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -831,6 +875,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutStudySessionsInput = {
 
 export type StudentProfileUpdateWithoutStudySessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -846,6 +891,7 @@ export type StudentProfileUpdateWithoutStudySessionsInput = {
 export type StudentProfileUncheckedUpdateWithoutStudySessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -859,6 +905,7 @@ export type StudentProfileUncheckedUpdateWithoutStudySessionsInput = {
 
 export type StudentProfileCreateWithoutAssessmentAttemptsInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -874,6 +921,7 @@ export type StudentProfileCreateWithoutAssessmentAttemptsInput = {
 export type StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -903,6 +951,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutAssessmentAttemptsInput = {
 
 export type StudentProfileUpdateWithoutAssessmentAttemptsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -918,6 +967,7 @@ export type StudentProfileUpdateWithoutAssessmentAttemptsInput = {
 export type StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -931,6 +981,7 @@ export type StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput = {
 
 export type StudentProfileCreateWithoutGoalsInput = {
   id?: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -946,6 +997,7 @@ export type StudentProfileCreateWithoutGoalsInput = {
 export type StudentProfileUncheckedCreateWithoutGoalsInput = {
   id?: string
   userId: string
+  track?: $Enums.StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
@@ -975,6 +1027,7 @@ export type StudentProfileUpdateToOneWithWhereWithoutGoalsInput = {
 
 export type StudentProfileUpdateWithoutGoalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -990,6 +1043,7 @@ export type StudentProfileUpdateWithoutGoalsInput = {
 export type StudentProfileUncheckedUpdateWithoutGoalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  track?: Prisma.NullableEnumStudentTrackFieldUpdateOperationsInput | $Enums.StudentTrack | null
   educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1080,6 +1134,7 @@ export type StudentProfileCountOutputTypeCountGoalsArgs<ExtArgs extends runtime.
 export type StudentProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  track?: boolean
   educationLevel?: boolean
   schoolName?: boolean
   createdAt?: boolean
@@ -1097,6 +1152,7 @@ export type StudentProfileSelect<ExtArgs extends runtime.Types.Extensions.Intern
 export type StudentProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  track?: boolean
   educationLevel?: boolean
   schoolName?: boolean
   createdAt?: boolean
@@ -1107,6 +1163,7 @@ export type StudentProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Type
 export type StudentProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  track?: boolean
   educationLevel?: boolean
   schoolName?: boolean
   createdAt?: boolean
@@ -1117,13 +1174,14 @@ export type StudentProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
 export type StudentProfileSelectScalar = {
   id?: boolean
   userId?: boolean
+  track?: boolean
   educationLevel?: boolean
   schoolName?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StudentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "educationLevel" | "schoolName" | "createdAt" | "updatedAt", ExtArgs["result"]["studentProfile"]>
+export type StudentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "track" | "educationLevel" | "schoolName" | "createdAt" | "updatedAt", ExtArgs["result"]["studentProfile"]>
 export type StudentProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studySubjects?: boolean | Prisma.StudentProfile$studySubjectsArgs<ExtArgs>
   studyPlans?: boolean | Prisma.StudentProfile$studyPlansArgs<ExtArgs>
@@ -1155,6 +1213,7 @@ export type $StudentProfilePayload<ExtArgs extends runtime.Types.Extensions.Inte
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
+    track: $Enums.StudentTrack | null
     educationLevel: string | null
     schoolName: string | null
     createdAt: Date
@@ -1591,6 +1650,7 @@ export interface Prisma__StudentProfileClient<T, Null = never, ExtArgs extends r
 export interface StudentProfileFieldRefs {
   readonly id: Prisma.FieldRef<"StudentProfile", 'String'>
   readonly userId: Prisma.FieldRef<"StudentProfile", 'String'>
+  readonly track: Prisma.FieldRef<"StudentProfile", 'StudentTrack'>
   readonly educationLevel: Prisma.FieldRef<"StudentProfile", 'String'>
   readonly schoolName: Prisma.FieldRef<"StudentProfile", 'String'>
   readonly createdAt: Prisma.FieldRef<"StudentProfile", 'DateTime'>

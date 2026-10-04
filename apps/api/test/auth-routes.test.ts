@@ -21,6 +21,8 @@ const authResult = {
   user,
 }
 
+let registrationInput: unknown
+
 const createAuthService = (): AuthService => ({
   authenticateAccessToken: async () => user,
   changePassword: async () => undefined,
@@ -29,7 +31,10 @@ const createAuthService = (): AuthService => ({
   logout: async () => undefined,
   logoutAll: async () => undefined,
   refresh: async () => authResult,
-  register: async () => authResult,
+  register: async (input) => {
+    registrationInput = input
+    return authResult
+  },
 })
 
 const createApp = (options: { cookieDomain?: string; cookieSecure?: boolean } = {}) =>
@@ -68,6 +73,46 @@ test('registration returns an access token and HttpOnly refresh cookie', async (
   assert.match(response.headers['set-cookie'], /SameSite=Lax/)
   assert.doesNotMatch(response.headers['set-cookie'], /Domain=/)
   assert.doesNotMatch(response.headers['set-cookie'], /Secure/)
+
+  await app.close()
+})
+
+test('registration accepts canonical track and rejects invalid track', async () => {
+  registrationInput = undefined
+  const app = createApp()
+
+  const valid = await app.inject({
+    method: 'POST',
+    payload: {
+      email: 'student@example.com',
+      password: 'strong password',
+      track: 'MATHEMATICS',
+    },
+    url: '/api/v1/auth/register',
+  })
+
+  assert.equal(valid.statusCode, 201)
+  assert.deepEqual(registrationInput, {
+    email: 'student@example.com',
+    password: 'strong password',
+    phone: null,
+    track: 'MATHEMATICS',
+  })
+
+  registrationInput = undefined
+  const invalid = await app.inject({
+    method: 'POST',
+    payload: {
+      email: 'student@example.com',
+      password: 'strong password',
+      track: 'SCIENCE',
+    },
+    url: '/api/v1/auth/register',
+  })
+
+  assert.equal(invalid.statusCode, 400)
+  assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  assert.equal(registrationInput, undefined)
 
   await app.close()
 })

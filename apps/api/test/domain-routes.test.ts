@@ -32,6 +32,7 @@ const store: DomainStore = {
   upsertStudentProfile: async (userId, input) => ({
     id: 'student-profile-1',
     userId,
+    track: input.track ?? null,
     educationLevel: input.educationLevel ?? null,
     schoolName: input.schoolName ?? null,
     createdAt: new Date('2026-09-03T00:00:00.000Z'),
@@ -75,11 +76,42 @@ test('student profile route uses the v1 contract and request id', async () => {
   assert.deepEqual(response.json().data, {
     id: 'student-profile-1',
     userId: 'student-1',
+    track: null,
     educationLevel: 'secondary',
     schoolName: null,
     createdAt: '2026-09-03T00:00:00.000Z',
     updatedAt: '2026-09-03T00:00:00.000Z',
   })
+
+  await app.close()
+})
+
+test('student profile route accepts a canonical track and rejects invalid track', async () => {
+  const app = buildApp({
+    auth: createAuth(),
+    domain: createDomainService(store),
+    environment: 'test',
+    logger: false,
+    prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
+  })
+
+  const valid = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { track: 'EXPERIMENTAL' },
+    url: '/api/v1/me/student-profile',
+  })
+  assert.equal(valid.statusCode, 200)
+  assert.equal(valid.json().data.track, 'EXPERIMENTAL')
+
+  const invalid = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { track: 'SCIENCE' },
+    url: '/api/v1/me/student-profile',
+  })
+  assert.equal(invalid.statusCode, 400)
+  assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
 
   await app.close()
 })

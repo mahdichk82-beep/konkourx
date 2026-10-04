@@ -5,6 +5,7 @@ export const registerSchema = z
     email: z.string().email().nullable().optional(),
     password: z.string().min(12),
     phone: z.string().min(1).nullable().optional(),
+    track: z.enum(['EXPERIMENTAL', 'MATHEMATICS', 'HUMANITIES']).optional(),
   })
   .strict()
   .refine((input) => Boolean(input.email || input.phone), {

@@ -190,7 +190,7 @@ test('assigned student detail is accessible without sensitive authentication or 
 
   assert.equal(response.statusCode, 200)
   assert.deepEqual(response.json().data, students.get(ids.studentA))
-  for (const field of ['email', 'phone', 'passwordHash', 'sessions', 'refreshToken', 'tokenHash']) {
+  for (const field of ['track', 'email', 'phone', 'passwordHash', 'sessions', 'refreshToken', 'tokenHash']) {
     assert.equal(Object.hasOwn(response.json().data, field), false)
   }
 

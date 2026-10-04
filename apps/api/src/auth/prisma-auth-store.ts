@@ -78,6 +78,7 @@ export const createPrismaAuthStore = (prisma: PrismaClient): AuthStore => ({
         passwordHash: input.passwordHash,
         phone: input.phone,
         role: 'STUDENT',
+        studentProfile: { create: { track: input.track ?? null } },
       },
       select: userFields,
     })

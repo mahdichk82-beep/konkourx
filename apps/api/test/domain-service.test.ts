@@ -44,10 +44,11 @@ const createStore = (): DomainStore & {
     async findStudentProfile(userId: string) {
       return store.studentProfile?.userId === userId ? store.studentProfile : null
     },
-    async upsertStudentProfile(userId: string, input: { educationLevel?: string | null; schoolName?: string | null }) {
+    async upsertStudentProfile(userId: string, input: { track?: 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES' | null; educationLevel?: string | null; schoolName?: string | null }) {
       store.studentProfile = {
         id: 'student-profile-1',
         userId,
+        track: input.track ?? null,
         educationLevel: input.educationLevel ?? null,
         schoolName: input.schoolName ?? null,
         createdAt: new Date('2026-09-03T00:00:00.000Z'),

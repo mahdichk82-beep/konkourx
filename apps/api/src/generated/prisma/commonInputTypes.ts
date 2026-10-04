@@ -196,6 +196,23 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumStudentTrackNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentTrack | Prisma.EnumStudentTrackFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel> | $Enums.StudentTrack | null
+}
+
+export type EnumStudentTrackNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentTrack | Prisma.EnumStudentTrackFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStudentTrackNullableWithAggregatesFilter<$PrismaModel> | $Enums.StudentTrack | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel>
+}
+
 export type EnumStudentCounselorStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.StudentCounselorStatus | Prisma.EnumStudentCounselorStatusFieldRefInput<$PrismaModel>
   in?: $Enums.StudentCounselorStatus[] | Prisma.ListEnumStudentCounselorStatusFieldRefInput<$PrismaModel>
@@ -604,6 +621,23 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumStudentTrackNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentTrack | Prisma.EnumStudentTrackFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel> | $Enums.StudentTrack | null
+}
+
+export type NestedEnumStudentTrackNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentTrack | Prisma.EnumStudentTrackFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StudentTrack[] | Prisma.ListEnumStudentTrackFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStudentTrackNullableWithAggregatesFilter<$PrismaModel> | $Enums.StudentTrack | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentTrackNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumStudentCounselorStatusFilter<$PrismaModel = never> = {

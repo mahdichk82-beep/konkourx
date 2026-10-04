@@ -39,7 +39,7 @@ const createApp = () => buildApp({
   prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
 })
 
-const get = (app: ReturnType<typeof createApp>, url: string, token = 'student-token') =>
+const get = (app: ReturnType<typeof createApp>, url: string, token = 'admin-token') =>
   app.inject({ headers: { authorization: `Bearer ${token}` }, method: 'GET', url })
 
 test('Curriculum routes require authentication and allow every existing role', async () => {
@@ -128,7 +128,7 @@ test('Curriculum routes reject unknown IDs, unsafe bounds, and all write/admin p
   await app.close()
 })
 
-test('track-scoped Curriculum routes require authentication and allow all reader roles', async () => {
+test('track-scoped Curriculum routes require authentication and allow only administrators', async () => {
   const app = createApp()
   const humanitiesArabic = canonicalCurriculumStore
     .listTrackCatalog('HUMANITIES')
@@ -152,14 +152,17 @@ test('track-scoped Curriculum routes require authentication and allow all reader
     const anonymous = await app.inject({ method: 'GET', url })
     assert.equal(anonymous.statusCode, 401, url)
     assert.equal(anonymous.json().error.code, 'TOKEN_MISSING')
-    for (const token of ['student-token', 'counselor-token', 'admin-token']) {
+    for (const token of ['student-token', 'counselor-token']) {
       const response = await get(app, url, token)
-      assert.equal(response.statusCode, 200, `${token}: ${url}`)
+      assert.equal(response.statusCode, 403, `${token}: ${url}`)
+      assert.equal(response.json().error.code, 'ROLE_FORBIDDEN')
     }
+    const admin = await get(app, url, 'admin-token')
+    assert.equal(admin.statusCode, 200, url)
   }
 
   for (const track of ['EXPERIMENTAL', 'MATHEMATICS', 'HUMANITIES']) {
-    const response = await get(app, `/api/v1/curriculum/tracks/${track}/catalog`, 'student-token')
+    const response = await get(app, `/api/v1/curriculum/tracks/${track}/catalog`, 'admin-token')
     assert.equal(response.statusCode, 200)
   }
   await app.close()
@@ -167,14 +170,14 @@ test('track-scoped Curriculum routes require authentication and allow all reader
 
 test('track-scoped Curriculum routes filter entries, trees, and search by request context', async () => {
   const app = createApp()
-  const experimental = await get(app, '/api/v1/curriculum/tracks/EXPERIMENTAL/catalog')
+  const experimental = await get(app, '/api/v1/curriculum/tracks/EXPERIMENTAL/catalog', 'admin-token')
   assert.deepEqual(experimental.json().data.map(({ title }: { title: string }) => title), [
     'فارسی', 'فارسی موضوعی', 'عربی', 'عربی موضوعی', 'دین و زندگی',
     'زبان انگلیسی', 'زبان انگلیسی موضوعی', 'ریاضی', 'ریاضی موضوعی',
     'زیست', 'فیزیک تجربی', 'شیمی',
   ])
-  const mathematics = await get(app, '/api/v1/curriculum/tracks/MATHEMATICS/catalog')
-  const humanities = await get(app, '/api/v1/curriculum/tracks/HUMANITIES/catalog')
+  const mathematics = await get(app, '/api/v1/curriculum/tracks/MATHEMATICS/catalog', 'admin-token')
+  const humanities = await get(app, '/api/v1/curriculum/tracks/HUMANITIES/catalog', 'admin-token')
   const experimentalPersian = experimental.json().data.find(({ title }: { title: string }) => title === 'فارسی')
   const humanitiesPersian = humanities.json().data.find(({ title }: { title: string }) => title === 'فارسی')
   assert.equal(experimentalPersian.id, humanitiesPersian.id)
@@ -183,6 +186,7 @@ test('track-scoped Curriculum routes filter entries, trees, and search by reques
   const unavailableArabic = await get(
     app,
     `/api/v1/curriculum/tracks/EXPERIMENTAL/catalog/${humanitiesArabic.id}`,
+    'admin-token',
   )
   assert.equal(unavailableArabic.statusCode, 404)
   assert.equal(unavailableArabic.json().error.code, 'CURRICULUM_CATALOG_ENTRY_NOT_FOUND')
@@ -191,6 +195,7 @@ test('track-scoped Curriculum routes filter entries, trees, and search by reques
   const unavailableMath = await get(
     app,
     `/api/v1/curriculum/tracks/EXPERIMENTAL/catalog/${mathOnly.id}`,
+    'admin-token',
   )
   assert.equal(unavailableMath.statusCode, 404)
   assert.equal(unavailableMath.json().error.code, 'CURRICULUM_CATALOG_ENTRY_NOT_FOUND')
@@ -219,7 +224,7 @@ test('track-scoped Curriculum routes strictly validate track, IDs, pagination, a
     '/api/v1/curriculum/tracks/EXPERIMENTAL/search?q=',
     '/api/v1/curriculum/tracks/EXPERIMENTAL/search?q=test&offset=10001',
   ]) {
-    const response = await get(app, url)
+    const response = await get(app, url, 'admin-token')
     assert.equal(response.statusCode, 400, url)
     assert.equal(response.json().error.code, 'VALIDATION_ERROR')
   }

@@ -10,6 +10,7 @@ import type {
   StudentCounselorRecord,
   StudentProfileInput,
   StudentProfileRecord,
+  StudentTrack,
   StudentCounselorStatus,
 } from './types.js'
 
@@ -165,5 +166,20 @@ export const createDomainService = (store: DomainStore) => ({
     }
 
     return student
+  },
+
+  async getAssignedStudentTrack(
+    actor: DomainUser,
+    studentProfileId: string,
+  ): Promise<StudentTrack | null> {
+    ensureActive(actor)
+    ensureCounselor(actor)
+    const student = await store.findAssignedStudentTrack(actor.id, studentProfileId)
+
+    if (!student) {
+      throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+    }
+
+    return student.track
   },
 })

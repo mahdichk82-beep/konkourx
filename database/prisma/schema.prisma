@@ -73,9 +73,16 @@ enum StudentCounselorStatus {
   INACTIVE
 }
 
+enum StudentTrack {
+  EXPERIMENTAL
+  MATHEMATICS
+  HUMANITIES
+}
+
 model StudentProfile {
   id             String   @id @default(uuid()) @db.Uuid
   userId         String   @unique @db.Uuid
+  track          StudentTrack?
   educationLevel String?
   schoolName     String?
   createdAt      DateTime @default(now())
