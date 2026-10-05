@@ -207,6 +207,7 @@ export type UserWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   sessions?: Prisma.AuthSessionListRelationFilter
+  personProfile?: Prisma.XOR<Prisma.PersonProfileNullableScalarRelationFilter, Prisma.PersonProfileWhereInput> | null
   studentProfile?: Prisma.XOR<Prisma.StudentProfileNullableScalarRelationFilter, Prisma.StudentProfileWhereInput> | null
   counselorProfile?: Prisma.XOR<Prisma.CounselorProfileNullableScalarRelationFilter, Prisma.CounselorProfileWhereInput> | null
   studentRelationships?: Prisma.StudentCounselorListRelationFilter
@@ -224,6 +225,7 @@ export type UserOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   sessions?: Prisma.AuthSessionOrderByRelationAggregateInput
+  personProfile?: Prisma.PersonProfileOrderByWithRelationInput
   studentProfile?: Prisma.StudentProfileOrderByWithRelationInput
   counselorProfile?: Prisma.CounselorProfileOrderByWithRelationInput
   studentRelationships?: Prisma.StudentCounselorOrderByRelationAggregateInput
@@ -244,6 +246,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   sessions?: Prisma.AuthSessionListRelationFilter
+  personProfile?: Prisma.XOR<Prisma.PersonProfileNullableScalarRelationFilter, Prisma.PersonProfileWhereInput> | null
   studentProfile?: Prisma.XOR<Prisma.StudentProfileNullableScalarRelationFilter, Prisma.StudentProfileWhereInput> | null
   counselorProfile?: Prisma.XOR<Prisma.CounselorProfileNullableScalarRelationFilter, Prisma.CounselorProfileWhereInput> | null
   studentRelationships?: Prisma.StudentCounselorListRelationFilter
@@ -289,6 +292,7 @@ export type UserCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
@@ -306,6 +310,7 @@ export type UserUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
@@ -323,6 +328,7 @@ export type UserUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
@@ -340,6 +346,7 @@ export type UserUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
@@ -438,6 +445,20 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type UserCreateNestedOneWithoutPersonProfileInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPersonProfileInput, Prisma.UserUncheckedCreateWithoutPersonProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPersonProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPersonProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPersonProfileInput, Prisma.UserUncheckedCreateWithoutPersonProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPersonProfileInput
+  upsert?: Prisma.UserUpsertWithoutPersonProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPersonProfileInput, Prisma.UserUpdateWithoutPersonProfileInput>, Prisma.UserUncheckedUpdateWithoutPersonProfileInput>
+}
+
 export type UserCreateNestedOneWithoutSessionsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutSessionsInput, Prisma.UserUncheckedCreateWithoutSessionsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutSessionsInput
@@ -522,6 +543,90 @@ export type UserUpdateOneRequiredWithoutCreatedDailyTasksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedDailyTasksInput, Prisma.UserUpdateWithoutCreatedDailyTasksInput>, Prisma.UserUncheckedUpdateWithoutCreatedDailyTasksInput>
 }
 
+export type UserCreateWithoutPersonProfileInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  passwordHash: string
+  role: $Enums.UserRole
+  status?: $Enums.UserStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
+  counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
+  studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
+  counselorRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutCounselorInput
+  createdDailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserUncheckedCreateWithoutPersonProfileInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  passwordHash: string
+  role: $Enums.UserRole
+  status?: $Enums.UserStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
+  counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
+  studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
+  counselorRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutCounselorInput
+  createdDailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserCreateOrConnectWithoutPersonProfileInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPersonProfileInput, Prisma.UserUncheckedCreateWithoutPersonProfileInput>
+}
+
+export type UserUpsertWithoutPersonProfileInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPersonProfileInput, Prisma.UserUncheckedUpdateWithoutPersonProfileInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPersonProfileInput, Prisma.UserUncheckedCreateWithoutPersonProfileInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPersonProfileInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPersonProfileInput, Prisma.UserUncheckedUpdateWithoutPersonProfileInput>
+}
+
+export type UserUpdateWithoutPersonProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
+  counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
+  studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
+  counselorRelationships?: Prisma.StudentCounselorUpdateManyWithoutCounselorNestedInput
+  createdDailyTasks?: Prisma.DailyTaskUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPersonProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+  counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
+  studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
+  counselorRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutCounselorNestedInput
+  createdDailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
 export type UserCreateWithoutSessionsInput = {
   id?: string
   email?: string | null
@@ -531,6 +636,7 @@ export type UserCreateWithoutSessionsInput = {
   status?: $Enums.UserStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
@@ -547,6 +653,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   status?: $Enums.UserStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
@@ -579,6 +686,7 @@ export type UserUpdateWithoutSessionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
@@ -595,6 +703,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
@@ -612,6 +721,7 @@ export type UserCreateWithoutStudentProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
   counselorRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutCounselorInput
@@ -628,6 +738,7 @@ export type UserUncheckedCreateWithoutStudentProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutCounselorInput
@@ -660,6 +771,7 @@ export type UserUpdateWithoutStudentProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
   counselorRelationships?: Prisma.StudentCounselorUpdateManyWithoutCounselorNestedInput
@@ -676,6 +788,7 @@ export type UserUncheckedUpdateWithoutStudentProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutCounselorNestedInput
@@ -692,6 +805,7 @@ export type UserCreateWithoutCounselorProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
   counselorRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutCounselorInput
@@ -708,6 +822,7 @@ export type UserUncheckedCreateWithoutCounselorProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutCounselorInput
@@ -740,6 +855,7 @@ export type UserUpdateWithoutCounselorProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
   counselorRelationships?: Prisma.StudentCounselorUpdateManyWithoutCounselorNestedInput
@@ -756,6 +872,7 @@ export type UserUncheckedUpdateWithoutCounselorProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutCounselorNestedInput
@@ -772,6 +889,7 @@ export type UserCreateWithoutStudentRelationshipsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   counselorRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutCounselorInput
@@ -788,6 +906,7 @@ export type UserUncheckedCreateWithoutStudentRelationshipsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutCounselorInput
@@ -809,6 +928,7 @@ export type UserCreateWithoutCounselorRelationshipsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
@@ -825,6 +945,7 @@ export type UserUncheckedCreateWithoutCounselorRelationshipsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
@@ -857,6 +978,7 @@ export type UserUpdateWithoutStudentRelationshipsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   counselorRelationships?: Prisma.StudentCounselorUpdateManyWithoutCounselorNestedInput
@@ -873,6 +995,7 @@ export type UserUncheckedUpdateWithoutStudentRelationshipsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutCounselorNestedInput
@@ -900,6 +1023,7 @@ export type UserUpdateWithoutCounselorRelationshipsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
@@ -916,6 +1040,7 @@ export type UserUncheckedUpdateWithoutCounselorRelationshipsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
@@ -932,6 +1057,7 @@ export type UserCreateWithoutCreatedDailyTasksInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorCreateNestedManyWithoutStudentInput
@@ -948,6 +1074,7 @@ export type UserUncheckedCreateWithoutCreatedDailyTasksInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  personProfile?: Prisma.PersonProfileUncheckedCreateNestedOneWithoutUserInput
   studentProfile?: Prisma.StudentProfileUncheckedCreateNestedOneWithoutUserInput
   counselorProfile?: Prisma.CounselorProfileUncheckedCreateNestedOneWithoutUserInput
   studentRelationships?: Prisma.StudentCounselorUncheckedCreateNestedManyWithoutStudentInput
@@ -980,6 +1107,7 @@ export type UserUpdateWithoutCreatedDailyTasksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUpdateManyWithoutStudentNestedInput
@@ -996,6 +1124,7 @@ export type UserUncheckedUpdateWithoutCreatedDailyTasksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  personProfile?: Prisma.PersonProfileUncheckedUpdateOneWithoutUserNestedInput
   studentProfile?: Prisma.StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   counselorProfile?: Prisma.CounselorProfileUncheckedUpdateOneWithoutUserNestedInput
   studentRelationships?: Prisma.StudentCounselorUncheckedUpdateManyWithoutStudentNestedInput
@@ -1070,6 +1199,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAt?: boolean
   updatedAt?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  personProfile?: boolean | Prisma.User$personProfileArgs<ExtArgs>
   studentProfile?: boolean | Prisma.User$studentProfileArgs<ExtArgs>
   counselorProfile?: boolean | Prisma.User$counselorProfileArgs<ExtArgs>
   studentRelationships?: boolean | Prisma.User$studentRelationshipsArgs<ExtArgs>
@@ -1114,6 +1244,7 @@ export type UserSelectScalar = {
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "phone" | "passwordHash" | "role" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  personProfile?: boolean | Prisma.User$personProfileArgs<ExtArgs>
   studentProfile?: boolean | Prisma.User$studentProfileArgs<ExtArgs>
   counselorProfile?: boolean | Prisma.User$counselorProfileArgs<ExtArgs>
   studentRelationships?: boolean | Prisma.User$studentRelationshipsArgs<ExtArgs>
@@ -1128,6 +1259,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "User"
   objects: {
     sessions: Prisma.$AuthSessionPayload<ExtArgs>[]
+    personProfile: Prisma.$PersonProfilePayload<ExtArgs> | null
     studentProfile: Prisma.$StudentProfilePayload<ExtArgs> | null
     counselorProfile: Prisma.$CounselorProfilePayload<ExtArgs> | null
     studentRelationships: Prisma.$StudentCounselorPayload<ExtArgs>[]
@@ -1538,6 +1670,7 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuthSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  personProfile<T extends Prisma.User$personProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$personProfileArgs<ExtArgs>>): Prisma.Prisma__PersonProfileClient<runtime.Types.Result.GetResult<Prisma.$PersonProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   studentProfile<T extends Prisma.User$studentProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$studentProfileArgs<ExtArgs>>): Prisma.Prisma__StudentProfileClient<runtime.Types.Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   counselorProfile<T extends Prisma.User$counselorProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$counselorProfileArgs<ExtArgs>>): Prisma.Prisma__CounselorProfileClient<runtime.Types.Result.GetResult<Prisma.$CounselorProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   studentRelationships<T extends Prisma.User$studentRelationshipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$studentRelationshipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudentCounselorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1994,6 +2127,25 @@ export type User$sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.AuthSessionScalarFieldEnum | Prisma.AuthSessionScalarFieldEnum[]
+}
+
+/**
+ * User.personProfile
+ */
+export type User$personProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PersonProfile
+   */
+  select?: Prisma.PersonProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PersonProfile
+   */
+  omit?: Prisma.PersonProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PersonProfileInclude<ExtArgs> | null
+  where?: Prisma.PersonProfileWhereInput
 }
 
 /**

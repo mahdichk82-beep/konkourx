@@ -7,6 +7,8 @@ import type {
   CounselorStudentPageQuery,
   CounselorStudentRecord,
   DomainUser,
+  PersonProfileInput,
+  PersonProfileRecord,
   StudentCounselorRecord,
   StudentProfileInput,
   StudentProfileRecord,
@@ -53,6 +55,19 @@ const requireUser = async (store: DomainStore, id: string): Promise<DomainUser> 
 export type DomainService = ReturnType<typeof createDomainService>
 
 export const createDomainService = (store: DomainStore) => ({
+  async getPersonProfile(actor: DomainUser): Promise<PersonProfileRecord | null> {
+    ensureActive(actor)
+    return store.findPersonProfile(actor.id)
+  },
+
+  async upsertPersonProfile(
+    actor: DomainUser,
+    input: PersonProfileInput,
+  ): Promise<PersonProfileRecord> {
+    ensureActive(actor)
+    return store.upsertPersonProfile(actor.id, input)
+  },
+
   async getStudentProfile(actor: DomainUser): Promise<StudentProfileRecord | null> {
     ensureActive(actor)
     ensureRole(actor, 'STUDENT')

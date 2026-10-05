@@ -2,7 +2,79 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createPrismaDomainStore } from '../src/domain/prisma-domain-store.js'
-import type { CounselorProfileRecord, StudentProfileRecord } from '../src/domain/types.js'
+import type {
+  CounselorProfileRecord,
+  PersonProfileRecord,
+  StudentProfileRecord,
+} from '../src/domain/types.js'
+
+test('person profile GET is read-only and PATCH preserves omitted fields while clearing nulls', async () => {
+  const timestamp = new Date('2026-10-05T00:00:00.000Z')
+  let profile: PersonProfileRecord | null = null
+  const finds: unknown[] = []
+  const upserts: unknown[] = []
+  const prisma = {
+    personProfile: {
+      async findUnique(input: unknown) {
+        finds.push(input)
+        return profile
+      },
+      async upsert(input: {
+        create: Omit<PersonProfileRecord, 'id' | 'createdAt' | 'updatedAt'>
+        update: Partial<Omit<PersonProfileRecord, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+        where: { userId: string }
+      }) {
+        upserts.push(input)
+        profile = {
+          id: 'person-profile-1',
+          ...input.create,
+          ...profile,
+          ...input.update,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        }
+        return profile
+      },
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaDomainStore(prisma)
+
+  assert.equal(await store.findPersonProfile('user-1'), null)
+  assert.equal(upserts.length, 0)
+
+  const created = await store.upsertPersonProfile('user-1', {
+    firstName: 'Ali', lastName: 'Ahmadi', province: 'Tehran', city: 'Rey',
+  })
+  const updated = await store.upsertPersonProfile('user-1', {
+    preferredName: 'Arman', city: null,
+  })
+
+  assert.equal(created.userId, 'user-1')
+  assert.equal(updated.firstName, 'Ali')
+  assert.equal(updated.lastName, 'Ahmadi')
+  assert.equal(updated.province, 'Tehran')
+  assert.equal(updated.preferredName, 'Arman')
+  assert.equal(updated.city, null)
+  assert.deepEqual(finds, [{ where: { userId: 'user-1' } }])
+  assert.deepEqual(upserts, [
+    {
+      create: {
+        userId: 'user-1', firstName: 'Ali', lastName: 'Ahmadi',
+        preferredName: null, province: 'Tehran', city: 'Rey',
+      },
+      update: { firstName: 'Ali', lastName: 'Ahmadi', province: 'Tehran', city: 'Rey' },
+      where: { userId: 'user-1' },
+    },
+    {
+      create: {
+        userId: 'user-1', firstName: null, lastName: null,
+        preferredName: 'Arman', province: null, city: null,
+      },
+      update: { preferredName: 'Arman', city: null },
+      where: { userId: 'user-1' },
+    },
+  ])
+})
 
 test('profile PATCH upserts preserve omitted fields and apply supplied nulls', async () => {
   const timestamp = new Date('2026-09-03T00:00:00.000Z')
@@ -116,7 +188,14 @@ test('counselor student store scopes list and detail queries to active assignmen
     track: 'MATHEMATICS',
     educationLevel: 'دوازدهم',
     schoolName: 'دبیرستان نمونه',
-    user: { status: 'ACTIVE' },
+    user: {
+      status: 'ACTIVE',
+      personProfile: {
+        firstName: 'علی',
+        lastName: 'احمدی',
+        preferredName: 'آرمان',
+      },
+    },
   }
   const prisma = {
     studentProfile: {
@@ -151,7 +230,7 @@ test('counselor student store scopes list and detail queries to active assignmen
   assert.deepEqual(list, {
     items: [{
       id: studentProfileId,
-      displayName: null,
+      displayName: 'آرمان',
       educationLevel: 'دوازدهم',
       schoolName: 'دبیرستان نمونه',
       status: 'ACTIVE',
@@ -167,7 +246,14 @@ test('counselor student store scopes list and detail queries to active assignmen
       id: true,
       educationLevel: true,
       schoolName: true,
-      user: { select: { status: true } },
+      user: {
+        select: {
+          status: true,
+          personProfile: {
+            select: { firstName: true, lastName: true, preferredName: true },
+          },
+        },
+      },
     },
     skip: undefined,
     take: 26,
@@ -184,7 +270,14 @@ test('counselor student store scopes list and detail queries to active assignmen
       id: true,
       educationLevel: true,
       schoolName: true,
-      user: { select: { status: true } },
+      user: {
+        select: {
+          status: true,
+          personProfile: {
+            select: { firstName: true, lastName: true, preferredName: true },
+          },
+        },
+      },
     },
     where: {
       id: studentProfileId,
@@ -206,4 +299,8 @@ test('counselor student store scopes list and detail queries to active assignmen
       },
     },
   }])
+  assert.equal(JSON.stringify(listQueries).includes('province'), false)
+  assert.equal(JSON.stringify(listQueries).includes('city'), false)
+  assert.equal(JSON.stringify(detailQueries).includes('province'), false)
+  assert.equal(JSON.stringify(detailQueries).includes('city'), false)
 })

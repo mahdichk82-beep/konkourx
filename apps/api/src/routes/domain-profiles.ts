@@ -4,7 +4,11 @@ import { successResponse } from '../contracts/api-response.js'
 import type { DomainService } from '../domain/domain-service.js'
 import { authenticateRequest } from '../plugins/authentication.js'
 import { requireRoles } from '../auth/rbac.js'
-import { counselorProfileSchema, studentProfileSchema } from '../schemas/domain.js'
+import {
+  counselorProfileSchema,
+  personProfileSchema,
+  studentProfileSchema,
+} from '../schemas/domain.js'
 import { ApiError } from '../errors/api-error.js'
 
 type DomainProfileRouteOptions = {
@@ -23,6 +27,29 @@ export const registerDomainProfileRoutes = (
   app: FastifyInstance,
   options: DomainProfileRouteOptions,
 ): void => {
+  app.get(
+    '/me/person-profile',
+    { preHandler: authenticateRequest(options.auth) },
+    async (request) =>
+      successResponse(
+        await options.domain.getPersonProfile(request.user!),
+        request.context.requestId,
+      ),
+  )
+
+  app.patch(
+    '/me/person-profile',
+    { preHandler: authenticateRequest(options.auth) },
+    async (request) =>
+      successResponse(
+        await options.domain.upsertPersonProfile(
+          request.user!,
+          parseBody(personProfileSchema.safeParse(request.body)),
+        ),
+        request.context.requestId,
+      ),
+  )
+
   app.get(
     '/me/student-profile',
     { preHandler: [authenticateRequest(options.auth), requireRoles('STUDENT', 'ADMIN')] },

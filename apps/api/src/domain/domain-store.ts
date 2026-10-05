@@ -6,6 +6,8 @@ import type {
   CounselorStudentPageQuery,
   CounselorStudentRecord,
   DomainUser,
+  PersonProfileInput,
+  PersonProfileRecord,
   StudentCounselorRecord,
   StudentProfileInput,
   StudentProfileRecord,
@@ -14,6 +16,11 @@ import type {
 
 export interface DomainStore {
   findUserById(id: string): Promise<DomainUser | null>
+  findPersonProfile(userId: string): Promise<PersonProfileRecord | null>
+  upsertPersonProfile(
+    userId: string,
+    input: PersonProfileInput,
+  ): Promise<PersonProfileRecord>
   findStudentProfile(userId: string): Promise<StudentProfileRecord | null>
   upsertStudentProfile(
     userId: string,

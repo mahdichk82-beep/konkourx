@@ -4,6 +4,23 @@ All application routes use the `/api/v1` prefix and the standard success/error e
 
 This file documents the currently implemented HTTP contract, including student-owned subject/topic validation and the read-only file-backed Canonical Curriculum runtime.
 
+## Private PersonProfile
+
+### CURRENT IMPLEMENTED STATE
+
+`PersonProfile` is the optional, private, cross-role human-identity record associated one-to-one with a `User`. It is separate from authentication data, Student academic data, Counselor-specific data, and any future public ProfessionalProfile. Existing Users remain valid without a PersonProfile, and registration does not create or infer one.
+
+```text
+GET /api/v1/me/person-profile
+PATCH /api/v1/me/person-profile
+```
+
+Both routes require authentication and are scoped exclusively to the authenticated User. There is no arbitrary-User or public PersonProfile read endpoint. `GET` returns the existing record or `data: null` and never creates a row. `PATCH` creates the authenticated User's record when absent and accepts only `firstName`, `lastName`, `preferredName`, `province`, and `city`. Omitted fields remain unchanged, explicit `null` clears a field, non-null strings are trimmed, and whitespace-only strings are normalized to `null`. Client-supplied ownership, role, public-profile, biography, specialization, avatar, address, and subscription fields are rejected.
+
+All five fields are private. `province` and `city` are coarse private residence data and do not imply public visibility. The server derives an internal display name without persisting a duplicate column: non-empty `preferredName`, then `firstName + lastName`, then either single name, otherwise `null`. A raw UUID is never used as the fallback, and this internal derivation never publishes a professional identity.
+
+The existing authorized Counselor assigned-Student list/detail projection may return only this derived value as `displayName`. It does not expose the PersonProfile payload, province, city, or any other private field, and its active-assignment authorization boundary is unchanged.
+
 ## Canonical Curriculum reads
 
 ### CURRENT IMPLEMENTED STATE

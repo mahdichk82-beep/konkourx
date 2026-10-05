@@ -9,6 +9,18 @@ export type DomainUser = {
   status: DomainStatus
 }
 
+export type PersonProfileRecord = {
+  id: string
+  userId: string
+  firstName: string | null
+  lastName: string | null
+  preferredName: string | null
+  province: string | null
+  city: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type StudentProfileRecord = {
   id: string
   userId: string
@@ -48,6 +60,14 @@ export type StudentProfileInput = {
 export type CounselorProfileInput = {
   bio?: string | null
   specialization?: string | null
+}
+
+export type PersonProfileInput = {
+  firstName?: string | null
+  lastName?: string | null
+  preferredName?: string | null
+  province?: string | null
+  city?: string | null
 }
 
 export type CounselorStudentRecord = {

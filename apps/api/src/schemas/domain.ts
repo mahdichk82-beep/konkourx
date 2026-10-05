@@ -1,6 +1,23 @@
 import { z } from 'zod'
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
+const optionalPrivateIdentityText = (max: number) => z
+  .string()
+  .trim()
+  .max(max)
+  .transform((value) => value || null)
+  .nullable()
+  .optional()
+
+export const personProfileSchema = z
+  .object({
+    firstName: optionalPrivateIdentityText(100),
+    lastName: optionalPrivateIdentityText(100),
+    preferredName: optionalPrivateIdentityText(100),
+    province: optionalPrivateIdentityText(100),
+    city: optionalPrivateIdentityText(100),
+  })
+  .strict()
 
 export const studentProfileSchema = z
   .object({

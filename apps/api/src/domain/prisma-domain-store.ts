@@ -4,12 +4,15 @@ import type {
   CounselorProfileRecord,
   CounselorStudentRecord,
   DomainUser,
+  PersonProfileInput,
+  PersonProfileRecord,
   StudentCounselorRecord,
   StudentProfileInput,
   StudentProfileRecord,
   StudentCounselorStatus,
 } from './types.js'
 import type { DomainStore } from './domain-store.js'
+import { derivePersonDisplayName } from './person-profile.js'
 
 const toDomainUser = (user: {
   id: string
@@ -20,6 +23,7 @@ const toDomainUser = (user: {
   role: user.role as DomainUser['role'],
   status: user.status as DomainUser['status'],
 })
+const toPersonProfile = (profile: PersonProfileRecord): PersonProfileRecord => profile
 
 const toStudentProfile = (profile: StudentProfileRecord): StudentProfileRecord => profile
 const toCounselorProfile = (profile: CounselorProfileRecord): CounselorProfileRecord => profile
@@ -28,10 +32,17 @@ const toCounselorStudent = (profile: {
   id: string
   educationLevel: string | null
   schoolName: string | null
-  user: { status: string }
+  user: {
+    status: string
+    personProfile: {
+      firstName: string | null
+      lastName: string | null
+      preferredName: string | null
+    } | null
+  }
 }): CounselorStudentRecord => ({
   id: profile.id,
-  displayName: null,
+  displayName: derivePersonDisplayName(profile.user.personProfile),
   educationLevel: profile.educationLevel,
   schoolName: profile.schoolName,
   status: profile.user.status as CounselorStudentRecord['status'],
@@ -44,6 +55,33 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
       where: { id },
     })
     return user ? toDomainUser(user) : null
+  },
+
+  async findPersonProfile(userId) {
+    const profile = await prisma.personProfile.findUnique({ where: { userId } })
+    return profile ? toPersonProfile(profile) : null
+  },
+
+  async upsertPersonProfile(userId: string, input: PersonProfileInput) {
+    const profile = await prisma.personProfile.upsert({
+      create: {
+        userId,
+        firstName: input.firstName ?? null,
+        lastName: input.lastName ?? null,
+        preferredName: input.preferredName ?? null,
+        province: input.province ?? null,
+        city: input.city ?? null,
+      },
+      update: {
+        ...(input.firstName === undefined ? {} : { firstName: input.firstName }),
+        ...(input.lastName === undefined ? {} : { lastName: input.lastName }),
+        ...(input.preferredName === undefined ? {} : { preferredName: input.preferredName }),
+        ...(input.province === undefined ? {} : { province: input.province }),
+        ...(input.city === undefined ? {} : { city: input.city }),
+      },
+      where: { userId },
+    })
+    return toPersonProfile(profile)
   },
 
   async findStudentProfile(userId) {
@@ -134,7 +172,14 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
         id: true,
         educationLevel: true,
         schoolName: true,
-        user: { select: { status: true } },
+        user: {
+          select: {
+            status: true,
+            personProfile: {
+              select: { firstName: true, lastName: true, preferredName: true },
+            },
+          },
+        },
       },
       skip: query.cursor ? 1 : undefined,
       take: limit + 1,
@@ -161,7 +206,14 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
         id: true,
         educationLevel: true,
         schoolName: true,
-        user: { select: { status: true } },
+        user: {
+          select: {
+            status: true,
+            personProfile: {
+              select: { firstName: true, lastName: true, preferredName: true },
+            },
+          },
+        },
       },
       where: {
         id: studentProfileId,
