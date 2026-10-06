@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
 import { AppShell, type NavigationItem } from './components/layout/AppShell'
@@ -8,13 +8,15 @@ import { DashboardPage } from './pages/DashboardPage'
 import { AssessmentAttemptsPage } from './pages/AssessmentAttemptsPage'
 import { LoginPage } from './pages/LoginPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
-import { SettingsPage } from './pages/SettingsPage'
 import { SubjectTopicsPage } from './pages/SubjectTopicsPage'
 import { TodayPlanningPage } from './pages/TodayPlanningPage'
 import { WeeklyPlanningPage } from './pages/WeeklyPlanningPage'
 import { useBrowserRouter } from './routing/useBrowserRouter'
 import { useTheme } from './theme/useTheme'
 import { StudentCurriculumPage } from './curriculum/StudentCurriculumPage'
+import { StudentProfilePage } from './profile/StudentProfilePage'
+import { profileSectionForPath } from './profile/profile-state'
+import { usePersonProfile } from './profile/usePersonProfile'
 import './App.css'
 
 const navigation: NavigationItem[] = [
@@ -24,7 +26,6 @@ const navigation: NavigationItem[] = [
   { icon: 'study', label: 'برنامهٔ درسی رسمی', mobileLabel: 'مباحث', path: '/curriculum' },
   { icon: 'assessment', label: 'آزمون‌ها', mobileLabel: 'آزمون', path: '/assessments' },
   { icon: 'reports', label: 'گزارش‌ها', mobileLabel: 'گزارش', path: '/reports' },
-  { icon: 'settings', label: 'تنظیمات', mobileLabel: 'تنظیمات', path: '/settings' },
 ]
 
 const routeMeta: Record<string, { description: string; title: string }> = {
@@ -35,13 +36,22 @@ const routeMeta: Record<string, { description: string; title: string }> = {
   '/curriculum': { title: 'مباحث درسی', description: 'مرور و انتخاب از ساختار رسمی برنامهٔ درسی رشتهٔ شما' },
   '/assessments': { title: 'آزمون‌ها', description: 'ثبت و مرور نتیجه خام آزمون‌های پایان‌یافته' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور روند و پیشرفت' },
-  '/settings': { title: 'تنظیمات', description: 'ترجیحات پایه محیط دانش‌آموزی' },
+  '/profile': { title: 'پروفایل من', description: 'مدیریت اطلاعات شخصی و حساب دانش‌آموزی' },
+  '/profile/academic': { title: 'اطلاعات تحصیلی', description: 'رشته، پایه و مدرسهٔ مرجع حساب دانش‌آموزی' },
+  '/profile/settings': { title: 'تنظیمات', description: 'ترجیحات واقعی محیط دانش‌آموزی' },
+  '/profile/security': { title: 'امنیت و حساب', description: 'رمز عبور و نشست‌های ورود' },
 }
 
 function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
   const { logout, user } = useAuth()
   const { setTheme, theme } = useTheme()
-  const meta = routeMeta[path] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل دانش‌آموز تعریف نشده است.' }
+  const personProfile = usePersonProfile()
+  const effectivePath = path === '/settings' ? '/profile/settings' : path
+  const meta = routeMeta[effectivePath] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل دانش‌آموز تعریف نشده است.' }
+
+  useEffect(() => {
+    if (path === '/settings') navigate('/profile/settings', true)
+  }, [navigate, path])
 
   const signOut = async () => {
     try {
@@ -60,7 +70,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
   else if (path === '/study') content = <SubjectTopicsPage />
   else if (path === '/curriculum') content = <StudentCurriculumPage />
   else if (path === '/assessments') content = <AssessmentAttemptsPage />
-  else if (path === '/settings') content = <SettingsPage onThemeChange={setTheme} theme={theme} />
+  else if (profileSectionForPath(effectivePath) !== null) content = <StudentProfilePage navigate={navigate} onPersonProfileSaved={personProfile.save} onRetryPersonProfile={personProfile.load} onThemeChange={setTheme} path={effectivePath} personProfile={personProfile.profile} personProfileError={personProfile.error} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
   else content = <ContentState kind="error" title="صفحه پیدا نشد" description="نشانی واردشده در پنل دانش‌آموز وجود ندارد." action={<Button onClick={() => navigate('/')}>بازگشت به داشبورد</Button>} />
 
@@ -73,6 +83,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
       onThemeChange={setTheme}
       pageDescription={meta.description}
       pageTitle={meta.title}
+      personProfile={personProfile.profile}
       theme={theme}
       user={user}
     >

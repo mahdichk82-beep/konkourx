@@ -1,4 +1,5 @@
-import { apiUrl } from '../config/api'
+import { apiUrl } from '../config/api.ts'
+import { createCounselorProfileClient } from '../profile/profile-client.ts'
 
 export type AuthRole = 'STUDENT' | 'COUNSELOR' | 'ADMIN'
 
@@ -10,6 +11,26 @@ export type AuthUser = {
   status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED'
   createdAt: string
   updatedAt: string
+}
+
+export type PersonProfile = {
+  id: string
+  userId: string
+  firstName: string | null
+  lastName: string | null
+  preferredName: string | null
+  province: string | null
+  city: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type PersonProfileInput = {
+  firstName?: string | null
+  lastName?: string | null
+  preferredName?: string | null
+  province?: string | null
+  city?: string | null
 }
 
 export type CounselorProfile = {
@@ -175,15 +196,20 @@ class CounselorAuthClient {
     this.accessToken = null
   }
 
+  getPersonProfile(): Promise<PersonProfile | null> {
+    return createCounselorProfileClient(this.authorizedRequest.bind(this)).getPersonProfile()
+  }
+
+  updatePersonProfile(input: PersonProfileInput): Promise<PersonProfile> {
+    return createCounselorProfileClient(this.authorizedRequest.bind(this)).updatePersonProfile(input)
+  }
+
   getCounselorProfile(): Promise<CounselorProfile | null> {
-    return this.authorizedRequest<CounselorProfile | null>('/me/counselor-profile')
+    return createCounselorProfileClient(this.authorizedRequest.bind(this)).getCounselorProfile()
   }
 
   updateCounselorProfile(input: CounselorProfileInput): Promise<CounselorProfile> {
-    return this.authorizedRequest<CounselorProfile>('/me/counselor-profile', {
-      body: JSON.stringify(input),
-      method: 'PATCH',
-    })
+    return createCounselorProfileClient(this.authorizedRequest.bind(this)).updateCounselorProfile(input)
   }
 
   async authorizedRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

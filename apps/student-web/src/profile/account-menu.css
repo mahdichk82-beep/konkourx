@@ -1,0 +1,22 @@
+.account-control { position: relative; }
+.account-trigger { min-width: 0; padding: 0.32rem 0.42rem; display: flex; align-items: center; gap: 0.62rem; border: 1px solid transparent; border-radius: 999px; color: var(--text-primary); background: transparent; text-align: start; cursor: pointer; }
+.account-trigger:hover, .account-trigger[aria-expanded='true'] { border-color: var(--border-default); background: var(--bg-subtle); }
+.account-trigger:focus-visible { outline: 3px solid color-mix(in srgb, var(--action-primary) 35%, transparent); outline-offset: 2px; }
+.account-avatar { border-radius: 50%; }
+.account-trigger__copy { max-width: 190px; display: grid; line-height: 1.35; }
+.account-trigger__copy strong, .account-trigger__copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-trigger__copy strong { font-size: 0.8rem; font-weight: 600; }
+.account-trigger__copy small { color: var(--text-muted); font-size: 0.67rem; }
+.account-trigger__chevron { color: var(--text-muted); font-size: 0.75rem; }
+.account-menu { width: min(240px, calc(100vw - 2rem)); position: absolute; inset: calc(100% + 0.55rem) auto auto 0; padding: 0.4rem; display: grid; border: 1px solid var(--border-default); border-radius: 13px; background: var(--bg-surface-raised); box-shadow: var(--shadow-raised); z-index: 40; }
+.account-menu button { padding: 0.72rem 0.78rem; border: 0; border-radius: 9px; color: var(--text-primary); background: transparent; font: inherit; font-size: 0.82rem; font-weight: 500; text-align: start; cursor: pointer; }
+.account-menu button:hover, .account-menu button:focus-visible { background: var(--bg-subtle); outline: 2px solid transparent; }
+.account-menu__divider { height: 1px; margin: 0.3rem; background: var(--border-default); }
+.account-menu .account-menu__logout { color: var(--status-danger); }
+
+@media (max-width: 1023px) {
+  .account-theme-toggle { display: none; }
+  .account-trigger { padding: 0.2rem; }
+  .account-trigger__copy, .account-trigger__chevron { display: none; }
+  .account-menu { inset-inline: auto 0; }
+}

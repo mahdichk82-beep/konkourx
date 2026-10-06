@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import { BrandLogo } from '@konkourx/brand'
-import type { AuthUser } from '../../auth/auth-client'
+import type { AuthUser, PersonProfile } from '../../auth/auth-client'
 import type { NavIconName } from '../navigation/NavIcon'
 import { NavIcon } from '../navigation/NavIcon'
 import { Button } from '../ui/Button'
 import type { Theme } from '../../theme/useTheme'
+import { AccountMenu } from '../../profile/AccountMenu'
 
 export type NavigationItem = { icon: NavIconName; label: string; mobileLabel: string; path: string }
 
@@ -17,11 +18,12 @@ type AppShellProps = {
   onThemeChange(theme: Theme): void
   pageDescription: string
   pageTitle: string
+  personProfile: PersonProfile | null | undefined
   theme: Theme
   user: AuthUser
 }
 
-export function AppShell({ children, currentPath, navigation, navigate, onLogout, onThemeChange, pageDescription, pageTitle, theme, user }: AppShellProps) {
+export function AppShell({ children, currentPath, navigation, navigate, onLogout, onThemeChange, pageDescription, pageTitle, personProfile, theme, user }: AppShellProps) {
   const identity = user.email ?? user.phone ?? 'مشاور'
   return (
     <div className="app-shell" dir="rtl">
@@ -46,6 +48,7 @@ export function AppShell({ children, currentPath, navigation, navigate, onLogout
             <Button aria-label={theme === 'light' ? 'فعال‌کردن حالت تاریک' : 'فعال‌کردن حالت روشن'} onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')} variant="secondary">
               <span aria-hidden="true">{theme === 'light' ? '◐' : '☀'}</span><span className="theme-label">{theme === 'light' ? 'تاریک' : 'روشن'}</span>
             </Button>
+            <AccountMenu navigate={navigate} onLogout={onLogout} personProfile={personProfile} user={user} />
           </div>
         </header>
         <main className="app-content" id="main-content">{children}</main>

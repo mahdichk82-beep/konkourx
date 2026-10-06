@@ -1,4 +1,5 @@
-import { apiUrl } from '../config/api'
+import { apiUrl } from '../config/api.ts'
+import { createStudentProfileClient } from '../profile/profile-client.ts'
 
 export type AuthRole = 'STUDENT' | 'COUNSELOR' | 'ADMIN'
 
@@ -12,9 +13,32 @@ export type AuthUser = {
   updatedAt: string
 }
 
+export type PersonProfile = {
+  id: string
+  userId: string
+  firstName: string | null
+  lastName: string | null
+  preferredName: string | null
+  province: string | null
+  city: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type PersonProfileInput = {
+  firstName?: string | null
+  lastName?: string | null
+  preferredName?: string | null
+  province?: string | null
+  city?: string | null
+}
+
+export type StudentTrack = 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES'
+
 export type StudentProfile = {
   id: string
   userId: string
+  track: StudentTrack | null
   educationLevel: string | null
   schoolName: string | null
   createdAt: string
@@ -22,6 +46,7 @@ export type StudentProfile = {
 }
 
 export type StudentProfileInput = {
+  track?: StudentTrack | null
   educationLevel?: string | null
   schoolName?: string | null
 }
@@ -175,15 +200,20 @@ class StudentAuthClient {
     this.accessToken = null
   }
 
+  getPersonProfile(): Promise<PersonProfile | null> {
+    return createStudentProfileClient(this.authorizedRequest.bind(this)).getPersonProfile()
+  }
+
+  updatePersonProfile(input: PersonProfileInput): Promise<PersonProfile> {
+    return createStudentProfileClient(this.authorizedRequest.bind(this)).updatePersonProfile(input)
+  }
+
   getStudentProfile(): Promise<StudentProfile | null> {
-    return this.authorizedRequest<StudentProfile | null>('/me/student-profile')
+    return createStudentProfileClient(this.authorizedRequest.bind(this)).getStudentProfile()
   }
 
   updateStudentProfile(input: StudentProfileInput): Promise<StudentProfile> {
-    return this.authorizedRequest<StudentProfile>('/me/student-profile', {
-      body: JSON.stringify(input),
-      method: 'PATCH',
-    })
+    return createStudentProfileClient(this.authorizedRequest.bind(this)).updateStudentProfile(input)
   }
 
   async authorizedRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
