@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { BrandLogo } from '@konkourx/brand'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/ui/Button'
 
@@ -21,7 +22,7 @@ export function LoginPage({ onSuccess }: { onSuccess(): void }) {
   }
   return (
     <main className="auth-layout" dir="rtl">
-      <section className="brand-panel" aria-label="کنکوریکس مشاور"><span className="brand-mark">ک</span><p className="eyebrow">Konkourix Counselor</p><h1>راهنمایی دقیق، برای مسیرهای متفاوت.</h1><p>فضای حرفه‌ای و مستقل مشاور برای همراهی دانش‌آموزان.</p></section>
+      <section className="brand-panel" aria-label="کنکوریکس مشاور"><BrandLogo context="dark" /><p className="eyebrow">Konkourix Counselor</p><h1>راهنمایی دقیق، برای مسیرهای متفاوت.</h1><p>فضای حرفه‌ای و مستقل مشاور برای همراهی دانش‌آموزان.</p></section>
       <section className="login-panel">
         <form className="login-card" onSubmit={submit}>
           <div><p className="eyebrow">ورود مشاور</p><h2>به پنل مشاور وارد شوید</h2><p className="muted">ایمیل یا شماره موبایل و رمز عبور حساب مشاور را وارد کنید.</p></div>

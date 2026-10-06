@@ -1,5 +1,6 @@
 import type { AuthUser } from '../../auth/auth-client'
 import type { ReactNode } from 'react'
+import { BrandLogo } from '@konkourx/brand'
 import type { NavIconName } from '../navigation/NavIcon'
 import { NavIcon } from '../navigation/NavIcon'
 import { Button } from '../ui/Button'
@@ -44,10 +45,7 @@ export function AppShell({
   return (
     <div className="app-shell" dir="rtl">
       <aside className="sidebar">
-        <div className="app-brand">
-          <span className="brand-mark brand-mark--small">ک</span>
-          <div><strong>کنکوریکس</strong><small>فضای دانش‌آموز</small></div>
-        </div>
+        <BrandLogo descriptor="فضای دانش‌آموز" />
         <nav className="sidebar-nav" aria-label="ناوبری اصلی دانش‌آموز">
           {navigation.map((item) => (
             <a

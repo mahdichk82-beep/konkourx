@@ -35,10 +35,12 @@ test('browser exposes explicit loading, empty, retryable error, and no-track sta
   assert.match(viewModel, /NO_TRACK/);
 });
 
-test('layout has keyboard focus, RTL-safe wrapping, app-authoritative dark mode, and mobile breakpoints', () => {
+test('layout has keyboard focus, RTL-safe wrapping, shared semantic theming, and mobile breakpoints', () => {
   assert.match(styles, /:focus-visible/);
   assert.match(styles, /overflow-wrap:\s*anywhere/);
-  assert.match(styles, /:root\[data-theme=['"]dark['"]\]/);
+  assert.match(styles, /var\(--curriculum-bg-surface\)/);
+  assert.match(styles, /var\(--curriculum-text-primary\)/);
+  assert.doesNotMatch(styles, /--curriculum-(?:surface|ink|accent|border):/);
   assert.doesNotMatch(styles, /prefers-color-scheme:\s*dark/);
   assert.match(styles, /max-width:\s*600px/);
 });

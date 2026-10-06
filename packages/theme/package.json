@@ -1,0 +1,17 @@
+{
+  "name": "@konkourx/theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./styles.css": "./src/index.css"
+  },
+  "scripts": {
+    "test": "node --test src/theme-contract.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "~6.0.2"
+  }
+}

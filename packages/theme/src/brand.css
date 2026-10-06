@@ -1,0 +1,25 @@
+:root {
+  --brand-primary: #2563eb;
+  --brand-secondary: #8b5cf6;
+  --brand-accent: #06b6d4;
+  --brand-panel-ink: #0f172a;
+  --brand-panel-ink-deep: #0b1220;
+  --brand-panel-mid: #172554;
+  --brand-panel-deep: #312e81;
+  --brand-panel-blue: #1e3a8a;
+  --brand-secondary-strong: #7c3aed;
+  --brand-secondary-deep: #6d28d9;
+  --brand-secondary-soft: #ede9fe;
+  --brand-indigo: #6366f1;
+  --brand-indigo-strong: #4338ca;
+  --brand-primary-soft: #dbeafe;
+  --brand-primary-bright: #3b82f6;
+  --brand-accent-soft: #cffafe;
+  --brand-accent-strong: #0e7490;
+  --brand-accent-bright: #67e8f9;
+  --brand-on-dark-muted: #cbd5e1;
+  --brand-on-dark-soft: #dbeafe;
+  --brand-on-dark-bright: #e0f2fe;
+  --brand-on-dark-highlight: #bfdbfe;
+  --brand-on-dark-cyan: #a5f3fc;
+}

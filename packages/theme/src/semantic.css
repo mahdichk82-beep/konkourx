@@ -1,0 +1,24 @@
+/* Semantic role mappings are defined alongside their light and dark values. */
+
+:root {
+  /* Temporary compatibility debt: remove after the preserved legacy surfaces are retired. */
+  --legacy-hero-eyebrow: #f1c86d;
+  --legacy-foundation-badge-border: rgba(255, 255, 255, 0.28);
+  --legacy-foundation-badge-text: #ffe5a8;
+  --legacy-student-hero-start: #0d4934;
+  --legacy-student-hero-end: #176b4d;
+  --legacy-student-hero-text: #d9eee4;
+  --legacy-student-auth-glow: #3d9d72;
+  --legacy-student-auth-start: #114a36;
+  --legacy-student-auth-end: #092b21;
+  --legacy-student-auth-text: #d4e8dd;
+  --legacy-counselor-hero-start: #202c5b;
+  --legacy-counselor-hero-end: #334a92;
+  --legacy-counselor-hero-text: #e0e5f8;
+  --legacy-counselor-auth-glow: #6178c9;
+  --legacy-counselor-auth-start: #2a396f;
+  --legacy-counselor-auth-end: #151c3c;
+  --legacy-counselor-auth-text: #dbe1f7;
+  --legacy-nav-active-start: #172b4d;
+  --legacy-nav-active-end: #1d2940;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { BrandLogo } from '@konkourx/brand'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/ui/Button'
 
@@ -27,7 +28,7 @@ export function LoginPage({ onSuccess }: { onSuccess(): void }) {
   return (
     <main className="auth-layout" dir="rtl">
       <section className="brand-panel" aria-label="کنکوریکس دانش‌آموز">
-        <span className="brand-mark">ک</span>
+        <BrandLogo context="dark" />
         <p className="eyebrow">Konkourix Student</p>
         <h1>مسیر مطالعه‌ات را با تمرکز ادامه بده.</h1>
         <p>برنامه، هدف‌ها و پیشرفت روزانه‌ات در فضای مستقل دانش‌آموزی.</p>

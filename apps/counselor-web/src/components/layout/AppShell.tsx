@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BrandLogo } from '@konkourx/brand'
 import type { AuthUser } from '../../auth/auth-client'
 import type { NavIconName } from '../navigation/NavIcon'
 import { NavIcon } from '../navigation/NavIcon'
@@ -25,7 +26,7 @@ export function AppShell({ children, currentPath, navigation, navigate, onLogout
   return (
     <div className="app-shell" dir="rtl">
       <aside className="sidebar">
-        <div className="app-brand"><span className="brand-mark brand-mark--small">ک</span><div><strong>کنکوریکس</strong><small>فضای مشاور</small></div></div>
+        <BrandLogo descriptor="فضای مشاور" />
         <nav className="sidebar-nav" aria-label="ناوبری اصلی مشاور">
           {navigation.map((item) => (
             <a className={currentPath === item.path ? 'nav-link nav-link--active' : 'nav-link'} href={item.path} key={item.path} onClick={(event) => { event.preventDefault(); navigate(item.path) }} aria-current={currentPath === item.path ? 'page' : undefined}>
