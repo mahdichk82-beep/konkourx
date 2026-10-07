@@ -1,6 +1,9 @@
 export { CurriculumBrowser } from './CurriculumBrowser.tsx';
 export type { CurriculumBrowserProps } from './CurriculumBrowser.tsx';
+export { PlanningCurriculumField } from './PlanningCurriculumField.tsx';
+export type { PlanningCurriculumFieldProps } from './PlanningCurriculumField.tsx';
 export * from './client.ts';
+export * from './planning.ts';
 export * from './state.ts';
 export * from './types.ts';
 export * from './view-model.ts';

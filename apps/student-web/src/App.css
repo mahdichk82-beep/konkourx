@@ -106,6 +106,12 @@
 .study-switch-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .planning-create-card { border-color: color-mix(in srgb, var(--action-primary) 40%, var(--border-default)); box-shadow: none; }
 .planning-form { display: grid; gap: 1rem; }
+.planning-form .task-content-type { border: 0; display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; min-width: 0; padding: 0; }
+.planning-form .task-content-type legend { color: var(--text-primary); font-size: .86rem; font-weight: 700; margin-bottom: .5rem; }
+.planning-form .task-content-type label { align-items: center; background: var(--bg-subtle); border: 1px solid var(--border-default); border-radius: .75rem; display: inline-flex; gap: .45rem; min-height: 2.75rem; padding: .55rem .9rem; }
+.planning-form .task-content-type label:has(input:checked) { border-color: var(--action-primary); color: var(--action-primary); }
+.planning-form .task-content-type input[type='radio'] { accent-color: var(--action-primary); min-height: 0; width: auto; }
+.planning-form .task-content-type label:focus-within { outline: 3px solid var(--action-primary); outline-offset: 2px; }
 .planning-form label, .planning-filters label, .inline-subject__form label { display: grid; gap: 0.5rem; color: var(--text-primary); font-size: 0.86rem; font-weight: 700; }
 .planning-form input, .planning-form textarea, .planning-form select, .planning-filters select { width: 100%; min-height: 46px; padding: 0.75rem 0.9rem; border: 1px solid var(--border-default); border-radius: 12px; color: var(--text-primary); background: var(--bg-subtle); outline: none; }
 .planning-form textarea { min-height: 92px; resize: vertical; }

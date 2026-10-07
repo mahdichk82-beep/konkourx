@@ -1,6 +1,10 @@
 import { authClient } from '../auth/auth-client'
+import type {
+  PlanningCurriculumTargetInput,
+  PlanningCurriculumTargetSnapshot,
+} from '@konkourx/curriculum-browser'
 
-export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
+export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
@@ -18,8 +22,15 @@ export type StudyTopic = {
 }
 
 export type DailyTask = {
+  contentType: 'STUDY' | 'GENERAL' | null
   completedAt: string | null
   createdAt: string
+  curriculum: {
+    completedItemCount: number
+    remainingItemCount: number
+    targets: PlanningCurriculumTargetSnapshot[]
+    totalItemCount: number
+  }
   description: string | null
   estimatedMinutes: number | null
   id: string
@@ -74,6 +85,8 @@ export type TaskListQuery = {
 }
 
 export type CreateTaskInput = {
+  contentType: 'STUDY' | 'GENERAL'
+  curriculumTargets: PlanningCurriculumTargetInput[]
   description: string | null
   estimatedMinutes: number | null
   scheduledFor: string
@@ -168,6 +181,19 @@ class PlanningClient {
       body: JSON.stringify(input),
       method: 'POST',
     })
+  }
+
+  replaceTaskCurriculumTargets(
+    id: string,
+    curriculumTargets: PlanningCurriculumTargetInput[],
+  ): Promise<DailyTask> {
+    return authClient.authorizedRequest<DailyTask>(
+      `/student/daily-tasks/${encodeURIComponent(id)}/curriculum-targets`,
+      {
+        body: JSON.stringify({ curriculumTargets }),
+        method: 'PATCH',
+      },
+    )
   }
 
   listTaskSessions(taskId: string, cursor?: string): Promise<Page<StudySession>> {

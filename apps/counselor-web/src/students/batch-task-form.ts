@@ -2,16 +2,17 @@ import type {
   CreateCounselorBatchTaskInput,
   CreateCounselorTaskBatchResult,
 } from './student-tasks-client'
+import type { PlanningCurriculumTargetInput } from '@konkourx/curriculum-browser'
 
 export type BatchTaskRow = {
+  contentType: 'STUDY' | 'GENERAL' | ''
+  curriculumTargets: PlanningCurriculumTargetInput[]
   id: string
   title: string
   description: string
   scheduledFor: string
   plannedMinutes: string
   plannedTestCount: string
-  subjectId: string
-  topicId: string
 }
 
 export type BatchSubmitResult =
@@ -31,14 +32,14 @@ const nonNegativeInteger = (value: string, maximum?: number) => {
 }
 
 export const createBatchTaskRow = (id: string, scheduledFor: string): BatchTaskRow => ({
+  contentType: '',
+  curriculumTargets: [],
   description: '',
   id,
   plannedMinutes: '0',
   plannedTestCount: '0',
   scheduledFor,
-  subjectId: '',
   title: '',
-  topicId: '',
 })
 
 export const addBatchTaskRow = (
@@ -69,8 +70,12 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
     if (row.description.trim().length > 2000) {
       return `توضیحات ردیف ${rowNumber} بیش از حد طولانی است.`
     }
-    if (row.topicId && !row.subjectId) {
-      return `برای مبحث ردیف ${rowNumber} باید درس انتخاب شود.`
+    if (!row.contentType) return `نوع کار ردیف ${rowNumber} الزامی است.`
+    if (row.contentType === 'STUDY' && (
+      row.curriculumTargets.length === 0
+      || row.curriculumTargets.some((target) => target.referenceKind !== 'NODE' || target.selectionMode !== 'EXACT')
+    )) {
+      return `برای کار درسی ردیف ${rowNumber} حداقل یک مبحث معتبر انتخاب کنید.`
     }
   }
   return null
@@ -78,13 +83,15 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
 
 export const toBatchTaskInputs = (rows: BatchTaskRow[]): CreateCounselorBatchTaskInput[] =>
   rows.map((row) => ({
+    contentType: row.contentType as 'STUDY' | 'GENERAL',
+    curriculumTargets: row.contentType === 'STUDY' ? row.curriculumTargets : [],
     description: row.description.trim() || null,
     plannedMinutes: Number(row.plannedMinutes),
-    plannedTestCount: Number(row.plannedTestCount),
+    plannedTestCount: row.contentType === 'STUDY' ? Number(row.plannedTestCount) : 0,
     scheduledFor: row.scheduledFor,
-    subjectId: row.subjectId || null,
+    subjectId: null,
     title: row.title.trim(),
-    topicId: row.topicId || null,
+    topicId: null,
   }))
 
 export const submitBatchTaskRows = async (

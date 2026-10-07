@@ -1,6 +1,14 @@
 import type { FormEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AuthApiError } from '../auth/auth-client'
+import {
+  PlanningCurriculumField,
+  canEditPlanningCurriculum,
+  loadPlanningTaskDrafts,
+  replaceChangedPlanningTargets,
+  type PlanningTargetDraftItem,
+} from '@konkourx/curriculum-browser'
+import '@konkourx/curriculum-browser/styles.css'
+import { AuthApiError, authClient } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
@@ -13,9 +21,10 @@ import {
   type FinishStudySessionInput,
   type StudySession,
   type StudySubject,
-  type StudyTopic,
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
+import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
+import { createStudentCurriculumClient } from '../curriculum/curriculum-client'
 import {
   activeSessionAfterCancel,
   activeSessionAfterFinish,
@@ -35,6 +44,7 @@ type StatusFilter = DailyTaskStatus | 'ALL'
 
 const statusLabels: Record<DailyTaskStatus, string> = {
   COMPLETED: 'انجام‌شده',
+  PARTIAL: 'بخشی انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
 }
@@ -68,6 +78,15 @@ const planningErrorMessage = (error: unknown): string => {
     TASK_ACTIVE_SESSION_EXISTS: 'ابتدا مطالعه فعال این کار را پایان دهید، سپس نتیجه کار را ثبت کنید.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست. فهرست را تازه‌سازی کنید.',
     TASK_ALREADY_EXECUTED: 'برای این کار سابقه مطالعه ثبت شده است و تاریخ آن قابل تغییر نیست.',
+    CURRICULUM_EXECUTION_STARTED: 'به‌دلیل شروع اجرای مباحث، ویرایش آن‌ها ممکن نیست.',
+    STUDENT_TRACK_NOT_SET: 'برای انتخاب مباحث، ابتدا رشته تحصیلی خود را در پروفایل مشخص کنید.',
+    CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK: 'مبحث انتخاب‌شده برای رشته تحصیلی شما مجاز نیست.',
+    CURRICULUM_TARGET_NOT_SELECTABLE: 'مورد انتخاب‌شده مبحث قابل انتخاب نیست.',
+    TASK_STUDY_TARGET_REQUIRED: 'برای کار درسی حداقل یک مبحث لازم است.',
+    TASK_GENERAL_TARGET_FORBIDDEN: 'کار عمومی نباید مبحث درسی داشته باشد.',
+    TASK_LEGACY_LINK_FORBIDDEN: 'پیوند درس یا مبحث قدیمی برای این نوع کار مجاز نیست.',
+    TASK_NOT_PENDING: 'مباحث کار نهایی‌شده قابل ویرایش نیستند.',
+    TASK_SOURCE_FORBIDDEN: 'فقط مباحث کار شخصی را می‌توانید ویرایش کنید.',
     TASK_RESCHEDULE_FORBIDDEN: 'تغییر تاریخ کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
     TOPIC_ARCHIVED: 'این مبحث بایگانی شده و برای کار جدید قابل استفاده نیست.',
     TOPIC_NOT_FOUND: 'مبحث انتخاب‌شده دیگر در دسترس نیست.',
@@ -105,22 +124,6 @@ const loadSubjects = async (): Promise<StudySubject[]> => {
   } while (cursor)
 
   return mergeSubjects(subjects)
-}
-
-const loadTopics = async (subjectId: string): Promise<StudyTopic[]> => {
-  const topics: StudyTopic[] = []
-  const seenCursors = new Set<string>()
-  let cursor: string | undefined
-
-  do {
-    const page = await planningClient.listTopics(subjectId, cursor)
-    topics.push(...page.items)
-    cursor = page.nextCursor ?? undefined
-    if (cursor && seenCursors.has(cursor)) break
-    if (cursor) seenCursors.add(cursor)
-  } while (cursor)
-
-  return topics.filter((topic) => topic.archivedAt === null)
 }
 
 function ActiveStudyExecutionCard({
@@ -177,10 +180,12 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     year: 'numeric',
   }).format(today)
   const numberFormatter = useMemo(() => new Intl.NumberFormat('fa-IR'), [])
+  const curriculumClient = useMemo(() => createStudentCurriculumClient(
+    authClient.authorizedRequest.bind(authClient),
+  ), [])
 
   const [tasks, setTasks] = useState<DailyTask[]>([])
   const [subjects, setSubjects] = useState<StudySubject[]>([])
-  const [topics, setTopics] = useState<StudyTopic[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [subjectFilter, setSubjectFilter] = useState('ALL')
@@ -188,7 +193,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
   const [subjectError, setSubjectError] = useState<string | null>(null)
-  const [topicError, setTopicError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set())
@@ -200,19 +204,18 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [title, setTitle] = useState('')
+  const [taskScheduledFor, setTaskScheduledFor] = useState(todayKey)
   const [description, setDescription] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
-  const [taskSubjectId, setTaskSubjectId] = useState('')
-  const [taskTopicId, setTaskTopicId] = useState('')
-  const [isTopicsLoading, setIsTopicsLoading] = useState(false)
+  const [contentType, setContentType] = useState<'STUDY' | 'GENERAL' | ''>('')
   const [isSubmittingTask, setIsSubmittingTask] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
+  const [taskCurriculum, setTaskCurriculum] = useState<readonly PlanningTargetDraftItem[]>([])
+  const [taskCurriculumDrafts, setTaskCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
+  const [taskCurriculumReady, setTaskCurriculumReady] = useState<Set<string>>(new Set())
+  const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
 
-  const [isSubjectCreateOpen, setIsSubjectCreateOpen] = useState(false)
-  const [subjectName, setSubjectName] = useState('')
-  const [isSubmittingSubject, setIsSubmittingSubject] = useState(false)
-  const [subjectFormError, setSubjectFormError] = useState<string | null>(null)
   const [activeSession, setActiveSession] = useState<StudySession | null>(null)
   const [activeTaskTitle, setActiveTaskTitle] = useState<string | null>(null)
   const [executionReady, setExecutionReady] = useState(false)
@@ -267,32 +270,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   }, [restoreActiveExecution])
 
   useEffect(() => {
-    if (!taskSubjectId) return
-
-    let active = true
-    const fetchTopics = async () => {
-      await Promise.resolve()
-      if (!active) return
-      setIsTopicsLoading(true)
-      setTopicError(null)
-      setTopics([])
-      try {
-        const items = await loadTopics(taskSubjectId)
-        if (active) setTopics(items)
-      } catch (error) {
-        if (active) setTopicError(planningErrorMessage(error))
-      } finally {
-        if (active) setIsTopicsLoading(false)
-      }
-    }
-
-    void fetchTopics()
-    return () => {
-      active = false
-    }
-  }, [taskSubjectId])
-
-  useEffect(() => {
     let active = true
     void loadSubjects().then((items) => {
       if (active) setSubjects(items)
@@ -340,14 +317,28 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }, [refreshKey, statusFilter, subjectFilter, todayKey])
 
-  const activeSubjects = subjects.filter((subject) => subject.archivedAt === null)
+  useEffect(() => {
+    let active = true
+    void loadPlanningTaskDrafts(tasks, curriculumClient, (drafts) => {
+      if (!active) return
+      setTaskCurriculumDrafts(drafts)
+      setTaskCurriculumReady(new Set(tasks.map(({ id }) => id)))
+    }).catch((error: unknown) => {
+      if (active) setActionError(planningErrorMessage(error))
+    })
+    return () => {
+      active = false
+    }
+  }, [curriculumClient, tasks])
+
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
   const summary = tasks.reduce(
     (counts, task) => ({ ...counts, [task.status]: counts[task.status] + 1 }),
-    { COMPLETED: 0, PENDING: 0, SKIPPED: 0 },
+    { COMPLETED: 0, PARTIAL: 0, PENDING: 0, SKIPPED: 0 },
   )
 
   const taskMatchesFilters = (task: DailyTask): boolean =>
+    taskOccursOnDate(task.scheduledFor, todayKey) &&
     (statusFilter === 'ALL' || task.status === statusFilter) &&
     (subjectFilter === 'ALL' || task.subjectId === subjectFilter)
 
@@ -562,6 +553,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setFormError('عنوان کار را وارد کنید.')
       return
     }
+    if (!taskScheduledFor) {
+      setFormError('تاریخ کار را انتخاب کنید.')
+      return
+    }
     if (trimmedTitle.length > 200 || trimmedDescription.length > 2000) {
       setFormError('عنوان یا توضیحات از طول مجاز بیشتر است.')
       return
@@ -570,16 +565,23 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setFormError('زمان تخمینی باید عددی صحیح بین ۱ تا ۱۴۴۰ دقیقه باشد.')
       return
     }
+    const taskContent = prepareTaskContent(contentType, taskCurriculum)
+    if (!taskContent.ok) {
+      setFormError(taskContent.message)
+      return
+    }
 
     setIsSubmittingTask(true)
     try {
       const created = await planningClient.createTask({
+        contentType: taskContent.contentType,
+        curriculumTargets: taskContent.curriculumTargets,
         description: trimmedDescription || null,
         estimatedMinutes: minutes,
-        scheduledFor: todayKey,
-        subjectId: taskSubjectId || null,
-        topicId: taskTopicId || null,
+        scheduledFor: taskScheduledFor,
+        subjectId: taskContent.subjectId,
         title: trimmedTitle,
+        topicId: taskContent.topicId,
       })
       if (taskMatchesFilters(created)) {
         setTasks((current) => mergeTasks([created, ...current]))
@@ -590,6 +592,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setTitle('')
       setDescription('')
       setEstimatedMinutes('')
+      setTaskScheduledFor(todayKey)
+      setContentType('')
+      setTaskCurriculum([])
     } catch (error) {
       setFormError(planningErrorMessage(error))
     } finally {
@@ -597,35 +602,43 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
-  const handleSubjectSubmit = async () => {
-    setSubjectFormError(null)
-    const name = subjectName.trim()
-
-    if (!name) {
-      setSubjectFormError('نام درس را وارد کنید.')
-      return
-    }
-    if (name.length > 200) {
-      setSubjectFormError('نام درس از طول مجاز بیشتر است.')
-      return
-    }
-
-    setIsSubmittingSubject(true)
+  const handleCurriculumTargetsChange = async (
+    task: DailyTask,
+    draft: readonly PlanningTargetDraftItem[],
+  ) => {
+    setActionError(null)
+    setUpdatingCurriculumTaskIds((current) => new Set(current).add(task.id))
     try {
-      const created = await planningClient.createSubject(name)
-      setSubjects((current) => mergeSubjects([created, ...current]))
-      setTaskTopicId('')
-      setTopics([])
-      setTaskSubjectId(created.id)
-      setSubjectName('')
-      setIsSubjectCreateOpen(false)
-      setFormSuccess(`درس «${created.name}» ساخته و انتخاب شد.`)
+      const result = await replaceChangedPlanningTargets(
+        task.curriculum.targets,
+        draft,
+        curriculumEditContext(task),
+        (targets) => planningClient.replaceTaskCurriculumTargets(task.id, targets),
+      )
+      if (result.kind === 'REPLACED') {
+        setTasks((current) => current.map((item) => item.id === result.value.id ? result.value : item))
+      } else if (result.kind === 'READ_ONLY') {
+        setActionError('مباحث این کار در حال حاضر فقط قابل مشاهده هستند.')
+      }
     } catch (error) {
-      setSubjectFormError(planningErrorMessage(error))
+      setActionError(planningErrorMessage(error))
     } finally {
-      setIsSubmittingSubject(false)
+      setUpdatingCurriculumTaskIds((current) => {
+        const next = new Set(current)
+        next.delete(task.id)
+        return next
+      })
     }
   }
+
+  const curriculumEditContext = (task: DailyTask) => ({
+    actor: 'student' as const,
+    contentType: task.contentType,
+    source: task.source,
+    status: task.status,
+    completedItemCount: task.curriculum.completedItemCount,
+    hasActiveStudySession: activeSession?.dailyTaskId === task.id,
+  })
 
   return (
     <div className="page-stack planning-page">
@@ -747,6 +760,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       {isCreateOpen && (
         <Card className="planning-create-card" title="کار شخصی تازه">
           <form className="planning-form" onSubmit={handleTaskSubmit}>
+            <fieldset className="task-content-type">
+              <legend>نوع کار</legend>
+              <label><input checked={contentType === 'STUDY'} name="student-task-content-type" onChange={() => { setContentType('STUDY'); setTaskCurriculum([]) }} type="radio" />درسی</label>
+              <label><input checked={contentType === 'GENERAL'} name="student-task-content-type" onChange={() => { setContentType('GENERAL'); setTaskCurriculum([]) }} type="radio" />عمومی</label>
+            </fieldset>
             <label htmlFor="task-title">
               عنوان کار
               <input
@@ -761,23 +779,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             </label>
 
             <div className="planning-form__row">
-              <label htmlFor="task-subject">
-                درس (اختیاری)
-                <select
-                  id="task-subject"
-                  onChange={(event) => {
-                    setTaskTopicId('')
-                    setTopics([])
-                    setTopicError(null)
-                    setTaskSubjectId(event.target.value)
-                  }}
-                  value={taskSubjectId}
-                >
-                  <option value="">بدون درس</option>
-                  {activeSubjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
+              <label htmlFor="task-date">
+                تاریخ انجام
+                <input id="task-date" onChange={(event) => setTaskScheduledFor(event.target.value)} required type="date" value={taskScheduledFor} />
               </label>
               <label htmlFor="task-minutes">
                 زمان تخمینی (دقیقه)
@@ -794,32 +798,12 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
               </label>
             </div>
 
-            <label className="planning-topic-field" htmlFor="task-topic">
-              مبحث (اختیاری)
-              <select
-                disabled={!taskSubjectId || isTopicsLoading || topics.length === 0}
-                id="task-topic"
-                onChange={(event) => setTaskTopicId(event.target.value)}
-                value={taskTopicId}
-              >
-                <option value="">
-                  {!taskSubjectId
-                    ? 'ابتدا درس را انتخاب کنید'
-                    : isTopicsLoading
-                      ? 'در حال دریافت مباحث…'
-                      : topics.length === 0
-                        ? 'برای این درس مبحث فعالی ثبت نشده است'
-                        : 'بدون مبحث'}
-                </option>
-                {topics.map((topic) => (
-                  <option key={topic.id} value={topic.id}>{topic.title}</option>
-                ))}
-              </select>
-              {!isTopicsLoading && taskSubjectId && topics.length === 0 && !topicError && (
-                <span className="planning-topic-field__state">مباحث این درس را می‌توانید در بخش «درس‌ها و مباحث» مدیریت کنید.</span>
-              )}
-              {topicError && <span className="planning-topic-field__error" role="alert">{topicError}</span>}
-            </label>
+            {contentType === 'STUDY' ? <PlanningCurriculumField
+              audience="student"
+              client={curriculumClient}
+              onChange={setTaskCurriculum}
+              value={taskCurriculum}
+            /> : null}
 
             <label htmlFor="task-description">
               توضیحات (اختیاری)
@@ -832,40 +816,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                 value={description}
               />
             </label>
-
-            <div className="inline-subject">
-              <Button
-                onClick={() => {
-                  setIsSubjectCreateOpen((current) => !current)
-                  setSubjectFormError(null)
-                }}
-                variant="ghost"
-              >
-                {isSubjectCreateOpen ? 'انصراف از ساخت درس' : 'درس موردنظر در فهرست نیست؟'}
-              </Button>
-              {isSubjectCreateOpen && (
-                <div className="inline-subject__form">
-                  <label htmlFor="subject-name">
-                    نام درس تازه
-                    <input
-                      id="subject-name"
-                      maxLength={200}
-                      onChange={(event) => setSubjectName(event.target.value)}
-                      placeholder="نام درس"
-                      value={subjectName}
-                    />
-                  </label>
-                  <Button
-                    disabled={isSubmittingSubject}
-                    onClick={() => void handleSubjectSubmit()}
-                    variant="secondary"
-                  >
-                    {isSubmittingSubject ? 'در حال ساخت…' : 'ساخت و انتخاب درس'}
-                  </Button>
-                </div>
-              )}
-              {subjectFormError && <p className="form-error" role="alert">{subjectFormError}</p>}
-            </div>
 
             {formError && <p className="form-error" role="alert">{formError}</p>}
             {formSuccess && <p className="form-success" role="status">{formSuccess}</p>}
@@ -979,7 +929,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       </span>
                     </div>
                     <div className="task-meta">
-                      <span>{subject?.name ?? (task.subjectId ? 'درس نامشخص' : 'بدون درس')}</span>
+                      <span>{task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</span>
+                      {task.subjectId ? <span>{subject?.name ?? 'درس نامشخص'}</span> : null}
                       {task.source === 'COUNSELOR' && (
                         <span className="task-source--counselor">تعیین‌شده توسط مشاور</span>
                       )}
@@ -996,6 +947,35 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
+                    {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) && taskCurriculumReady.has(task.id) ? (
+                      <PlanningCurriculumField
+                        audience="student"
+                        client={curriculumClient}
+                        minimumOne={task.contentType === 'STUDY'}
+                        disabled={!canEditPlanningCurriculum(
+                          curriculumEditContext(task),
+                          task.curriculum.targets,
+                          taskCurriculumDrafts[task.id] ?? [],
+                        ) || updatingCurriculumTaskIds.has(task.id)}
+                        disabledReason={task.curriculum.targets.some(({ referenceKind }) => referenceKind === 'PLACEMENT')
+                          ? 'این مبحث از ساختار قدیمی برنامه ذخیره شده و در حال حاضر فقط قابل مشاهده است.'
+                          : (taskCurriculumDrafts[task.id] ?? []).some(({ kind }) => kind === 'UNRESOLVED_NODE')
+                            ? 'مبحث ذخیره‌شده از روی سابقه نمایش داده می‌شود و در حال حاضر قابل ویرایش نیست.'
+                            : task.contentType === null
+                              ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
+                            : task.source !== 'PERSONAL'
+                          ? 'مباحث کار تعیین‌شده توسط مشاور فقط خواندنی است.'
+                          : task.status !== 'PENDING' || task.curriculum.completedItemCount > 0 || activeSession?.dailyTaskId === task.id
+                            ? 'به‌دلیل شروع یا نهایی‌شدن کار، مباحث فقط خواندنی هستند.'
+                            : updatingCurriculumTaskIds.has(task.id)
+                              ? 'در حال ثبت مباحث…'
+                              : undefined}
+                        onChange={(draft) => void handleCurriculumTargetsChange(task, draft)}
+                        value={taskCurriculumDrafts[task.id] ?? []}
+                      />
+                    ) : task.curriculum.targets.length > 0 ? (
+                      <p className="planning-curriculum-loading" role="status">در حال بازیابی مباحث رسمی این کار…</p>
+                    ) : null}
                     {task.source === 'PERSONAL' && (
                       <form
                         className="task-schedule"

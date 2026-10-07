@@ -33,6 +33,7 @@ type Feedback = {
 
 const statusLabels: Record<DailyTaskStatus, string> = {
   COMPLETED: 'انجام‌شده',
+  PARTIAL: 'بخشی انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
 }

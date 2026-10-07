@@ -97,6 +97,12 @@
 .student-task-card .content-state { min-height: 180px; }
 .student-task-card__intro { margin: -0.35rem 0 0.25rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
 .student-task-form { display: grid; gap: 1rem; }
+.student-task-form .task-content-type { border: 0; display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; min-width: 0; padding: 0; }
+.student-task-form .task-content-type legend { color: var(--text-primary); font-size: .88rem; font-weight: 700; margin-bottom: .5rem; }
+.student-task-form .task-content-type label { align-items: center; background: var(--bg-subtle); border: 1px solid var(--border-default); border-radius: .75rem; display: inline-flex; gap: .45rem; min-height: 2.75rem; padding: .55rem .9rem; }
+.student-task-form .task-content-type label:has(input:checked) { border-color: var(--action-primary); color: var(--action-primary); }
+.student-task-form .task-content-type input[type='radio'] { accent-color: var(--action-primary); min-height: 0; width: auto; }
+.student-task-form .task-content-type label:focus-within { outline: 3px solid var(--action-primary); outline-offset: 2px; }
 .student-task-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .student-task-form label { display: grid; gap: 0.5rem; color: var(--text-primary); font-size: 0.88rem; font-weight: 700; }
 .student-task-form input, .student-task-form select, .student-task-form textarea { width: 100%; padding: 0.85rem 0.95rem; border: 1px solid var(--border-default); border-radius: 12px; color: var(--text-primary); background: var(--bg-subtle); outline: none; resize: vertical; }

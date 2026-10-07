@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { selectionKey, toggleSelection, updateSelectionMode } from './state.ts';
+import { initialMultipleSelection, selectionKey, toggleCheckboxSelection, toggleSelection, updateSelectionMode } from './state.ts';
 import type {
   CurriculumBrowserClient,
   CurriculumCatalogEntry,
@@ -23,7 +23,10 @@ export type CurriculumBrowserProps = {
   client: CurriculumBrowserClient;
   audience: CurriculumAudience;
   contextLabel?: string;
+  mode?: 'BROWSE' | 'PICKER';
   onBack?: () => void;
+  onSelectedNodesChange?(selections: readonly CurriculumSelection[]): void;
+  selectedNodes?: readonly CurriculumSelection[];
 };
 
 type RootBranch = {
@@ -38,17 +41,39 @@ type AsyncValue<T> =
   | { status: 'ready'; value: T }
   | { status: 'error'; error: unknown };
 
-export function CurriculumBrowser({ client, audience, contextLabel, onBack }: CurriculumBrowserProps) {
+export function CurriculumBrowser({
+  client,
+  audience,
+  contextLabel,
+  mode = 'BROWSE',
+  onBack,
+  onSelectedNodesChange,
+  selectedNodes,
+}: CurriculumBrowserProps) {
   const [catalog, setCatalog] = useState<AsyncValue<readonly CurriculumCatalogEntry[]>>({ status: 'loading' });
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [roots, setRoots] = useState<AsyncValue<readonly RootBranch[]>>({ status: 'idle' });
-  const [multiple, setMultiple] = useState(false);
+  const [multiple, setMultiple] = useState(() => initialMultipleSelection(mode, selectedNodes?.length ?? 0));
   const [selectionMode, setSelectionMode] = useState<CurriculumSelectionMode>('EXACT');
-  const [selections, setSelections] = useState<readonly CurriculumSelection[]>([]);
+  const [localSelections, setLocalSelections] = useState<readonly CurriculumSelection[]>([]);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState<AsyncValue<readonly CurriculumCatalogSearchResult[]>>({ status: 'idle' });
   const [revealPath, setRevealPath] = useState<ReadonlySet<string>>(new Set());
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const picker = mode === 'PICKER';
+  const selections = selectedNodes ?? localSelections;
+  const setSelections: React.Dispatch<React.SetStateAction<readonly CurriculumSelection[]>> = useCallback((update) => {
+    if (selectedNodes) {
+      const next = typeof update === 'function' ? update(selectedNodes) : update;
+      onSelectedNodesChange?.(next);
+      return;
+    }
+    setLocalSelections((current) => {
+      const next = typeof update === 'function' ? update(current) : update;
+      onSelectedNodesChange?.(next);
+      return next;
+    });
+  }, [onSelectedNodesChange, selectedNodes]);
 
   const loadCatalog = useCallback(async () => {
     setCatalog({ status: 'loading' });
@@ -93,8 +118,10 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
   }, [activeEntryId, loadEntry]);
 
   const chooseNode = useCallback((node: CurriculumCatalogNodeView) => {
-    setSelections((current) => toggleSelection(current, node, { multiple, mode: selectionMode }));
-  }, [multiple, selectionMode]);
+    setSelections((current) => picker
+      ? toggleCheckboxSelection(current, node)
+      : toggleSelection(current, node, { multiple, mode: selectionMode }));
+  }, [multiple, picker, selectionMode]);
 
   const submitSearch = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -129,8 +156,12 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
   const activeEntry = entries.find(({ id }) => id === activeEntryId) ?? null;
 
   return (
-    <main className="curriculum-browser" dir="rtl">
-      <header className="curriculum-browser__hero">
+    <main className={`curriculum-browser${picker ? ' curriculum-browser--picker' : ''}`} dir="rtl">
+      {picker ? <header className="curriculum-browser__picker-heading">
+        <strong>مباحث درسی</strong>
+        {contextLabel ? <small>انتخاب برای {contextLabel}</small> : null}
+      </header> : null}
+      {!picker ? <header className="curriculum-browser__hero">
         <div>
           {onBack ? <button className="curriculum-browser__back" type="button" onClick={onBack}>بازگشت</button> : null}
           <p className="curriculum-browser__eyebrow">مرور و انتخاب از برنامهٔ درسی رسمی</p>
@@ -144,7 +175,7 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
             <small>رشته از پروفایل همین دانش‌آموز خوانده می‌شود.</small>
           </aside>
         ) : null}
-      </header>
+      </header> : null}
 
       <section className="curriculum-browser__toolbar" aria-label="ابزارهای انتخاب">
         <form className="curriculum-browser__search" onSubmit={submitSearch} role="search">
@@ -159,20 +190,20 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
             <button type="submit">جست‌وجو</button>
           </div>
         </form>
-        <fieldset className="curriculum-browser__segmented">
+        {!picker ? <fieldset className="curriculum-browser__segmented">
           <legend>شیوهٔ انتخاب</legend>
           <button type="button" aria-pressed={!multiple} onClick={() => {
             setMultiple(false);
             setSelections((current) => current.slice(0, 1));
           }}>تکی</button>
           <button type="button" aria-pressed={multiple} onClick={() => setMultiple(true)}>چندتایی</button>
-        </fieldset>
-        <fieldset className="curriculum-browser__segmented">
+        </fieldset> : null}
+        {!picker ? <fieldset className="curriculum-browser__segmented">
           <legend>دامنهٔ پیش‌فرض</legend>
           <button type="button" aria-pressed={selectionMode === 'EXACT'} onClick={() => setSelectionMode('EXACT')}>دقیق</button>
           <button type="button" aria-pressed={selectionMode === 'WHOLE'} onClick={() => setSelectionMode('WHOLE')}>با زیرمبحث</button>
           <small>{modeDescription(selectionMode)}</small>
-        </fieldset>
+        </fieldset> : null}
       </section>
 
       <SearchResults
@@ -183,6 +214,7 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
         selected={selections}
         audience={audience}
         retry={() => void submitSearch({ preventDefault() {} } as React.FormEvent)}
+        picker={picker}
       />
 
       {catalogEntries.length === 0 ? (
@@ -234,14 +266,14 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
                 <section className="curriculum-browser__group" key={branch.key} aria-labelledby={`group-${branch.key}`}>
                   <h3 id={`group-${branch.key}`}>{branch.group.label}</h3>
                   <p>گروه راهبری — قابل انتخاب نیست</p>
-                  <div className="curriculum-browser__tree" role="tree">
+                  <div className="curriculum-browser__tree" role={picker ? undefined : 'tree'}>
                     {branch.nodes.map((node) => (
                       <TreeNode key={node.id} {...treeNodeProps(node)} />
                     ))}
                   </div>
                 </section>
               ) : (
-                <div className="curriculum-browser__tree" role="tree" key={branch.key}>
+                <div className="curriculum-browser__tree" role={picker ? undefined : 'tree'} key={branch.key}>
                   {branch.nodes.map((node) => <TreeNode key={node.id} {...treeNodeProps(node)} />)}
                 </div>
               )
@@ -250,12 +282,16 @@ export function CurriculumBrowser({ client, audience, contextLabel, onBack }: Cu
         </div>
       )}
 
-      <SelectionTray selections={selections} setSelections={setSelections} />
+      {!picker ? <SelectionTray
+        selections={selections}
+        setSelections={setSelections}
+        showLocalNotice={mode === 'BROWSE'}
+      /> : null}
     </main>
   );
 
   function treeNodeProps(node: CurriculumCatalogNodeView): TreeNodeProps {
-    return { client, node, selections, onSelect: chooseNode, revealPath, focusedNodeId };
+    return { client, node, selections, onSelect: chooseNode, revealPath, focusedNodeId, picker };
   }
 }
 
@@ -266,9 +302,10 @@ type TreeNodeProps = {
   onSelect(node: CurriculumCatalogNodeView): void;
   revealPath: ReadonlySet<string>;
   focusedNodeId: string | null;
+  picker: boolean;
 };
 
-function TreeNode({ client, node, selections, onSelect, revealPath, focusedNodeId }: TreeNodeProps) {
+function TreeNode({ client, node, selections, onSelect, revealPath, focusedNodeId, picker }: TreeNodeProps) {
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState<AsyncValue<readonly CurriculumCatalogNodeView[]>>({ status: 'idle' });
   const [loadedCount, setLoadedCount] = useState(0);
@@ -296,24 +333,32 @@ function TreeNode({ client, node, selections, onSelect, revealPath, focusedNodeI
   }, [children.status, loadChildren, open]);
 
   return (
-    <div className="curriculum-browser__node" role="treeitem" aria-expanded={node.childrenCount > 0 ? open : undefined}>
+    <div className="curriculum-browser__node" role={picker ? undefined : 'treeitem'} aria-expanded={!picker && node.childrenCount > 0 ? open : undefined}>
       <div className={`curriculum-browser__node-row${focusedNodeId === node.id ? ' is-focused' : ''}`}>
         {node.childrenCount > 0 ? (
-          <button className="curriculum-browser__expand" type="button" aria-label={open ? 'بستن زیرمبحث‌ها' : 'بازکردن زیرمبحث‌ها'} onClick={() => setExpanded(!open)}>
+          <button className="curriculum-browser__expand" type="button" aria-expanded={picker ? open : undefined} aria-label={open ? 'بستن زیرمبحث‌ها' : 'بازکردن زیرمبحث‌ها'} onClick={() => setExpanded(!open)}>
             <span aria-hidden="true">{open ? '−' : '+'}</span>
           </button>
         ) : <span className="curriculum-browser__leaf" aria-hidden="true">•</span>}
-        <button className="curriculum-browser__node-select" type="button" aria-pressed={selected} onClick={() => onSelect(node)}>
-          <span>{node.rawLabel}</span>
-          <small>{node.childrenCount > 0 ? `${node.childrenCount.toLocaleString('fa-IR')} زیرمبحث` : 'مبحث پایانی'}</small>
-        </button>
+        {picker ? (
+          <label className="curriculum-browser__node-select curriculum-browser__checkbox-label">
+            <input type="checkbox" checked={selected} onChange={() => onSelect(node)} />
+            <span>{node.rawLabel}</span>
+            <small>{node.childrenCount > 0 ? `${node.childrenCount.toLocaleString('fa-IR')} زیرمبحث` : 'مبحث پایانی'}</small>
+          </label>
+        ) : (
+          <button className="curriculum-browser__node-select" type="button" aria-pressed={selected} onClick={() => onSelect(node)}>
+            <span>{node.rawLabel}</span>
+            <small>{node.childrenCount > 0 ? `${node.childrenCount.toLocaleString('fa-IR')} زیرمبحث` : 'مبحث پایانی'}</small>
+          </button>
+        )}
       </div>
       {open ? (
         <div className="curriculum-browser__children" role="group">
           {children.status === 'loading' ? <p className="curriculum-browser__inline-state">در حال دریافت زیرمبحث‌ها…</p> : null}
           {children.status === 'error' ? <button className="curriculum-browser__retry" type="button" onClick={() => void loadChildren()}>تلاش دوباره برای این شاخه</button> : null}
           {children.status === 'ready' ? children.value.map((child) => (
-            <TreeNode key={child.id} client={client} node={child} selections={selections} onSelect={onSelect} revealPath={revealPath} focusedNodeId={focusedNodeId} />
+            <TreeNode key={child.id} client={client} node={child} selections={selections} onSelect={onSelect} revealPath={revealPath} focusedNodeId={focusedNodeId} picker={picker} />
           )) : null}
           {children.status === 'ready' && loadedCount < node.childrenCount ? (
             <button className="curriculum-browser__retry" type="button" onClick={() => void loadChildren(loadedCount)}>نمایش موارد بیشتر</button>
@@ -324,7 +369,7 @@ function TreeNode({ client, node, selections, onSelect, revealPath, focusedNodeI
   );
 }
 
-function SearchResults({ state, entries, onOpen, onSelect, selected, audience, retry }: {
+function SearchResults({ state, entries, onOpen, onSelect, selected, audience, retry, picker }: {
   state: AsyncValue<readonly CurriculumCatalogSearchResult[]>;
   entries: readonly CurriculumCatalogEntry[];
   onOpen(result: CurriculumCatalogSearchResult): void;
@@ -332,6 +377,7 @@ function SearchResults({ state, entries, onOpen, onSelect, selected, audience, r
   selected: readonly CurriculumSelection[];
   audience: CurriculumAudience;
   retry(): void;
+  picker: boolean;
 }) {
   if (state.status === 'idle') return null;
   return (
@@ -355,7 +401,12 @@ function SearchResults({ state, entries, onOpen, onSelect, selected, audience, r
             </div>
             <div>
               <button type="button" onClick={() => onOpen(result)}>نمایش در ساختار</button>
-              <button type="button" aria-pressed={isSelected} onClick={() => onSelect(result)}>{isSelected ? 'حذف انتخاب' : 'انتخاب'}</button>
+              {picker ? (
+                <label className="curriculum-browser__checkbox-label">
+                  <input type="checkbox" checked={isSelected} onChange={() => onSelect(result)} />
+                  <span>{result.rawLabel}</span>
+                </label>
+              ) : <button type="button" aria-pressed={isSelected} onClick={() => onSelect(result)}>{isSelected ? 'حذف انتخاب' : 'انتخاب'}</button>}
             </div>
           </article>
         );
@@ -364,9 +415,10 @@ function SearchResults({ state, entries, onOpen, onSelect, selected, audience, r
   );
 }
 
-function SelectionTray({ selections, setSelections }: {
+function SelectionTray({ selections, setSelections, showLocalNotice }: {
   selections: readonly CurriculumSelection[];
   setSelections: React.Dispatch<React.SetStateAction<readonly CurriculumSelection[]>>;
+  showLocalNotice: boolean;
 }) {
   if (selections.length === 0) return null;
   return (
@@ -393,7 +445,7 @@ function SelectionTray({ selections, setSelections }: {
           );
         })}
       </ul>
-      <p>این انتخاب فعلاً فقط در همین صفحه نگه‌داری می‌شود و هنوز به برنامه یا تکلیف متصل نیست.</p>
+      {showLocalNotice ? <p>این انتخاب فعلاً فقط در همین صفحه نگه‌داری می‌شود و هنوز به برنامه یا تکلیف متصل نیست.</p> : null}
     </aside>
   );
 }

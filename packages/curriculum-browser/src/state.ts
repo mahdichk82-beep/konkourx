@@ -9,6 +9,10 @@ export function selectionKey(selection: Pick<CurriculumSelection, 'entryId' | 'n
   return `${selection.entryId}:${selection.nodeId}`;
 }
 
+export function initialMultipleSelection(mode: 'BROWSE' | 'PICKER', selectedCount: number): boolean {
+  return mode === 'PICKER' || selectedCount > 1;
+}
+
 export function toggleSelection(
   selections: readonly CurriculumSelection[],
   node: CurriculumCatalogNodeView,
@@ -27,6 +31,13 @@ export function toggleSelection(
     return selections.filter((selection) => selectionKey(selection) !== key);
   }
   return options.multiple ? [...selections, candidate] : [candidate];
+}
+
+export function toggleCheckboxSelection(
+  selections: readonly CurriculumSelection[],
+  node: CurriculumCatalogNodeView,
+): CurriculumSelection[] {
+  return toggleSelection(selections, node, { multiple: true, mode: 'EXACT' });
 }
 
 export function updateSelectionMode(

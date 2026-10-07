@@ -1,4 +1,8 @@
 import { authClient } from '../auth/auth-client'
+import type {
+  PlanningCurriculumTargetInput,
+  PlanningCurriculumTargetSnapshot,
+} from '@konkourx/curriculum-browser'
 
 export type CounselorTaskSubject = {
   id: string
@@ -13,9 +17,16 @@ export type CounselorTaskTopic = {
 
 export type CounselorTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
-type CounselorTask = {
+export type CounselorTask = {
+  contentType: 'STUDY' | 'GENERAL' | null
   completedAt: string | null
   createdAt: string
+  curriculum: {
+    completedItemCount: number
+    remainingItemCount: number
+    targets: PlanningCurriculumTargetSnapshot[]
+    totalItemCount: number
+  }
   description: string | null
   estimatedMinutes: number | null
   id: string
@@ -24,7 +35,7 @@ type CounselorTask = {
   skipReason: CounselorTaskSkipReason | null
   skippedAt: string | null
   source: 'PERSONAL' | 'COUNSELOR'
-  status: 'PENDING' | 'COMPLETED' | 'SKIPPED'
+  status: 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
   studentProfileId: string
   studyPlanId: string | null
   subjectId: string | null
@@ -52,6 +63,8 @@ export type Page<T> = {
 }
 
 export type CreateCounselorTaskInput = {
+  contentType: 'STUDY' | 'GENERAL'
+  curriculumTargets: PlanningCurriculumTargetInput[]
   description: string | null
   estimatedMinutes: number | null
   scheduledFor: string
@@ -61,6 +74,8 @@ export type CreateCounselorTaskInput = {
 }
 
 export type CreateCounselorBatchTaskInput = {
+  contentType: 'STUDY' | 'GENERAL'
+  curriculumTargets: PlanningCurriculumTargetInput[]
   description: string | null
   plannedMinutes: number
   plannedTestCount: number
@@ -171,6 +186,23 @@ export const studentTasksClient = {
       ),
       {
         body: JSON.stringify({ scheduledFor }),
+        method: 'PATCH',
+      },
+    )
+  },
+
+  replaceCurriculumTargets(
+    studentProfileId: string,
+    taskId: string,
+    curriculumTargets: PlanningCurriculumTargetInput[],
+  ): Promise<CounselorTask> {
+    return authClient.authorizedRequest<CounselorTask>(
+      resourcePath(
+        studentProfileId,
+        `/tasks/${encodeURIComponent(taskId)}/curriculum-targets`,
+      ),
+      {
+        body: JSON.stringify({ curriculumTargets }),
         method: 'PATCH',
       },
     )

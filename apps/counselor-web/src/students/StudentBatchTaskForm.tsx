@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { AuthApiError } from '../auth/auth-client'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
+import {
+  PlanningCurriculumField,
+  planningDraftToTargetInputs,
+  type PlanningTargetDraftItem,
+} from '@konkourx/curriculum-browser'
+import '@konkourx/curriculum-browser/styles.css'
+import { AuthApiError, authClient } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
-import { ContentState } from '../components/ui/ContentState'
+import { createCounselorCurriculumClient } from '../curriculum/curriculum-client'
 import {
   addBatchTaskRow,
   createBatchTaskRow,
@@ -10,15 +16,13 @@ import {
   submitBatchTaskRows,
   type BatchTaskRow,
 } from './batch-task-form'
-import {
-  studentTasksClient,
-  type CounselorTaskSubject,
-  type CounselorTaskTopic,
-} from './student-tasks-client'
+import { studentTasksClient } from './student-tasks-client'
+import { taskContentErrorMessage } from './task-error-messages'
 
 type StudentBatchTaskFormProps = {
   onTasksCreated?(): void
   studentId: string
+  studentLabel: string
 }
 
 const localDate = () => {
@@ -34,17 +38,9 @@ const batchError = (error: unknown) => {
     if (error.code === 'STUDENT_NOT_FOUND') {
       return 'تخصیص فعال این دانش‌آموز پیدا نشد. صفحه را دوباره بارگذاری کنید.'
     }
-    if (error.code === 'SUBJECT_NOT_FOUND' || error.code === 'SUBJECT_ARCHIVED') {
-      return 'یکی از درس‌های انتخاب‌شده دیگر در دسترس نیست.'
-    }
-    if (
-      error.code === 'TOPIC_NOT_FOUND'
-      || error.code === 'TOPIC_ARCHIVED'
-      || error.code === 'TOPIC_SUBJECT_MISMATCH'
-      || error.code === 'TOPIC_SUBJECT_REQUIRED'
-    ) {
-      return 'یکی از مباحث انتخاب‌شده با درس همان ردیف سازگار نیست.'
-    }
+    const message = taskContentErrorMessage(error.code)
+    if (message) return message
+    return 'ثبت گروهی وظایف ممکن نشد. اطلاعات را بررسی و دوباره تلاش کنید.'
   }
   if (error instanceof Error && error.message) return error.message
   return 'ثبت گروهی وظایف ممکن نشد. اطلاعات را بررسی و دوباره تلاش کنید.'
@@ -53,38 +49,20 @@ const batchError = (error: unknown) => {
 export function StudentBatchTaskForm({
   onTasksCreated,
   studentId,
+  studentLabel,
 }: StudentBatchTaskFormProps) {
+  const curriculumClient = useMemo(() => createCounselorCurriculumClient(
+    studentId,
+    authClient.authorizedRequest.bind(authClient),
+  ), [studentId])
   const nextRowId = useRef(2)
   const [rows, setRows] = useState<BatchTaskRow[]>(() => [
     createBatchTaskRow('batch-task-1', localDate()),
   ])
-  const [subjects, setSubjects] = useState<CounselorTaskSubject[]>([])
-  const [topicsBySubject, setTopicsBySubject] = useState<Record<string, CounselorTaskTopic[]>>({})
-  const [loadingTopicSubjects, setLoadingTopicSubjects] = useState<Set<string>>(new Set())
-  const [subjectsLoading, setSubjectsLoading] = useState(true)
-  const [subjectsError, setSubjectsError] = useState<string | null>(null)
-  const [subjectRefreshKey, setSubjectRefreshKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-    studentTasksClient.listSubjects(studentId).then((items) => {
-      if (!active) return
-      setSubjects(items)
-      setSubjectsError(null)
-    }).catch(() => {
-      if (!active) return
-      setSubjects([])
-      setSubjectsError('دریافت درس‌های دانش‌آموز ممکن نشد. دوباره تلاش کنید.')
-    }).finally(() => {
-      if (active) setSubjectsLoading(false)
-    })
-    return () => {
-      active = false
-    }
-  }, [studentId, subjectRefreshKey])
+  const [curriculumDrafts, setCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
 
   const updateRow = <K extends keyof BatchTaskRow>(
     id: string,
@@ -96,29 +74,12 @@ export function StudentBatchTaskForm({
     )))
   }
 
-  const loadTopics = async (subjectId: string) => {
-    if (!subjectId || topicsBySubject[subjectId] || loadingTopicSubjects.has(subjectId)) return
-    setLoadingTopicSubjects((current) => new Set(current).add(subjectId))
-    try {
-      const topics = await studentTasksClient.listTopics(studentId, subjectId)
-      setTopicsBySubject((current) => ({ ...current, [subjectId]: topics }))
-    } catch (error) {
-      setFormError(batchError(error))
-    } finally {
-      setLoadingTopicSubjects((current) => {
-        const next = new Set(current)
-        next.delete(subjectId)
-        return next
-      })
-    }
-  }
-
-  const selectSubject = (rowId: string, subjectId: string) => {
-    setRows((current) => current.map((row) => (
-      row.id === rowId ? { ...row, subjectId, topicId: '' } : row
-    )))
+  const selectType = (rowId: string, contentType: BatchTaskRow['contentType']) => {
+    setRows((current) => current.map((row) => row.id === rowId
+      ? { ...row, contentType, curriculumTargets: [] }
+      : row))
+    setCurriculumDrafts((current) => ({ ...current, [rowId]: [] }))
     setFormError(null)
-    if (subjectId) void loadTopics(subjectId)
   }
 
   const addRow = () => {
@@ -131,6 +92,11 @@ export function StudentBatchTaskForm({
 
   const removeRow = (id: string) => {
     setRows((current) => removeBatchTaskRow(current, id))
+    setCurriculumDrafts((current) => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
     setFormError(null)
     setSuccess(null)
   }
@@ -152,6 +118,7 @@ export function StudentBatchTaskForm({
     }
 
     setRows([createBatchTaskRow(`batch-task-${nextRowId.current}`, localDate())])
+    setCurriculumDrafts({})
     nextRowId.current += 1
     setSuccess(`${result.value.created.toLocaleString('fa-IR')} وظیفه با موفقیت ثبت شد.`)
     setSubmitting(false)
@@ -164,31 +131,9 @@ export function StudentBatchTaskForm({
         چند وظیفه مستقل با منبع مشاور و وضعیت «در انتظار» را در یک عملیات ثبت کنید.
       </p>
 
-      {subjectsLoading ? (
-        <ContentState
-          description="درس‌های فعال دانش‌آموز برای ردیف‌های برنامه در حال دریافت است."
-          kind="loading"
-          title="در حال دریافت درس‌ها"
-        />
-      ) : subjectsError ? (
-        <ContentState
-          action={<Button onClick={() => {
-            setSubjectsLoading(true)
-            setSubjectsError(null)
-            setSubjectRefreshKey((value) => value + 1)
-          }}>تلاش دوباره</Button>}
-          description={subjectsError}
-          kind="error"
-          title="درس‌ها در دسترس نیستند"
-        />
-      ) : (
-        <form className="student-task-form" onSubmit={(event) => void submit(event)}>
+      <form className="student-task-form" onSubmit={(event) => void submit(event)}>
           <div className="student-batch-rows">
             {rows.map((row, index) => {
-              const topics = row.subjectId ? topicsBySubject[row.subjectId] ?? [] : []
-              const topicsLoading = row.subjectId
-                ? loadingTopicSubjects.has(row.subjectId)
-                : false
               return (
                 <section className="student-batch-row" key={row.id}>
                   <div className="student-batch-row__heading">
@@ -202,6 +147,11 @@ export function StudentBatchTaskForm({
                       حذف ردیف
                     </Button>
                   </div>
+                  <fieldset className="task-content-type">
+                    <legend>نوع کار</legend>
+                    <label><input checked={row.contentType === 'STUDY'} onChange={() => selectType(row.id, 'STUDY')} type="radio" name={`${row.id}-content-type`} />درسی</label>
+                    <label><input checked={row.contentType === 'GENERAL'} onChange={() => selectType(row.id, 'GENERAL')} type="radio" name={`${row.id}-content-type`} />عمومی</label>
+                  </fieldset>
                   <div className="student-batch-row__grid">
                     <label htmlFor={`${row.id}-title`}>
                       عنوان
@@ -223,33 +173,6 @@ export function StudentBatchTaskForm({
                         value={row.scheduledFor}
                       />
                     </label>
-                    <label htmlFor={`${row.id}-subject`}>
-                      درس
-                      <select
-                        id={`${row.id}-subject`}
-                        onChange={(event) => selectSubject(row.id, event.target.value)}
-                        value={row.subjectId}
-                      >
-                        <option value="">بدون درس</option>
-                        {subjects.map((subject) => (
-                          <option key={subject.id} value={subject.id}>{subject.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label htmlFor={`${row.id}-topic`}>
-                      مبحث
-                      <select
-                        disabled={!row.subjectId || topicsLoading}
-                        id={`${row.id}-topic`}
-                        onChange={(event) => updateRow(row.id, 'topicId', event.target.value)}
-                        value={row.topicId}
-                      >
-                        <option value="">{topicsLoading ? 'در حال دریافت…' : 'بدون مبحث'}</option>
-                        {topics.map((topic) => (
-                          <option key={topic.id} value={topic.id}>{topic.title}</option>
-                        ))}
-                      </select>
-                    </label>
                     <label htmlFor={`${row.id}-minutes`}>
                       زمان برنامه‌ریزی‌شده (دقیقه)
                       <input
@@ -262,7 +185,7 @@ export function StudentBatchTaskForm({
                         value={row.plannedMinutes}
                       />
                     </label>
-                    <label htmlFor={`${row.id}-tests`}>
+                    {row.contentType === 'STUDY' ? <label htmlFor={`${row.id}-tests`}>
                       تعداد تست برنامه‌ریزی‌شده
                       <input
                         id={`${row.id}-tests`}
@@ -272,7 +195,7 @@ export function StudentBatchTaskForm({
                         type="number"
                         value={row.plannedTestCount}
                       />
-                    </label>
+                    </label> : null}
                     <label className="student-batch-row__description" htmlFor={`${row.id}-description`}>
                       توضیحات
                       <textarea
@@ -284,6 +207,16 @@ export function StudentBatchTaskForm({
                       />
                     </label>
                   </div>
+                  {row.contentType === 'STUDY' ? <PlanningCurriculumField
+                    audience="counselor"
+                    client={curriculumClient}
+                    contextLabel={studentLabel}
+                    onChange={(draft) => {
+                      setCurriculumDrafts((current) => ({ ...current, [row.id]: draft }))
+                      updateRow(row.id, 'curriculumTargets', planningDraftToTargetInputs(draft))
+                    }}
+                    value={curriculumDrafts[row.id] ?? []}
+                  /> : null}
                 </section>
               )
             })}
@@ -306,7 +239,6 @@ export function StudentBatchTaskForm({
             </Button>
           </div>
         </form>
-      )}
     </Card>
   )
 }

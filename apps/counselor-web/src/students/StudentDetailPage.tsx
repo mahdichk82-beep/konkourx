@@ -122,15 +122,22 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
         refreshKey={taskRefreshKey}
         studentId={student.id}
       />
-      <StudentTaskList key={student.id} refreshKey={taskRefreshKey} studentId={student.id} />
+      <StudentTaskList
+        key={student.id}
+        refreshKey={taskRefreshKey}
+        studentId={student.id}
+        studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
+      />
       <StudentBatchTaskForm
         key={student.id}
         onTasksCreated={() => setTaskRefreshKey((value) => value + 1)}
         studentId={student.id}
+        studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
       />
       <StudentTaskForm
         onTaskCreated={() => setTaskRefreshKey((value) => value + 1)}
         studentId={student.id}
+        studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
       />
     </div>
   )

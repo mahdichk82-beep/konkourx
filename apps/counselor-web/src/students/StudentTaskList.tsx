@@ -1,21 +1,34 @@
-import { useEffect, useState } from 'react'
-import { AuthApiError } from '../auth/auth-client'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  PlanningCurriculumField,
+  canEditPlanningCurriculum,
+  loadPlanningTaskDrafts,
+  replaceChangedPlanningTargets,
+  type PlanningTargetDraftItem,
+} from '@konkourx/curriculum-browser'
+import '@konkourx/curriculum-browser/styles.css'
+import { AuthApiError, authClient } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
+import { createCounselorCurriculumClient } from '../curriculum/curriculum-client'
 import {
   studentTasksClient,
   type CounselorTaskSkipReason,
   type CounselorVisibleTask,
 } from './student-tasks-client'
+import { taskContentErrorMessage } from './task-error-messages'
+import { mergeVisibleTask } from './task-view'
 
 type StudentTaskListProps = {
   refreshKey: number
   studentId: string
+  studentLabel: string
 }
 
 const statusLabels: Record<CounselorVisibleTask['status'], string> = {
   COMPLETED: 'انجام‌شده',
+  PARTIAL: 'بخشی انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
 }
@@ -91,7 +104,19 @@ const scheduleError = (error: unknown) => {
   return 'تغییر تاریخ کار ممکن نشد. دوباره تلاش کنید.'
 }
 
-export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps) {
+const curriculumError = (error: unknown) => {
+  if (error instanceof AuthApiError) {
+    const message = taskContentErrorMessage(error.code)
+    if (message) return message
+  }
+  return 'ویرایش مباحث ممکن نشد. دوباره تلاش کنید.'
+}
+
+export function StudentTaskList({ refreshKey, studentId, studentLabel }: StudentTaskListProps) {
+  const curriculumClient = useMemo(() => createCounselorCurriculumClient(
+    studentId,
+    authClient.authorizedRequest.bind(authClient),
+  ), [studentId])
   const [tasks, setTasks] = useState<CounselorVisibleTask[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -101,6 +126,9 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
   const [schedulingTaskId, setSchedulingTaskId] = useState<string | null>(null)
   const [scheduleActionError, setScheduleActionError] = useState<string | null>(null)
+  const [curriculumDrafts, setCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
+  const [curriculumReady, setCurriculumReady] = useState<Set<string>>(new Set())
+  const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let active = true
@@ -121,6 +149,20 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
       active = false
     }
   }, [refreshKey, retryKey, studentId])
+
+  useEffect(() => {
+    let active = true
+    void loadPlanningTaskDrafts(tasks, curriculumClient, (drafts) => {
+      if (!active) return
+      setCurriculumDrafts(drafts)
+      setCurriculumReady(new Set(tasks.map(({ id }) => id)))
+    }).catch((loadError: unknown) => {
+      if (active) setScheduleActionError(listError(loadError))
+    })
+    return () => {
+      active = false
+    }
+  }, [curriculumClient, tasks])
 
   const retry = () => {
     setLoading(true)
@@ -170,6 +212,48 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
     }
   }
 
+  const replaceCurriculum = async (
+    task: CounselorVisibleTask,
+    draft: readonly PlanningTargetDraftItem[],
+  ) => {
+    setUpdatingCurriculumTaskIds((current) => new Set(current).add(task.id))
+    setScheduleActionError(null)
+    try {
+      const result = await replaceChangedPlanningTargets(
+        task.curriculum.targets,
+        draft,
+        curriculumEditContext(task),
+        (targets) => studentTasksClient.replaceCurriculumTargets(studentId, task.id, targets),
+      )
+      if (result.kind === 'REPLACED') {
+        setTasks((current) => current.map((candidate) => candidate.id === result.value.id
+          ? mergeVisibleTask(candidate, result.value)
+          : candidate))
+      } else if (result.kind === 'READ_ONLY') {
+        setScheduleActionError('مباحث این کار در حال حاضر فقط قابل مشاهده هستند.')
+      }
+    } catch (updateError) {
+      setScheduleActionError(curriculumError(updateError))
+    } finally {
+      setUpdatingCurriculumTaskIds((current) => {
+        const next = new Set(current)
+        next.delete(task.id)
+        return next
+      })
+    }
+  }
+
+  const curriculumEditContext = (task: CounselorVisibleTask) => ({
+    actor: 'counselor' as const,
+    contentType: task.contentType,
+    source: task.source,
+    status: task.status,
+    completedItemCount: task.curriculum.completedItemCount,
+    hasActiveStudySession: task.hasActiveStudySession,
+    hasStudyHistory: task.studySessionCount > 0,
+    hasValidAssessmentAttempt: task.hasValidAssessmentAttempt,
+  })
+
   return (
     <Card className="student-task-list-card" title="وظایف و وضعیت اجرا">
       <p className="student-task-card__intro">
@@ -209,6 +293,7 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                   </span>
                 </div>
                 {task.description && <p className="counselor-task__description">{task.description}</p>}
+                <p className="counselor-task__content-type">نوع کار: {task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</p>
                 <div className="counselor-task__meta">
                   <span>{formatScheduledFor(task.scheduledFor)}</span>
                   <span>{sourceLabels[task.source]}</span>
@@ -227,6 +312,40 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
                   )}
                 </div>
+                {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) && curriculumReady.has(task.id) ? (
+                  <PlanningCurriculumField
+                    audience="counselor"
+                    client={curriculumClient}
+                    contextLabel={studentLabel}
+                    minimumOne={task.contentType === 'STUDY'}
+                    disabled={!canEditPlanningCurriculum(
+                      curriculumEditContext(task),
+                      task.curriculum.targets,
+                      curriculumDrafts[task.id] ?? [],
+                    ) || updatingCurriculumTaskIds.has(task.id)}
+                    disabledReason={task.curriculum.targets.some(({ referenceKind }) => referenceKind === 'PLACEMENT')
+                      ? 'این مبحث از ساختار قدیمی برنامه ذخیره شده و در حال حاضر فقط قابل مشاهده است.'
+                      : (curriculumDrafts[task.id] ?? []).some(({ kind }) => kind === 'UNRESOLVED_NODE')
+                        ? 'مبحث ذخیره‌شده از روی سابقه نمایش داده می‌شود و در حال حاضر قابل ویرایش نیست.'
+                        : task.contentType === null
+                          ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
+                        : task.source !== 'COUNSELOR'
+                      ? 'مباحث برنامه شخصی دانش‌آموز برای مشاور فقط خواندنی است.'
+                      : task.status !== 'PENDING'
+                        || task.completedStudySessionCount > 0
+                        || task.hasActiveStudySession
+                        || task.hasValidAssessmentAttempt
+                        || task.curriculum.completedItemCount > 0
+                        ? 'به‌دلیل شروع یا نهایی‌شدن کار، مباحث فقط خواندنی هستند.'
+                        : updatingCurriculumTaskIds.has(task.id)
+                          ? 'در حال ثبت مباحث…'
+                          : undefined}
+                    onChange={(draft) => void replaceCurriculum(task, draft)}
+                    value={curriculumDrafts[task.id] ?? []}
+                  />
+                ) : task.curriculum.targets.length > 0 ? (
+                  <p role="status">در حال بازیابی مباحث رسمی این کار…</p>
+                ) : null}
                 {task.source === 'COUNSELOR' && (
                   <form
                     className="counselor-task__schedule"

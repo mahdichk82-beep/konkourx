@@ -19,6 +19,7 @@ type StudentWeeklyPlanningProps = {
 
 const statusLabels: Record<CounselorVisibleTask['status'], string> = {
   COMPLETED: 'انجام‌شده',
+  PARTIAL: 'بخشی انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
 }

@@ -3,6 +3,7 @@ import { AuthApiError } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import {
   planningClient,
+  type DailyTaskStatus,
   type FinishStudySessionInput,
   type StudySession,
 } from './planning-client'
@@ -21,7 +22,7 @@ import {
 
 type TaskExecutionPanelProps = {
   taskId: string
-  taskStatus: 'PENDING' | 'COMPLETED' | 'SKIPPED'
+  taskStatus: DailyTaskStatus
   taskTitle: string
   activeSession: StudySession | null
   executionReady: boolean
