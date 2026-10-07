@@ -47,7 +47,7 @@ export type ReplaceCurriculumTargetsResult =
   | { ok: true; value: import('../student-core/types.js').DailyTaskRecord }
   | {
       ok: false
-      reason: 'TASK_NOT_FOUND' | 'TASK_SOURCE_FORBIDDEN' | 'TASK_NOT_PENDING' | 'CURRICULUM_EXECUTION_STARTED'
+      reason: 'TASK_NOT_FOUND' | 'TASK_SOURCE_FORBIDDEN' | 'TASK_NOT_PENDING' | 'CURRICULUM_EXECUTION_STARTED' | 'TASK_GENERAL_TARGET_FORBIDDEN' | 'TASK_STUDY_TARGET_REQUIRED'
     }
 
 export type ToggleCurriculumItemResult =

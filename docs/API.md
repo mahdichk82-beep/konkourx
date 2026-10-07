@@ -100,17 +100,20 @@ A future Question Bank contract may link `Question` and `CurriculumNode` many-to
 
 ### CURRENT IMPLEMENTED STATE
 
-Student personal-task creation, counselor single-task creation, and counselor batch-task creation accept an optional `curriculumTargets` array. Each target has `referenceKind` (`NODE` or `PLACEMENT`), `curriculumRefId`, and `selectionMode` (`EXACT` or `WHOLE`). References are checked against the file-backed Canonical Curriculum before persistence.
+Student personal-task creation, counselor single-task creation, and each item in counselor one-Student batch creation accept optional `contentType: "STUDY" | "GENERAL"` and optional `curriculumTargets`. `DailyTask.contentType` is nullable with no default: requests from existing clients that omit it persist `null`, retain legacy Subject/Topic and freeform compatibility, and are never inferred or backfilled. Task responses expose the stored value. PATCH routes do not accept `contentType`; historical null tasks remain unclassified pending a separately approved workflow.
 
-`CATALOG_ENTRY` and catalog navigation groups are not task-target kinds. Canonical nodes mounted below an entry remain selectable through the existing `NODE` contract; group IDs submitted as nodes return `CURRICULUM_NODE_NOT_FOUND`.
+When explicitly `STUDY`, creation requires at least one canonical Curriculum target and null legacy `subjectId`/`topicId`. When explicitly `GENERAL`, creation requires zero targets and null legacy links. GENERAL target replacement with nonempty targets is forbidden; STUDY target replacement with an empty set is forbidden. No frontend content-type selection is introduced in this milestone.
+
+Each new target has `referenceKind`, `curriculumRefId`, and `selectionMode`. New task writes and target replacements accept selectable canonical `NODE` references only. The server validates all supplied nodes against the authenticated Student's `StudentProfile.track`, or the actively assigned target Student's track for Counselor writes, at arbitrary catalog depth before mutation. A caller-supplied track is rejected. Missing track rejects nonempty new target writes; passive historical reads do not require a current track. Replacement validates the whole set before its existing transactional delete/create operation, so an invalid member does not partially apply.
+
+`CATALOG_ENTRY` and catalog navigation groups are not task-target kinds. Canonical nodes mounted below an entry remain selectable through the `NODE` contract; group IDs submitted as new targets return `CURRICULUM_TARGET_NOT_SELECTABLE`.
 
 - `NODE + EXACT` creates one execution item for the selected node.
 - `NODE + WHOLE` creates one execution item per direct child; a leaf creates one item for itself. Descendants below the direct children are not recursively flattened.
-- `PLACEMENT + EXACT` creates one execution item for the selected subject placement.
-- `PLACEMENT + WHOLE` returns `CURRICULUM_PLACEMENT_WHOLE_UNSUPPORTED` because no placement-to-representation mapping is inferred.
+- Historical `PLACEMENT + EXACT` targets and their snapshots remain readable; new PLACEMENT target writes are rejected as non-selectable. Existing `NODE + WHOLE` targets retain their snapshots and are not converted to EXACT on read.
 - Duplicate targets or overlapping selections that would create the same item return `CURRICULUM_TARGET_OVERLAP`.
 
-One task may contain multiple targets. Curriculum-backed and freeform tasks coexist; omitting or clearing targets leaves a normal freeform task and never creates a Curriculum node. Stored targets/items contain opaque runtime IDs plus immutable raw-label and path snapshots for historical display. There is no database foreign key to Curriculum.
+One task may contain multiple targets. For null-contentType legacy tasks, omitting or clearing targets retains compatibility freeform behavior. Stored targets/items contain opaque runtime IDs plus immutable raw-label and path snapshots for historical display. There is no database foreign key to Curriculum.
 
 Task responses include `curriculum.targets`, `completedItemCount`, `totalItemCount`, and `remainingItemCount`. Planning-target replacement uses:
 
@@ -119,13 +122,17 @@ PATCH /api/v1/student/daily-tasks/:id/curriculum-targets
 PATCH /api/v1/counselor/students/:studentProfileId/tasks/:taskId/curriculum-targets
 ```
 
-The strict body is `{ "curriculumTargets": [...] }`; an empty array clears targets. A student may replace targets only on an owned personal task. A counselor may replace targets only on a counselor-created task for an actively assigned student. The task must be `PENDING` and have zero completed Curriculum items. Targets and snapshots become immutable after execution starts or the task closes.
+The strict body is `{ "curriculumTargets": [...] }`; an empty array clears targets only for null-contentType legacy tasks. A student may replace targets only on an owned personal task. A counselor may replace targets only on a counselor-created task for an actively assigned student. The task must be `PENDING` and have zero completed Curriculum items. Targets and snapshots become immutable after execution starts or the task closes.
+
+New error codes in this milestone: HTTP `409 STUDENT_TRACK_NOT_SET` for nonempty new target writes without an authoritative track; `409 CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK` for unknown or out-of-track nodes; `400 CURRICULUM_TARGET_NOT_SELECTABLE` for GROUP or PLACEMENT references; `409 TASK_STUDY_TARGET_REQUIRED`, `409 TASK_GENERAL_TARGET_FORBIDDEN`, and `409 TASK_LEGACY_LINK_FORBIDDEN` for explicit content-type invariant violations. Existing `409 CURRICULUM_TARGET_OVERLAP`, authorization, terminal/execution, and strict-schema `400 VALIDATION_ERROR` behavior remains.
 
 Student checklist execution uses `PATCH /api/v1/student/daily-tasks/:id/curriculum-items/:itemId` with the strict body `{ "completed": true | false }`. The server assigns or clears the item `completedAt`. The authenticated student may toggle items on their own personal tasks and counselor-created tasks assigned to them while the task is `PENDING`; this does not grant permission to edit counselor planning content. Foreign task/item identifiers are hidden behind owner-scoped not-found responses. Counselors read checklist coverage through their existing assigned-student task list.
 
 `DailyTask.status` now includes terminal `PARTIAL`. For a Curriculum-backed task: `COMPLETED` requires N/N completed items, `PARTIAL` requires X/N where `0 < X < N`, and `SKIPPED` requires 0/N. `PENDING` remains open, checkbox changes never automatically transition the task, and lifecycle timestamps remain server-owned. `PARTIAL` keeps the completed and unfinished items, never reopens the original task, and never creates a compensatory task automatically. Existing tasks without Curriculum references retain their prior `PENDING`/`COMPLETED`/`SKIPPED` behavior; freeform tasks cannot use `PARTIAL`.
 
 ### APPROVED FUTURE STATE
+
+A later frontend milestone will require an explicit STUDY or GENERAL choice for canonical new task creation and stop relying on legacy Subject/Topic selectors. This milestone does not authorize that UX change or classification of historical null tasks.
 
 A counselor may later create a separate compensatory task from a partial task's remaining items. Reporting may derive direct coverage, repeated study, last-study time, accumulated duration, and unfinished planned content. Task completion is not mastery. No compensatory workflow, aggregate report, mastery persistence, or UI is implemented here.
 

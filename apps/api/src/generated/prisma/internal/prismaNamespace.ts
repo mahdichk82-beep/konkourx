@@ -1710,6 +1710,7 @@ export const DailyTaskScalarFieldEnum = {
   studentProfileId: 'studentProfileId',
   createdByUserId: 'createdByUserId',
   source: 'source',
+  contentType: 'contentType',
   studyPlanId: 'studyPlanId',
   subjectId: 'subjectId',
   topicId: 'topicId',
@@ -1957,6 +1958,20 @@ export type EnumDailyTaskSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'DailyTaskSource[]'
  */
 export type ListEnumDailyTaskSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskSource[]'>
+
+
+
+/**
+ * Reference to a field of type 'TaskContentType'
+ */
+export type EnumTaskContentTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TaskContentType'>
+
+
+
+/**
+ * Reference to a field of type 'TaskContentType[]'
+ */
+export type ListEnumTaskContentTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TaskContentType[]'>
 
 
 

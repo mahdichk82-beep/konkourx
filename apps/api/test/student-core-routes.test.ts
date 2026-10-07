@@ -36,7 +36,7 @@ const auth: AuthService = {
 }
 
 const store: StudentCoreStore = {
-  findStudentProfileByUserId: async () => ({ id: 'student-profile-1', userId: user.id }),
+  findStudentProfileByUserId: async () => ({ id: 'student-profile-1', userId: user.id, track: 'EXPERIMENTAL' }),
   listSubjects: async () => [],
   findSubjectById: async () => null,
   createSubject: async (input) => ({ id: 'subject-1', ...input, archivedAt: null, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
@@ -822,6 +822,27 @@ test('student toggles owned Curriculum execution items and receives coverage cou
 test('Curriculum execution and target operations hide foreign tasks and protect counselor planning', async () => {
   const hiddenStore: StudentCoreStore = {
     ...store,
+    findTaskById: async () => ({
+      id: '00000000-0000-4000-8000-000000000411',
+      studentProfileId: 'student-profile-1',
+      createdByUserId: counselor.id,
+      source: 'COUNSELOR',
+      contentType: null,
+      studyPlanId: null,
+      subjectId: null,
+      topicId: null,
+      title: 'Assigned task',
+      description: null,
+      scheduledFor: new Date('2026-09-30T00:00:00.000Z'),
+      estimatedMinutes: null,
+      plannedTestCount: 0,
+      status: 'PENDING',
+      completedAt: null,
+      skipReason: null,
+      skippedAt: null,
+      createdAt: new Date('2026-09-30T00:00:00.000Z'),
+      updatedAt: new Date('2026-09-30T00:00:00.000Z'),
+    }),
     toggleTaskCurriculumItem: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
     replacePersonalTaskCurriculumTargets: async () => ({ ok: false, reason: 'TASK_SOURCE_FORBIDDEN' }),
   }
@@ -844,4 +865,67 @@ test('Curriculum execution and target operations hide foreign tasks and protect 
   assert.equal(counselorTargets.statusCode, 403)
   assert.equal(counselorTargets.json().error.code, 'TASK_UPDATE_FORBIDDEN')
   await app.close()
+})
+
+test('student task creates persist nullable content type and enforce own-track writes', async () => {
+  const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
+  const root = canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id)[0]!
+  const validNode = root.itemKind === 'NODE' ? root.nodeId : root.childNodeIds[0]!
+  const wrongNode = canonicalCurriculumStore.listTrackCatalog('HUMANITIES')
+    .flatMap((item) => canonicalCurriculumStore.listCatalogRoots('HUMANITIES', item.id))
+    .flatMap((item) => item.itemKind === 'NODE' ? [item.nodeId] : item.childNodeIds)
+    .find((id) => !canonicalCurriculumStore.isSelectableNodeInTrack('EXPERIMENTAL', id))!
+  const saved: DailyTaskRecord[] = []
+  const taskStore: StudentCoreStore = {
+    ...store,
+    createTask: async (input) => {
+      const result = { ...input, id: `task-${saved.length + 1}`, createdAt: user.createdAt, updatedAt: user.updatedAt }
+      saved.push(result)
+      return result
+    },
+  }
+  const app = createApp(taskStore)
+  const create = (payload: Record<string, unknown>) => app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { title: 'Task', scheduledFor: '2026-10-01', ...payload },
+    url: '/api/v1/student/daily-tasks',
+  })
+  const legacy = await create({})
+  assert.equal(legacy.statusCode, 201)
+  assert.equal(legacy.json().data.contentType, null)
+  const general = await create({ contentType: 'GENERAL' })
+  assert.equal(general.statusCode, 201)
+  assert.equal(general.json().data.contentType, 'GENERAL')
+  const study = await create({ contentType: 'STUDY', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: validNode, selectionMode: 'EXACT' }] })
+  assert.equal(study.statusCode, 201)
+  assert.equal(study.json().data.contentType, 'STUDY')
+  assert.deepEqual(saved.map((item) => item.contentType), [null, 'GENERAL', 'STUDY'])
+  assert.equal(saved.every((item) => item.subjectId === null && item.topicId === null), true)
+  const bad = await create({ contentType: 'STUDY', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: wrongNode, selectionMode: 'EXACT' }] })
+  assert.equal(bad.statusCode, 409)
+  assert.equal(bad.json().error.code, 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK')
+  const spoof = await create({ contentType: 'STUDY', track: 'HUMANITIES', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: wrongNode, selectionMode: 'EXACT' }] })
+  assert.equal(spoof.statusCode, 400)
+  const conversion = await app.inject({
+    headers: { authorization: 'Bearer access-token' }, method: 'PATCH',
+    payload: { contentType: 'GENERAL' }, url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000410',
+  })
+  assert.equal(conversion.statusCode, 400)
+  assert.equal(saved.length, 3)
+  await app.close()
+
+  const noTrackApp = createApp({
+    ...taskStore,
+    findStudentProfileByUserId: async () => ({ id: 'student-profile-1', userId: user.id, track: null }),
+  })
+  const noTrack = await noTrackApp.inject({
+    headers: { authorization: 'Bearer access-token' }, method: 'POST',
+    payload: { title: 'No track', scheduledFor: '2026-10-01', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: validNode, selectionMode: 'EXACT' }] },
+    url: '/api/v1/student/daily-tasks',
+  })
+  assert.equal(noTrack.statusCode, 409)
+  assert.equal(noTrack.json().error.code, 'STUDENT_TRACK_NOT_SET')
+  assert.equal(saved.length, 3)
+  await noTrackApp.close()
 })

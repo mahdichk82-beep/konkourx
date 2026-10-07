@@ -96,6 +96,11 @@ enum StudentTrack {
   HUMANITIES
 }
 
+enum TaskContentType {
+  STUDY
+  GENERAL
+}
+
 model StudentProfile {
   id             String   @id @default(uuid()) @db.Uuid
   userId         String   @unique @db.Uuid
@@ -249,6 +254,7 @@ model DailyTask {
   studentProfileId String               @db.Uuid
   createdByUserId  String               @db.Uuid
   source           DailyTaskSource
+  contentType      TaskContentType?
   studyPlanId      String?              @db.Uuid
   subjectId        String?              @db.Uuid
   topicId          String?              @db.Uuid

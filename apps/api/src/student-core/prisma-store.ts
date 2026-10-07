@@ -1,5 +1,6 @@
 import type { PrismaClient } from '../generated/prisma/client.js'
 import type { StudentCoreStore } from './store.js'
+import { assertStudentTrackAtWrite } from '../task-domain/validation.js'
 import type {
   DailyTaskStatus,
   StudyPlanStatus,
@@ -18,7 +19,7 @@ const curriculumInclude = {
 export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreStore => ({
   async findStudentProfileByUserId(userId) {
     return prisma.studentProfile.findUnique({
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, track: true },
       where: { userId },
     })
   },
@@ -133,8 +134,15 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     return prisma.dailyTask.findFirst({ include: curriculumInclude, where: { id, studentProfileId } })
   },
 
-  async createTask(input, curriculumTargets = []) {
+  async createTask(input, curriculumTargets = [], expectedTrack) {
     return prisma.$transaction(async (transaction) => {
+      if (curriculumTargets.length > 0) {
+        await transaction.$queryRawUnsafe(lockStudentProfileSql, input.studentProfileId)
+        const profile = await transaction.studentProfile.findUnique({
+          select: { track: true }, where: { id: input.studentProfileId },
+        })
+        assertStudentTrackAtWrite(profile?.track, expectedTrack)
+      }
       const task = await transaction.dailyTask.create({ data: input })
       for (const target of curriculumTargets) {
         await transaction.dailyTaskCurriculumTarget.create({
@@ -237,9 +245,15 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     })
   },
 
-  async replacePersonalTaskCurriculumTargets(studentProfileId, id, targets) {
+  async replacePersonalTaskCurriculumTargets(studentProfileId, id, targets, expectedTrack) {
     return prisma.$transaction(async (transaction) => {
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      if (targets.length > 0) {
+        const profile = await transaction.studentProfile.findUnique({
+          select: { track: true }, where: { id: studentProfileId },
+        })
+        assertStudentTrackAtWrite(profile?.track, expectedTrack)
+      }
       const current = await transaction.dailyTask.findFirst({
         include: { curriculumItems: { select: { completedAt: true } } },
         where: { id, studentProfileId },
@@ -247,6 +261,12 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
       if (current.source !== 'PERSONAL') return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
       if (current.status !== 'PENDING') return { ok: false, reason: 'TASK_NOT_PENDING' as const }
+      if (current.contentType === 'GENERAL' && targets.length > 0) {
+        return { ok: false, reason: 'TASK_GENERAL_TARGET_FORBIDDEN' as const }
+      }
+      if (current.contentType === 'STUDY' && targets.length === 0) {
+        return { ok: false, reason: 'TASK_STUDY_TARGET_REQUIRED' as const }
+      }
       if (current.curriculumItems.some((item) => item.completedAt !== null)) {
         return { ok: false, reason: 'CURRICULUM_EXECUTION_STARTED' as const }
       }

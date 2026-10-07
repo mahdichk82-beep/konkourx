@@ -1,6 +1,7 @@
 import type {
   AssignedResourceResult,
   AssignedTaskResult,
+  AssignedStudentTrackResult,
   AssignedTopicResult,
   CounselorStudentSubject,
   CounselorTaskPageQuery,
@@ -12,8 +13,13 @@ import type {
   RescheduleCounselorTaskResult,
 } from './types.js'
 import type { ReplaceCurriculumTargetsResult, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
+import type { CurriculumTrackId } from '../curriculum/types.js'
 
 export interface CounselorTaskStore {
+  findAssignedStudentTrack(
+    counselorUserId: string,
+    studentProfileId: string,
+  ): Promise<AssignedStudentTrackResult>
   listAssignedStudentTasks(
     counselorUserId: string,
     studentProfileId: string,
@@ -35,12 +41,14 @@ export interface CounselorTaskStore {
     studentProfileId: string,
     input: CreateCounselorTaskRecordInput,
     curriculumTargets?: ResolvedCurriculumTarget[],
+    expectedTrack?: CurriculumTrackId | null,
   ): Promise<CreateCounselorTaskResult>
   createAssignedStudentTasksBatch(
     counselorUserId: string,
     studentProfileId: string,
     inputs: CreateCounselorTaskRecordInput[],
     curriculumTargetsByTask?: ResolvedCurriculumTarget[][],
+    expectedTrack?: CurriculumTrackId | null,
   ): Promise<CreateCounselorTaskBatchResult>
   rescheduleAssignedStudentTask(
     counselorUserId: string,
@@ -53,5 +61,6 @@ export interface CounselorTaskStore {
     studentProfileId: string,
     taskId: string,
     targets: ResolvedCurriculumTarget[],
+    expectedTrack?: CurriculumTrackId | null,
   ): Promise<ReplaceCurriculumTargetsResult | { ok: false; reason: 'STUDENT_NOT_FOUND' }>
 }

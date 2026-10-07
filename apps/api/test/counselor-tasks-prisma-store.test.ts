@@ -4,6 +4,7 @@ import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createCounselorTaskServices } from '../src/counselor-tasks/services.js'
 import { createPrismaCounselorTaskStore } from '../src/counselor-tasks/prisma-store.js'
 import { ApiError } from '../src/errors/api-error.js'
+import type { ResolvedCurriculumTarget } from '../src/task-curriculum/types.js'
 
 const ids = {
   counselor: '10000000-0000-4000-8000-000000000001',
@@ -104,6 +105,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
     orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
     select: {
       completedAt: true,
+      contentType: true,
       partialAt: true,
       createdAt: true,
       description: true,
@@ -261,6 +263,7 @@ test('Prisma counselor task creation validates assignment and relations atomical
   }])
   assert.deepEqual(taskCreates[0]?.data, {
     completedAt: null,
+    contentType: null,
     partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
@@ -390,6 +393,7 @@ test('Prisma counselor batch creation verifies profile, assignment, resources, a
   assert.equal(batchCreates[0]?.data.length, 2)
   assert.deepEqual(batchCreates[0]?.data[0], {
     completedAt: null,
+    contentType: null,
     partialAt: null,
     createdByUserId: ids.counselor,
     description: null,
@@ -709,4 +713,34 @@ test('Prisma counselor resource queries require active assignment and active res
     take: 26,
     where: { archivedAt: null, subjectId: ids.subject },
   }])
+})
+
+test('counselor target replacement checks explicit GENERAL before deleting historical targets', async () => {
+  let deleted = false
+  const transaction = {
+    $queryRawUnsafe: async () => [],
+    studentProfile: {
+      findFirst: async () => ({ id: ids.student }),
+      findUnique: async () => ({ track: 'EXPERIMENTAL' }),
+    },
+    dailyTask: {
+      findFirst: async () => ({
+        id: ids.task, source: 'COUNSELOR', status: 'PENDING', contentType: 'GENERAL',
+        curriculumItems: [],
+      }),
+    },
+    dailyTaskCurriculumTarget: { deleteMany: async () => { deleted = true } },
+  }
+  const prisma = {
+    $transaction: async <T>(operation: (client: typeof transaction) => Promise<T>) => operation(transaction),
+  } as unknown as PrismaClient
+  const proposed = [{
+    referenceKind: 'NODE', curriculumRefId: 'node', selectionMode: 'EXACT', position: 0,
+    labelSnapshot: 'node', pathSnapshot: ['node'], representationIdSnapshot: 'representation', items: [],
+  }] as ResolvedCurriculumTarget[]
+  const result = await createPrismaCounselorTaskStore(prisma).replaceAssignedTaskCurriculumTargets!(
+    ids.counselor, ids.student, ids.task, proposed, 'EXPERIMENTAL',
+  )
+  assert.deepEqual(result, { ok: false, reason: 'TASK_GENERAL_TARGET_FORBIDDEN' })
+  assert.equal(deleted, false)
 })

@@ -23,6 +23,8 @@ export type CurriculumCatalogReadStore = {
   getTrackCatalogEntry(track: CurriculumTrackId, entryId: string): CurriculumCatalogEntry
   listCatalogRoots(track: CurriculumTrackId, entryId: string): readonly CurriculumCatalogRootItem[]
   getCatalogNode(track: CurriculumTrackId, entryId: string, nodeId: string): CurriculumCatalogNodeView
+  isSelectableNodeInTrack(track: CurriculumTrackId, nodeId: string): boolean
+  isNavigationGroup(id: string): boolean
   listCatalogChildren(
     track: CurriculumTrackId,
     entryId: string,
@@ -99,6 +101,7 @@ export const createCurriculumCatalogReadStore = (
   const entriesById = new Map(catalog.entries.map((entry) => [entry.id, entry]))
   const membershipByEntry = new Map<string, Set<string>>()
   const groupByEntryNode = new Map<string, CurriculumCatalogRootItem & { itemKind: 'GROUP' }>()
+  const navigationGroupIds = new Set<string>()
 
   const addDescendants = (
     entryId: string,
@@ -120,7 +123,10 @@ export const createCurriculumCatalogReadStore = (
   for (const entry of catalog.entries) {
     for (const root of entry.rootItems) {
       if (root.itemKind === 'NODE') addDescendants(entry.id, root.nodeId)
-      else for (const childId of root.childNodeIds) addDescendants(entry.id, childId, root)
+      else {
+        navigationGroupIds.add(root.id)
+        for (const childId of root.childNodeIds) addDescendants(entry.id, childId, root)
+      }
     }
     if ((membershipByEntry.get(entry.id)?.size ?? 0) !== entry.nodeCount) {
       throw new Error(`Catalog entry node count mismatch: ${entry.key}`)
@@ -196,6 +202,9 @@ export const createCurriculumCatalogReadStore = (
     getTrackCatalogEntry: (trackId, entryId) => getEntry(trackId, entryId).entry,
     listCatalogRoots: (trackId, entryId) => getEntry(trackId, entryId).entry.rootItems,
     getCatalogNode: nodeView,
+    isSelectableNodeInTrack: (trackId, nodeId) =>
+      getTrack(trackId).entryIds.some((entryId) => membershipByEntry.get(entryId)?.has(nodeId) ?? false),
+    isNavigationGroup: (id) => navigationGroupIds.has(id),
     listCatalogChildren: (trackId, entryId, nodeId, query) => {
       getMemberNode(trackId, entryId, nodeId)
       const membership = membershipByEntry.get(entryId)!

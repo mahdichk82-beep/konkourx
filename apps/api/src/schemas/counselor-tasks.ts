@@ -38,6 +38,7 @@ export const listCounselorTasksSchema = z.object({
 )
 
 export const createCounselorTaskSchema = z.object({
+  contentType: z.enum(['STUDY', 'GENERAL']).optional(),
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).nullable().optional(),
   scheduledFor: dateOnly,
@@ -49,6 +50,7 @@ export const createCounselorTaskSchema = z.object({
 }).strict().superRefine(refineTaskSchedule)
 
 const createCounselorTaskBatchItemSchema = z.object({
+  contentType: z.enum(['STUDY', 'GENERAL']).optional(),
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).nullable().optional().default(null),
   scheduledFor: dateOnly,

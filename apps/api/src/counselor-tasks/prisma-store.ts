@@ -1,6 +1,7 @@
 import type { PrismaClient } from '../generated/prisma/client.js'
 import { calculateStudySessionDurationMinutes } from '../study-tracking/duration.js'
 import type { CounselorTaskStore } from './store.js'
+import { assertStudentTrackAtWrite } from '../task-domain/validation.js'
 
 const lockStudentProfileSql =
   'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE'
@@ -17,6 +18,13 @@ const assignedStudentWhere = (counselorUserId: string, studentProfileId: string)
 export const createPrismaCounselorTaskStore = (
   prisma: PrismaClient,
 ): CounselorTaskStore => ({
+  async findAssignedStudentTrack(counselorUserId, studentProfileId) {
+    const student = await prisma.studentProfile.findFirst({
+      select: { track: true },
+      where: assignedStudentWhere(counselorUserId, studentProfileId),
+    })
+    return student ? { ok: true, value: student.track } : { ok: false, reason: 'STUDENT_NOT_FOUND' }
+  },
   async listAssignedStudentTasks(counselorUserId, studentProfileId, query) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
@@ -33,6 +41,7 @@ export const createPrismaCounselorTaskStore = (
           partialAt: true,
           createdAt: true,
           description: true,
+          contentType: true,
           endMinuteOfDay: true,
           estimatedMinutes: true,
           id: true,
@@ -149,13 +158,20 @@ export const createPrismaCounselorTaskStore = (
     })
   },
 
-  async createAssignedStudentTask(counselorUserId, studentProfileId, input, curriculumTargets = []) {
+  async createAssignedStudentTask(counselorUserId, studentProfileId, input, curriculumTargets = [], expectedTrack) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
         select: { id: true },
         where: assignedStudentWhere(counselorUserId, studentProfileId),
       })
       if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+      if (curriculumTargets.length > 0) {
+        await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+        const profile = await transaction.studentProfile.findUnique({
+          select: { track: true }, where: { id: studentProfileId },
+        })
+        assertStudentTrackAtWrite(profile?.track, expectedTrack)
+      }
 
       if (input.subjectId) {
         const subject = await transaction.studySubject.findFirst({
@@ -214,7 +230,7 @@ export const createPrismaCounselorTaskStore = (
     })
   },
 
-  async createAssignedStudentTasksBatch(counselorUserId, studentProfileId, inputs, curriculumTargetsByTask = []) {
+  async createAssignedStudentTasksBatch(counselorUserId, studentProfileId, inputs, curriculumTargetsByTask = [], expectedTrack) {
     return prisma.$transaction(async (transaction) => {
       const counselor = await transaction.counselorProfile.findUnique({
         select: { id: true },
@@ -229,6 +245,13 @@ export const createPrismaCounselorTaskStore = (
         where: assignedStudentWhere(counselorUserId, studentProfileId),
       })
       if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+      if (curriculumTargetsByTask.some((targets) => targets.length > 0)) {
+        await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+        const profile = await transaction.studentProfile.findUnique({
+          select: { track: true }, where: { id: studentProfileId },
+        })
+        assertStudentTrackAtWrite(profile?.track, expectedTrack)
+      }
 
       for (const input of inputs) {
         if (input.subjectId) {
@@ -342,7 +365,7 @@ export const createPrismaCounselorTaskStore = (
     })
   },
 
-  async replaceAssignedTaskCurriculumTargets(counselorUserId, studentProfileId, taskId, targets) {
+  async replaceAssignedTaskCurriculumTargets(counselorUserId, studentProfileId, taskId, targets, expectedTrack) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
         select: { id: true },
@@ -350,6 +373,12 @@ export const createPrismaCounselorTaskStore = (
       })
       if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      if (targets.length > 0) {
+        const profile = await transaction.studentProfile.findUnique({
+          select: { track: true }, where: { id: studentProfileId },
+        })
+        assertStudentTrackAtWrite(profile?.track, expectedTrack)
+      }
       const current = await transaction.dailyTask.findFirst({
         include: { curriculumItems: { select: { completedAt: true } } },
         where: { id: taskId, studentProfileId },
@@ -357,6 +386,12 @@ export const createPrismaCounselorTaskStore = (
       if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
       if (current.source !== 'COUNSELOR') return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
       if (current.status !== 'PENDING') return { ok: false, reason: 'TASK_NOT_PENDING' as const }
+      if (current.contentType === 'GENERAL' && targets.length > 0) {
+        return { ok: false, reason: 'TASK_GENERAL_TARGET_FORBIDDEN' as const }
+      }
+      if (current.contentType === 'STUDY' && targets.length === 0) {
+        return { ok: false, reason: 'TASK_STUDY_TARGET_REQUIRED' as const }
+      }
       if (current.curriculumItems.some((item) => item.completedAt !== null)) {
         return { ok: false, reason: 'CURRICULUM_EXECUTION_STARTED' as const }
       }

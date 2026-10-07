@@ -4,6 +4,8 @@ import type {
 } from '../student-core/types.js'
 import type { CurriculumTargetInput, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
 import type { TaskSchedulePatch } from '../student-core/types.js'
+import type { TaskContentType } from '../task-domain/validation.js'
+import type { CurriculumTrackId } from '../curriculum/types.js'
 
 export type CounselorTaskActor = {
   id: string
@@ -43,6 +45,7 @@ export type CounselorTaskPage<T> = {
 }
 
 export type CreateCounselorTaskInput = {
+  contentType?: TaskContentType
   title: string
   description?: string | null
   scheduledFor: string
@@ -55,6 +58,7 @@ export type CreateCounselorTaskInput = {
 }
 
 export type CreateCounselorTaskBatchItemInput = {
+  contentType?: TaskContentType
   title: string
   description: string | null
   scheduledFor: string
@@ -100,6 +104,8 @@ export type CounselorTaskPlanningPatch = TaskSchedulePatch & {
 export type AssignedResourceResult<T> =
   | { ok: true; value: T }
   | { ok: false; reason: 'STUDENT_NOT_FOUND' }
+
+export type AssignedStudentTrackResult = AssignedResourceResult<CurriculumTrackId | null>
 
 export type CounselorVisibleTaskRecord = Omit<DailyTaskRecord, 'createdByUserId'> & {
   completedStudySessionCount: number

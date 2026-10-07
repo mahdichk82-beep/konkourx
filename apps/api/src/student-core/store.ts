@@ -16,6 +16,7 @@ import type {
   ResolvedCurriculumTarget,
   ToggleCurriculumItemResult,
 } from '../task-curriculum/types.js'
+import type { CurriculumTrackId } from '../curriculum/types.js'
 
 export interface StudentCoreStore {
   findStudentProfileByUserId(userId: string): Promise<StudentProfileRef | null>
@@ -33,10 +34,10 @@ export interface StudentCoreStore {
   updatePlan(profileId: string, id: string, input: Partial<Pick<StudyPlanRecord, 'title' | 'description' | 'status' | 'startsOn' | 'endsOn'>>): Promise<StudyPlanRecord | null>
   listTasks(profileId: string, query?: PageQuery & { scheduledFor?: Date; scheduledFrom?: Date; scheduledTo?: Date; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }): Promise<DailyTaskRecord[]>
   findTaskById(profileId: string, id: string): Promise<DailyTaskRecord | null>
-  createTask(input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'>, curriculumTargets?: ResolvedCurriculumTarget[]): Promise<DailyTaskRecord>
+  createTask(input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'>, curriculumTargets?: ResolvedCurriculumTarget[], expectedTrack?: CurriculumTrackId | null): Promise<DailyTaskRecord>
   updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'partialAt' | 'skipReason' | 'skippedAt'>>): Promise<DailyTaskRecord | null>
   updateTerminalTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'partialAt' | 'skipReason' | 'skippedAt'>>): Promise<UpdateTerminalStudentTaskResult>
-  replacePersonalTaskCurriculumTargets?(profileId: string, id: string, targets: ResolvedCurriculumTarget[]): Promise<ReplaceCurriculumTargetsResult>
+  replacePersonalTaskCurriculumTargets?(profileId: string, id: string, targets: ResolvedCurriculumTarget[], expectedTrack?: CurriculumTrackId | null): Promise<ReplaceCurriculumTargetsResult>
   toggleTaskCurriculumItem?(profileId: string, taskId: string, itemId: string, completedAt: Date | null): Promise<ToggleCurriculumItemResult>
   reschedulePersonalTask(profileId: string, id: string, schedule: TaskSchedulePatch): Promise<RescheduleStudentTaskResult>
 }

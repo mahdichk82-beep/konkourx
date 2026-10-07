@@ -55,6 +55,7 @@ export const listTasksSchema = z.object({
   .refine((value) => !value.date || (!value.from && !value.to), 'Date cannot be combined with a range')
   .refine((value) => (value.from === undefined) === (value.to === undefined), 'Both range dates are required')
 export const createTaskSchema = z.object({
+  contentType: z.enum(['STUDY', 'GENERAL']).optional(),
   studyPlanId: z.string().uuid().nullable().optional().default(null),
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),

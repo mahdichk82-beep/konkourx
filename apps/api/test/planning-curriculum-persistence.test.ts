@@ -4,6 +4,7 @@ import test from 'node:test'
 import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createPrismaStudentCoreStore } from '../src/student-core/prisma-store.js'
 import type { ResolvedCurriculumTarget } from '../src/task-curriculum/types.js'
+import { ApiError } from '../src/errors/api-error.js'
 
 const timestamp = new Date('2026-09-30T12:00:00.000Z')
 const target: ResolvedCurriculumTarget = {
@@ -46,6 +47,8 @@ test('task creation persists source-label/path snapshots and direct execution it
   const targetCreates: unknown[] = []
   const persistedTask = { id: '00000000-0000-4000-8000-000000000010', ...taskInput, createdAt: timestamp, updatedAt: timestamp }
   const transaction = {
+    $queryRawUnsafe: async () => [],
+    studentProfile: { findUnique: async () => ({ track: 'EXPERIMENTAL' }) },
     dailyTask: {
       create: async () => persistedTask,
       findUniqueOrThrow: async () => ({ ...persistedTask, curriculumTargets: [] }),
@@ -61,7 +64,7 @@ test('task creation persists source-label/path snapshots and direct execution it
     $transaction: async <T>(operation: (client: typeof transaction) => Promise<T>) => operation(transaction),
   } as unknown as PrismaClient
 
-  await createPrismaStudentCoreStore(prisma).createTask(taskInput, [target])
+  await createPrismaStudentCoreStore(prisma).createTask(taskInput, [target], 'EXPERIMENTAL')
 
   assert.deepEqual(targetCreates, [{ data: {
     curriculumRefId: 'cn_parent',
@@ -81,6 +84,23 @@ test('task creation persists source-label/path snapshots and direct execution it
       referenceKind: 'NODE',
     }] },
   } }])
+})
+
+test('task create rejects a changed authoritative track inside its transaction before insertion', async () => {
+  let inserted = false
+  const transaction = {
+    $queryRawUnsafe: async () => [],
+    studentProfile: { findUnique: async () => ({ track: 'HUMANITIES' }) },
+    dailyTask: { create: async () => { inserted = true; return { id: 'task-id' } } },
+  }
+  const prisma = {
+    $transaction: async <T>(operation: (client: typeof transaction) => Promise<T>) => operation(transaction),
+  } as unknown as PrismaClient
+  await assert.rejects(
+    createPrismaStudentCoreStore(prisma).createTask(taskInput, [target], 'EXPERIMENTAL'),
+    (error: unknown) => error instanceof ApiError && error.code === 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK',
+  )
+  assert.equal(inserted, false)
 })
 
 test('item toggle is task-owner scoped and cannot update a foreign item', async () => {
@@ -128,7 +148,7 @@ test('planning migrations only touch approved DailyTask planning structures', as
   const names = (await readdir(migrationsUrl, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-  assert.equal(names.length, 23)
+  assert.equal(names.length, 24)
   const migrationName = '20260930020000_add_planning_curriculum_references'
   assert.ok(names.includes(migrationName))
   const sql = await readFile(new URL(`${migrationName}/migration.sql`, migrationsUrl), 'utf8')

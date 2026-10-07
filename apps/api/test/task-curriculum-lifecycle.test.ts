@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { ApiError } from '../src/errors/api-error.js'
-import { canonicalCurriculumArtifact, canonicalCurriculumStore } from '../src/curriculum/artifact.js'
+import { canonicalCurriculumStore } from '../src/curriculum/artifact.js'
 import { createStudentCoreServices, type StudentCoreStore } from '../src/student-core/services.js'
 import type { DailyTaskRecord } from '../src/student-core/types.js'
 
@@ -133,13 +133,14 @@ test('student item toggles remain owner-scoped and terminal tasks reject executi
 })
 
 test('student personal tasks persist multiple validated Curriculum targets while freeform tasks stay unlinked', async () => {
-  const node = canonicalCurriculumArtifact.nodes.find((candidate) => candidate.childrenCount === 0)
-  const placement = canonicalCurriculumArtifact.subjectPlacements[0]
-  if (!node || !placement) throw new Error('Canonical Curriculum fixtures are required')
+  const nodes = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')
+    .flatMap((entry) => canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id))
+    .flatMap((root) => root.itemKind === 'NODE' ? [root.nodeId] : root.childNodeIds)
+  if (nodes.length < 2) throw new Error('Canonical Curriculum fixtures are required')
   const capturedTargets: unknown[] = []
   const createdTasks: DailyTaskRecord[] = []
   const store = {
-    findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1' }),
+    findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1', track: 'EXPERIMENTAL' as const }),
     createTask: async (input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'>, targets = []) => {
       capturedTargets.push(targets)
       const task: DailyTaskRecord = {
@@ -175,8 +176,8 @@ test('student personal tasks persist multiple validated Curriculum targets while
     estimatedMinutes: 75,
     status: 'PENDING',
     curriculumTargets: [
-      { referenceKind: 'NODE', curriculumRefId: node.id, selectionMode: 'EXACT' },
-      { referenceKind: 'PLACEMENT', curriculumRefId: placement.id, selectionMode: 'EXACT' },
+      { referenceKind: 'NODE', curriculumRefId: nodes[0]!, selectionMode: 'EXACT' },
+      { referenceKind: 'NODE', curriculumRefId: nodes[1]!, selectionMode: 'EXACT' },
     ],
   })
   assert.equal(curriculumTask.source, 'PERSONAL')
@@ -206,6 +207,7 @@ test('student target replacement reports execution and terminal immutability wit
   for (const [reason, errorCode] of cases) {
     const store = {
       findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1' }),
+      findTaskById: async () => record(0, 0),
       replacePersonalTaskCurriculumTargets: async () => ({ ok: false as const, reason }),
     } as unknown as StudentCoreStore
     await assert.rejects(
@@ -214,4 +216,58 @@ test('student target replacement reports execution and terminal immutability wit
       (error: unknown) => error instanceof ApiError && error.code === errorCode,
     )
   }
+})
+
+test('historical WHOLE and PLACEMENT snapshots remain readable without a current track', async () => {
+  const historical = record(0, 2)
+  historical.contentType = null
+  historical.curriculumTargets!.push({
+    id: 'historical-placement', referenceKind: 'PLACEMENT', curriculumRefId: 'old-placement',
+    selectionMode: 'EXACT', position: 1, labelSnapshot: 'Original placement',
+    pathSnapshot: ['Original scope', 'Original grade', 'Original placement'],
+    representationIdSnapshot: null, createdAt: now, items: [],
+  })
+  const store = {
+    findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1', track: null }),
+    findTaskById: async () => historical,
+  } as unknown as StudentCoreStore
+  const view = await createStudentCoreServices(store).tasks.get(actor, historical.id)
+  assert.equal(view.contentType, null)
+  assert.deepEqual(view.curriculum.targets.map((target) => target.selectionMode), ['WHOLE', 'EXACT'])
+  assert.deepEqual(view.curriculum.targets[1]?.pathSnapshot, ['Original scope', 'Original grade', 'Original placement'])
+})
+
+test('replacement validates the entire proposed set before touching stored historical targets', async () => {
+  const historical = record(0, 2)
+  historical.contentType = null
+  let writes = 0
+  const store = {
+    findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1', track: 'EXPERIMENTAL' as const }),
+    findTaskById: async () => historical,
+    replacePersonalTaskCurriculumTargets: async () => { writes++; return { ok: true as const, value: historical } },
+  } as unknown as StudentCoreStore
+  const service = createStudentCoreServices(store, () => now, canonicalCurriculumStore)
+  const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
+  const root = canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id)[0]!
+  const nodeId = root.itemKind === 'NODE' ? root.nodeId : root.childNodeIds[0]!
+  const valid = { referenceKind: 'NODE' as const, curriculumRefId: nodeId, selectionMode: 'EXACT' as const }
+  await assert.rejects(
+    service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [valid, { ...valid, curriculumRefId: 'unknown' }] }),
+    (error: unknown) => error instanceof ApiError && error.code === 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK',
+  )
+  assert.equal(writes, 0)
+  assert.equal(historical.curriculumTargets?.[0]?.selectionMode, 'WHOLE')
+  await service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [valid] })
+  assert.equal(writes, 1)
+  historical.contentType = 'GENERAL'
+  await assert.rejects(
+    service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [valid] }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_GENERAL_TARGET_FORBIDDEN',
+  )
+  historical.contentType = 'STUDY'
+  await assert.rejects(
+    service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [] }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_STUDY_TARGET_REQUIRED',
+  )
+  assert.equal(writes, 1)
 })

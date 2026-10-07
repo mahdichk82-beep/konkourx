@@ -90,13 +90,24 @@ const assignments = new Map<string, string[]>([
 
 const createStore = (): CounselorTaskStore & {
   activeAssignments: Map<string, string[]>
+  studentTracks: Map<string, 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES' | null>
   sessionMinutesByTaskId: Map<string, number[]>
   tasks: DailyTaskRecord[]
 } => {
   const store = {
     activeAssignments: new Map([...assignments].map(([key, value]) => [key, [...value]])),
+    studentTracks: new Map<string, 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES' | null>([
+      [ids.studentA, 'EXPERIMENTAL'],
+      [ids.studentB, 'HUMANITIES'],
+    ]),
     sessionMinutesByTaskId: new Map<string, number[]>(),
     tasks: [] as DailyTaskRecord[],
+    async findAssignedStudentTrack(counselorUserId: string, studentProfileId: string) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+        return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
+      }
+      return { ok: true as const, value: store.studentTracks.get(studentProfileId) ?? null }
+    },
     async listAssignedStudentTasks(
       counselorUserId: string,
       studentProfileId: string,
@@ -594,7 +605,9 @@ test('assigned counselor creates a pending counselor task with server-owned prov
 
 test('assigned counselor creates a task with an exact 15-minute schedule', async () => {
   const { app, store } = createApp()
-  const representation = canonicalCurriculumStore.listRepresentations({ limit: 1, offset: 0 }).items[0]!
+  const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
+  const root = canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id)[0]!
+  const nodeId = root.itemKind === 'NODE' ? root.nodeId : root.childNodeIds[0]!
   const response = await createRequest(app, 'counselor-a', ids.studentA, {
     title: 'برنامه دقیق زیست',
     scheduledFor: '2026-10-01',
@@ -602,7 +615,7 @@ test('assigned counselor creates a task with an exact 15-minute schedule', async
     endMinuteOfDay: 17 * 60,
     curriculumTargets: [{
       referenceKind: 'NODE',
-      curriculumRefId: representation.rootNodeIds[0],
+      curriculumRefId: nodeId,
       selectionMode: 'EXACT',
     }],
   })
@@ -1179,5 +1192,54 @@ test('assigned counselor reads Curriculum execution coverage and alone may edit 
   })
   assert.equal(foreign.statusCode, 404)
   assert.equal(foreign.json().error.code, 'STUDENT_NOT_FOUND')
+  await app.close()
+})
+
+test('counselor writes use assigned Student track and preserve one-Student batch atomicity', async () => {
+  const { app, store } = createApp()
+  const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
+  const root = canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id)[0]!
+  const validNode = root.itemKind === 'NODE' ? root.nodeId : root.childNodeIds[0]!
+  const wrongNode = canonicalCurriculumStore.listTrackCatalog('HUMANITIES')
+    .flatMap((item) => canonicalCurriculumStore.listCatalogRoots('HUMANITIES', item.id))
+    .flatMap((item) => item.itemKind === 'NODE' ? [item.nodeId] : item.childNodeIds)
+    .find((id) => !canonicalCurriculumStore.isSelectableNodeInTrack('EXPERIMENTAL', id))!
+  const target = (curriculumRefId: string) => [{ referenceKind: 'NODE', curriculumRefId, selectionMode: 'EXACT' }]
+  const valid = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'Study', scheduledFor: '2026-10-01', contentType: 'STUDY', curriculumTargets: target(validNode),
+  })
+  assert.equal(valid.statusCode, 201)
+  assert.equal(valid.json().data.contentType, 'STUDY')
+  const wrong = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'Wrong track', scheduledFor: '2026-10-01', contentType: 'STUDY', curriculumTargets: target(wrongNode),
+  })
+  assert.equal(wrong.statusCode, 409)
+  assert.equal(wrong.json().error.code, 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK')
+  const spoof = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'Spoof', scheduledFor: '2026-10-01', track: 'HUMANITIES', curriculumTargets: target(wrongNode),
+  })
+  assert.equal(spoof.statusCode, 400)
+  const unassigned = await createRequest(app, 'counselor-a', ids.studentB, {
+    title: 'Unassigned', scheduledFor: '2026-10-01', curriculumTargets: target(validNode),
+  })
+  assert.equal(unassigned.statusCode, 404)
+  store.studentTracks.set(ids.studentA, null)
+  const noTrack = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'No track', scheduledFor: '2026-10-01', curriculumTargets: target(validNode),
+  })
+  assert.equal(noTrack.statusCode, 409)
+  assert.equal(noTrack.json().error.code, 'STUDENT_TRACK_NOT_SET')
+  store.studentTracks.set(ids.studentA, 'EXPERIMENTAL')
+  const batch = await app.inject({
+    headers: { authorization: 'Bearer counselor-a' }, method: 'POST',
+    payload: { tasks: [
+      { title: 'Valid', scheduledFor: '2026-10-01', contentType: 'STUDY', curriculumTargets: target(validNode) },
+      { title: 'Invalid', scheduledFor: '2026-10-01', contentType: 'STUDY', curriculumTargets: target(wrongNode) },
+    ] },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/batch`,
+  })
+  assert.equal(batch.statusCode, 409)
+  assert.equal(batch.json().error.code, 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK')
+  assert.equal(store.tasks.length, 1)
   await app.close()
 })

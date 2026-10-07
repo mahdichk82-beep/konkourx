@@ -1,6 +1,6 @@
 import { ApiError } from '../errors/api-error.js'
 import type { CurriculumReadStore } from '../curriculum/store.js'
-import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
+import { resolveNewTaskTargets, validateTaskContent } from '../task-domain/validation.js'
 import type { CurriculumTargetInput } from '../task-curriculum/types.js'
 import { curriculumCoverage } from '../task-curriculum/view.js'
 import { deriveMiniBoxSpan, validateTaskScheduleWindow } from '../task-scheduling/schedule.js'
@@ -145,7 +145,13 @@ const throwRescheduleFailure = (
 export const createCounselorTaskServices = (
   store: CounselorTaskStore,
   curriculum?: CurriculumReadStore,
-) => ({
+) => {
+  const assignedTrack = async (counselorUserId: string, studentProfileId: string) => {
+    const result = await store.findAssignedStudentTrack(counselorUserId, studentProfileId)
+    if (!result.ok) throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+    return result.value
+  }
+  return ({
   async list(
     actor: CounselorTaskActor,
     studentProfileId: string,
@@ -223,6 +229,7 @@ export const createCounselorTaskServices = (
     input: CreateCounselorTaskInput,
   ): Promise<CounselorTaskView> {
     ensureCounselor(actor)
+    validateTaskContent(input.contentType, input.subjectId, input.topicId, input.curriculumTargets ?? [])
     if (!validDate(input.scheduledFor)) {
       throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
     }
@@ -231,11 +238,15 @@ export const createCounselorTaskServices = (
       throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
     }
 
+    const track = (input.curriculumTargets?.length ?? 0) > 0
+      ? await assignedTrack(actor.id, studentProfileId)
+      : null
     const resolvedTargets = (input.curriculumTargets?.length ?? 0) > 0
-      ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets!)
+      ? resolveNewTaskTargets(requireCurriculum(curriculum), track, input.curriculumTargets!)
       : []
     const result = await store.createAssignedStudentTask(actor.id, studentProfileId,
       {
+        contentType: input.contentType ?? null,
         completedAt: null,
         partialAt: null,
         createdByUserId: actor.id,
@@ -256,6 +267,7 @@ export const createCounselorTaskServices = (
         topicId: input.topicId,
       },
       resolvedTargets,
+      track,
     )
 
     if (!result.ok) return throwCreateFailure(result)
@@ -269,6 +281,7 @@ export const createCounselorTaskServices = (
   ): Promise<CreateCounselorTaskBatchView> {
     ensureCounselor(actor)
     for (const task of input.tasks) {
+      validateTaskContent(task.contentType, task.subjectId, task.topicId, task.curriculumTargets ?? [])
       if (!validDate(task.scheduledFor)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       }
@@ -278,10 +291,15 @@ export const createCounselorTaskServices = (
       }
     }
 
+    const track = input.tasks.some((task) => (task.curriculumTargets?.length ?? 0) > 0)
+      ? await assignedTrack(actor.id, studentProfileId)
+      : null
+
     const result = await store.createAssignedStudentTasksBatch(
       actor.id,
       studentProfileId,
       input.tasks.map((task) => ({
+          contentType: task.contentType ?? null,
           completedAt: null,
           partialAt: null,
           createdByUserId: actor.id,
@@ -302,8 +320,9 @@ export const createCounselorTaskServices = (
           topicId: task.topicId,
       })),
       input.tasks.map((task) => (task.curriculumTargets?.length ?? 0) > 0
-        ? resolveCurriculumTargets(requireCurriculum(curriculum), task.curriculumTargets!)
+        ? resolveNewTaskTargets(requireCurriculum(curriculum), track, task.curriculumTargets!)
         : []),
+      track,
     )
 
     if (!result.ok) return throwCreateFailure(result)
@@ -377,20 +396,26 @@ export const createCounselorTaskServices = (
     ensureCounselor(actor)
     const method = store.replaceAssignedTaskCurriculumTargets
     if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
+    const track = input.curriculumTargets.length > 0
+      ? await assignedTrack(actor.id, studentProfileId)
+      : null
     const targets = input.curriculumTargets.length > 0
-      ? resolveCurriculumTargets(requireCurriculum(curriculum), input.curriculumTargets)
+      ? resolveNewTaskTargets(requireCurriculum(curriculum), track, input.curriculumTargets)
       : []
-    const result = await method(actor.id, studentProfileId, taskId, targets)
+    const result = await method(actor.id, studentProfileId, taskId, targets, track)
     if (!result.ok) {
       if (result.reason === 'STUDENT_NOT_FOUND') throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
       if (result.reason === 'TASK_NOT_FOUND') throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       if (result.reason === 'TASK_SOURCE_FORBIDDEN') throw new ApiError(403, 'TASK_UPDATE_FORBIDDEN', 'Student personal task targets cannot be changed by counselors')
       if (result.reason === 'TASK_NOT_PENDING') throw new ApiError(409, 'TASK_TERMINAL', 'Curriculum targets are immutable after task closure')
+      if (result.reason === 'TASK_GENERAL_TARGET_FORBIDDEN') throw new ApiError(409, result.reason, 'General tasks cannot have Curriculum targets')
+      if (result.reason === 'TASK_STUDY_TARGET_REQUIRED') throw new ApiError(409, result.reason, 'Study tasks require a Curriculum target')
       throw new ApiError(409, 'TASK_CURRICULUM_EXECUTION_STARTED', 'Curriculum targets are immutable after execution starts')
     }
     return toTaskView(result.value)
   },
-})
+  })
+}
 
 export type CounselorTaskServices = ReturnType<typeof createCounselorTaskServices>
 export type { CounselorTaskStore } from './store.js'

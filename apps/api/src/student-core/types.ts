@@ -4,7 +4,10 @@ export type DomainStudent = {
   status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED'
 }
 
-export type StudentProfileRef = { id: string; userId: string }
+import type { CurriculumTrackId } from '../curriculum/types.js'
+import type { TaskContentType } from '../task-domain/validation.js'
+
+export type StudentProfileRef = { id: string; userId: string; track?: CurriculumTrackId | null }
 export type StudyPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
 import type { CurriculumTargetRecord, CurriculumTargetInput, TaskCurriculumCoverage } from '../task-curriculum/types.js'
 
@@ -49,6 +52,7 @@ export type DailyTaskRecord = {
   studentProfileId: string
   createdByUserId: string
   source: DailyTaskSource
+  contentType?: TaskContentType | null
   studyPlanId: string | null
   subjectId: string | null
   topicId: string | null
@@ -81,6 +85,7 @@ export type DailyTaskView = Omit<
 }
 
 export type StudentTaskCreateInput = {
+  contentType?: TaskContentType
   studyPlanId: string | null
   subjectId: string | null
   topicId: string | null
