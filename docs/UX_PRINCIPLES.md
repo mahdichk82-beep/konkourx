@@ -1,9 +1,11 @@
 # Konkourix UX Principles
 
-**Status:** APPROVED UX DIRECTION
-**Last synchronized:** 2026-09-30
+**Status:** SUPPORTING UX GUIDANCE
+**Last synchronized:** 2026-10-07
 
-Konkourix should feel calm, motivating, simple, and progress-oriented. It must behave like a specialized educational planning ecosystem, not a generic task manager, CRM, administrative dashboard, or data-entry system.
+This document guides experience quality within behavior defined by [PRODUCT_MAP.md](PRODUCT_MAP.md). It does not define or expand product scope, change [ROADMAP.md](ROADMAP.md) sequencing, or claim implementation. Where it conflicts with the Product Map or [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), those canonical documents govern.
+
+Konkourix should feel calm, motivating, simple, and progress-oriented. It must behave like a specialized educational platform, not a generic task manager, CRM, administrative dashboard, or data-entry system.
 
 ## CURRENT IMPLEMENTED STATE
 
@@ -42,7 +44,9 @@ The Counselor UI may be denser and more operational. It prioritizes fast plannin
 - One educational task may contain multiple Curriculum selections and one execution checklist. The planning display must preserve task unity rather than presenting each selected item as an independent scheduled task.
 - `PARTIAL` is a closed outcome: completed and remaining Curriculum items stay visible, but the original task is not reopened and no make-up task is created automatically.
 
-The approved planning grid is 24 hourly boxes per day with four 15-minute mini-boxes inside each hour. Tasks may span box boundaries; for example, `15:45–17:00` occupies five mini-boxes. Mini-boxes are a visual planning representation, not persisted entities. The backend now persists an optional 15-minute-aligned same-day start/end window and derives the mini-box span, but no Student or Counselor grid UI is implemented by the current P0.5 milestone.
+The approved 24×4 representation is 24 hours with four 15-minute visual slots per hour. Tasks may span slot boundaries; for example, `15:45–17:00` occupies five slots. Slots are not persisted entities. V1 is a read-only Daily Timeline derived from optional same-day start/end values: no drag/drop, resize, click-to-edit, Task creation, or Task movement. Date-only Tasks appear separately and are never given a fabricated time. A planner-ready shell or static grid context does not itself implement this timeline.
+
+`/curriculum` is a browse-only official Curriculum explorer labeled `مباحث درسی`. Study Task creation/editing uses a separate tri-state recursive checkbox Picker with one shared search/tree selection state. Historical `WHOLE` retains its existing direct-child meaning; the approved documentation-only recursive persistence architecture adds internal `SUBTREE`, but it is not implemented.
 
 ### Student Principle: Minimum Data Entry
 
@@ -73,7 +77,7 @@ The student should understand what to do, start quickly, recover safely from sta
 
 ### Learning Result, Not Checkbox Completion
 
-When task-level learning feedback is implemented under an approved milestone, it should distinguish completion from learning quality and may include an optional student note or difficulty description. Task-level feedback is not the same record as an individual `StudySession` quality rating, and neither value may be silently derived from the other.
+When task-level reporting is implemented under an approved milestone, it distinguishes completion from learning quality and uses exactly one task-level 1–5 **Quality Score**, plus an optional note. Do not add separate task-level Mastery or Satisfaction ratings. Task-level feedback is not silently derived from an individual `StudySession` rating.
 
 ### Counselor Principle: Paper-Speed Planning
 
@@ -99,11 +103,11 @@ Raw evidence should be understandable before advanced interpretation is added. C
 
 ### Visual Direction
 
-The approved visual rules, tokens, role-specific density, theme behavior, illustration limits, and typography licensing boundaries are defined in [BRAND_IDENTITY.md](BRAND_IDENTITY.md) and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+The approved visual rules, Product Owner reference-image authority, tokens, role-specific density, theme behavior, illustration limits, mobile right-drawer direction, and typography licensing boundaries are defined in [BRAND_IDENTITY.md](BRAND_IDENTITY.md) and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
 
 ### Product Owner Decision Gate
 
-Any unapproved Student-facing capability, workflow, or major visual or interaction change must be returned to the Product Owner as a Decision Gate before implementation. UX principles do not authorize new product behavior.
+Any Student-facing capability, workflow, or major visual or interaction behavior not already defined by [PRODUCT_MAP.md](PRODUCT_MAP.md) must be returned to the Product Owner as a Decision Gate before implementation. UX principles do not authorize new product behavior.
 
 ## EXPLORATORY / DEFERRED
 

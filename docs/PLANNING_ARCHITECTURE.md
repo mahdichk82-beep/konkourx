@@ -1,9 +1,11 @@
 # Planning Architecture
 
-**Status:** Approved target architecture; not implemented
-**Last synchronized:** 2026-09-17
+**Status:** SUPPORTING TARGET ARCHITECTURE; interaction details refined by later canonical decisions
+**Last synchronized:** 2026-10-07
 
 This specification defines the target planning model. It preserves `DailyTask` as planned educational intention and `StudySession` as actual execution, but it does not declare the current `StudyPlan` schema to be the final persistence model.
+
+[PRODUCT_MAP.md](PRODUCT_MAP.md) governs product behavior, [ROADMAP.md](ROADMAP.md) governs sequencing, and [2026-10-07-planning-curriculum-interaction-design.md](superpowers/specs/2026-10-07-planning-curriculum-interaction-design.md) records the approved future browse-only Curriculum, tri-state recursive Picker, read-only 24×4 Daily Timeline, and planning-presentation decisions together with historical `WHOLE` compatibility. This supporting architecture does not authorize implementation or override those decisions.
 
 ## Core Concepts
 

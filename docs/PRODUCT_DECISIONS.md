@@ -1,7 +1,7 @@
 # Konkourix Product Decisions
 
 **Status:** Current product-architecture decision history
-**Last synchronized:** 2026-09-17
+**Last synchronized:** 2026-10-07
 
 This log records product and domain decisions. Existing technical ADRs remain in [DECISIONS.md](DECISIONS.md); they are not replaced by this file.
 
@@ -336,6 +336,48 @@ Konkourix must not resemble Todoist, a generic calendar, or a CRM. The student e
 
 The visual identity is blue-based, modern, premium, comfortable, and energetic. Glass UI elements may be used selectively where they preserve accessibility, contrast, performance, and clarity. Exact components and design tokens require later UX work.
 
+## Decision: Curriculum Browser, Study Task Picker, and Legacy Study UI
+
+**Status:** APPROVED FUTURE STATE; documentation only. Current compatibility behavior remains implemented until separately authorized milestones change it.
+
+`/curriculum` is the canonical `مباحث درسی` route and becomes browse-only: official Curriculum navigation, search, expand/collapse, hierarchy, and breadcrumb/path context. It is not a Task Picker and has no selected-items tray, single/multiple mode, scope selector, `EXACT`/`WHOLE` terminology, or save-to-Task action.
+
+Curriculum selection exists only inside authorized `STUDY` Task create/edit flows. The Picker is a tri-state checkbox tree. Parent selection recursively covers the complete selectable subtree, child changes update all ancestors, and search/tree use one selection state. Navigation wrappers may offer bulk behavior but never become invalid Task targets.
+
+`/study` is legacy compatibility only and will leave primary navigation in its approved milestone. Legacy Subject/Topic data and history remain preserved. The final primary Curriculum navigation has only `مباحث درسی`.
+
+## Decision: Historical WHOLE and Recursive Subtree Persistence
+
+**Status:** CURRENT compatibility semantics preserved; APPROVED FUTURE STATE architecture; implementation not authorized.
+
+Existing `WHOLE` keeps its historical direct-child meaning for saved Tasks. It is never reinterpreted as recursive, silently migrated, or converted by an unrelated edit.
+
+The approved future contract retains internal `EXACT` and legacy `WHOLE`, and adds internal `SUBTREE` through a versioned additive write payload. The client submits compact roots; the server validates the Student's authoritative track, normalizes overlaps deterministically, recursively resolves terminal selectable nodes, and atomically saves both selector intent and immutable execution-item snapshots. Navigation-only wrappers expand to valid child-node selectors and never become persisted targets.
+
+Unchanged legacy edits omit Curriculum replacement and preserve `WHOLE` and its stored item set exactly. An explicit replacement discards the complete legacy set and writes only a new-contract selection under the existing edit locks. The existing target/item tables are sufficient, but future implementation requires an additive `SUBTREE` enum migration and tolerant-reader-first rollout; it requires no backfill. The 50-target limit remains a normalized selector-root ceiling, not an item limit. A separate resolved-item capacity bound must be justified by implementation-time evidence. [The governing architecture specification](superpowers/specs/2026-10-07-planning-curriculum-interaction-design.md) records normalization, cardinality, compatibility, and atomicity details.
+
+## Decision: Planning Surface Classification and 24×4 Timeline
+
+**Status:** APPROVED FUTURE STATE; implementation requires separate milestones.
+
+Core Task lifecycle semantics and Weekly Planning are KEEP + POLISH. Today Planning presentation and the Curriculum Picker are REDESIGN. `/curriculum` is SIMPLIFY HEAVILY. `/study` is RETIRE FROM PRIMARY UI. Assessment UX is REWRITE LATER.
+
+Today Planning uses progressive disclosure: pre-execution identity/time/start, active execution state/elapsed time/finish, then applicable closure inputs and submit. It does not expose every control and form simultaneously.
+
+`24 × 4` means 96 visual 15-minute slots, not database entities. V1 is a read-only daily timeline of existing timed Tasks. It is not draggable, resizable, clickable for editing, or used to create or move Tasks. Date-only Tasks appear separately under an untimed area. Student daily planning is the primary context; Counselor surfaces may later reuse the visualization, but the current Counselor `/planning` shell is not an interactive scheduler.
+
+## Decision: Batch, Group Assignment, Profile, Account, and Assessment Boundaries
+
+**Status:** APPROVED product boundary; future implementation remains milestone-gated.
+
+Current batch creation means multiple independent Tasks for one Student, not cross-Student group assignment. True Group Assignment starts from a Student list, selects multiple Students, validates `STUDY` Curriculum against every authoritative Student track, and atomically creates independent `DailyTask` lifecycles.
+
+Profile Center is technically implemented but lacks Product Owner Visual PASS. Its Student sections remain `اطلاعات شخصی`, `اطلاعات تحصیلی`, `تنظیمات`, and `امنیت و حساب`; Counselor sections remain `اطلاعات شخصی`, `اطلاعات حرفه‌ای`, `تنظیمات`, and `امنیت و حساب`. The current visual presentation is classified for redesign.
+
+Current Account/Security capabilities are login, refresh/session handling, logout, logout-all, and current-password change. Verified email/phone management, verification/change, recovery/reset, session/device listing, and specific-session/device revocation are future milestones after Profile visual closeout. MFA/2FA is future-only unless separately approved. Frontends must not show fake controls for absent backend capability.
+
+The current `/assessments` UX is legacy. Useful backend/history remains eligible for preservation, but the giant all-in-one form, legacy Subject/Topic selectors, native/old date-time UX, old visual language, and simultaneous-input density require a dedicated later rewrite.
+
 ## Decision: DailyTask Curriculum Coverage
 
 **Status:** CURRENT IMPLEMENTED STATE.
@@ -358,9 +400,9 @@ For Curriculum-backed tasks, `COMPLETED` requires all planned checklist items, `
 
 ## Decision: Planning Time Grid
 
-**Status:** APPROVED FUTURE STATE; no UI change in the current milestone.
+**Status:** APPROVED FUTURE STATE; no UI change in this documentation milestone.
 
-The planning day is represented as 24 hourly boxes, each containing four 15-minute mini-boxes. Tasks may span hour boundaries; `15:45–17:00` occupies five mini-boxes. Mini-boxes are a time-grid representation, not database rows or lifecycle entities. Existing task scheduling/duration persistence remains authoritative until a separately approved UI milestone.
+The planning day uses 24 hours with four quarter-hours each. Tasks may span hour boundaries; `15:45–17:00` occupies five visual slots. Slots are a display representation, not database rows or lifecycle entities. The v1 Daily Timeline is read-only, uses existing start/end times, and excludes drag/drop, resize, click-to-edit, creation, and movement. Date-only Tasks remain separately listed rather than artificially positioned.
 
 ## Decision: Mastery Signals Remain Separate
 

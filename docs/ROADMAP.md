@@ -1,7 +1,7 @@
 # KonkourX Canonical Roadmap
 
 **Status:** CANONICAL IMPLEMENTATION SEQUENCING
-**Product Owner synchronization:** 2026-10-02
+**Product Owner synchronization:** 2026-10-07
 
 This document answers: **In what order should KonkourX be built?**
 
@@ -44,7 +44,8 @@ The following are established implementation facts, not future roadmap work:
 - multiple Curriculum targets per `DailyTask`, `NODE` / `PLACEMENT`, `EXACT` / `WHOLE`, overlap validation, immutable historical label/path snapshots, and item-level execution coverage;
 - terminal `PARTIAL` execution with completed and remaining Curriculum items preserved and no automatic compensatory Task;
 - exact optional same-day scheduling through paired 15-minute-aligned start/end values, including Counselor create/batch/update and Student personal scheduling compatibility;
-- all 21 tracked migration directories applied in the documented local development state;
+- nullable `TaskContentType` with `STUDY | GENERAL` for explicit new writes while legacy/null compatibility remains;
+- all 22 tracked migration directories applied in the documented local development state;
 - established API, frontend, Prisma, migration, container, deployment, security, and recovery validation history recorded in `PROJECT_STATE.md`.
 
 These foundations must be reused. They must not be re-planned as greenfield systems or silently replaced.
@@ -57,9 +58,9 @@ Current Curriculum runtime and scheduling contracts enable later work; they do n
 
 ## Immediate Worktree Reality
 
-### CURRENT CHECKPOINT — Uncommitted Visual/Shell Work
+### CURRENT CHECKPOINT — Uncommitted Product Work
 
-The working tree intentionally contains uncommitted Student and Counselor UI work, including:
+The working tree intentionally contains unrelated uncommitted Student and Counselor UI work, including:
 
 - shared KonkourX brand components and updated login presentation;
 - Student and Counselor shell, header, right-side desktop navigation, mobile hamburger/right drawer, theme, and selected-navigation behavior;
@@ -67,37 +68,61 @@ The working tree intentionally contains uncommitted Student and Counselor UI wor
 - Counselor Student-list presentation changes;
 - shell-state helpers and focused tests;
 - a Counselor `PlanningShellPage` that honestly exposes planner readiness and 24×4 context without claiming interactive planning;
+- Profile Center and Student-track UX that is technically implemented but still lacks Product Owner Visual PASS; and
 - supporting CSS, tokens, Light/Dark, RTL, and responsive changes.
 
-This work is neither discarded nor treated as accepted merely because it exists. Before another product domain is implemented, it must pass the stabilization checkpoint below.
+This work is neither discarded nor treated as accepted merely because it exists. The v1 Picker-to-Planning checkpoint is separately committed at `34a6af2e1932c1f171957a83f3d30023f5b07208`; its current Picker interaction is implemented compatibility behavior, not the final Product Owner-approved UX.
+
+## Resolved Architecture Gate
+
+### Recursive Subtree Persistence Architecture Decision
+
+**State:** DONE / STABILIZED — **architecture documented; implementation not authorized**
+
+The 2026-10-07 documentation gate selected a versioned additive persistence/resolution contract for recursive subtree selection that:
+
+1. preserves the existing direct-child meaning of every historical `WHOLE` target;
+2. represents a complete recursive selectable subtree even when descendants are lazy/paginated and not loaded client-side;
+3. avoids naive expansion into hundreds of client-side `EXACT` targets;
+4. addresses existing target-count limits explicitly;
+5. snapshots saved Task meaning so future Curriculum additions do not enter old Tasks; and
+6. keeps invalid navigation wrappers out of persisted Task targets.
+
+The approved contract retains `EXACT`, freezes historical direct-child `WHOLE`, and adds internal `SUBTREE` for future writes. The server resolves terminal selectable nodes from the authoritative catalog and stores normalized intent plus immutable item snapshots. The existing 50-target limit remains a selector-root ceiling; a separate resolved-item bound requires implementation-time capacity evidence. [The governing specification](superpowers/specs/2026-10-07-planning-curriculum-interaction-design.md) defines normalization, wrapper expansion, legacy editing, cardinality, rollout, and atomicity.
+
+This decision authorizes no product code, schema, migration, API, UI, test, package, generated-artifact, or database change. Future implementation requires an explicitly approved milestone and an additive `SUBTREE` enum migration; no historical backfill is allowed.
 
 ## Immediate Next Executable Milestone
 
-### Phase 2 — Visual/Shell Stabilization Checkpoint
+### Picker-to-Planning Checkpoint Closeout
 
-**State:** CURRENT CHECKPOINT — **the single next executable implementation milestone**
+**State:** DONE / STABILIZED — committed at `34a6af2e1932c1f171957a83f3d30023f5b07208`
 
-**Objective:** turn the current uncommitted Student/Counselor shell work into one understood, corrected, tested, documented, and reviewable checkpoint without adding product behavior.
+The current v1 integration connects canonical Curriculum selections to authorized Student and assigned-Student Counselor Task flows while preserving `EXACT`, direct-child `WHOLE`, snapshot-first history, track authority, and existing edit locks. It does not implement recursive selection, `SUBTREE`, the versioned v2 payload, or the later Browser/Picker split, and its Picker UX is not final.
 
-**Dependencies:** current dirty worktree; `PRODUCT_MAP.md`; `DESIGN_SYSTEM.md`; current Student/Counselor routes and backend contracts.
+### Browser / Picker Split
 
-**In scope:**
+**State:** PLANNED — the next executable product milestone only after explicit authorization
 
-1. audit every current uncommitted Student/Counselor UI change against the approved surface-specific references and `DESIGN_SYSTEM.md`;
-2. confirm the current changes are accepted, or correct incomplete, generic, misleading, or inconsistent shell/login/dashboard/planner-shell states;
-3. preserve Persian-first RTL, Light/Dark parity, right desktop sidebar, mobile hamburger/right drawer, and no main bottom navigation;
-4. verify brand components, navigation selection, drawer behavior, keyboard/focus handling, responsive behavior, loading/empty/error honesty, and Student-versus-Counselor density;
-5. keep `PlanningShellPage` explicitly non-functional until a separately approved functional-planner milestone;
-6. run the focused shell-state tests plus the established Student, Counselor, API, build, lint, type-check, Prisma, and migration-regression checks appropriate to the changed surface;
-7. verify no backend, schema, migration, auth, Curriculum, scheduling, or historical-data regression;
-8. update `PROJECT_STATE.md` only inside that future implementation milestone after the accepted state is known;
-9. create a coherent commit/checkpoint after Product Owner acceptance unless that future milestone explicitly says otherwise.
+Separate the browse-only `/curriculum` experience from the authorized `STUDY` Task Picker, then implement the approved tri-state recursive behavior through the versioned `SUBTREE` contract. This milestone must retain historical `WHOLE`, use server-authoritative terminal resolution and immutable snapshots, normalize wrappers to valid descendants, and complete tolerant-reader-first rollout and capacity validation.
 
-**Explicitly out of scope:** new navigation destinations, functional Counselor planning, new Student workflows, new backend/domain behavior, Admin, Business, School, Question Bank, communication, payments, and speculative dashboard data.
+## Approved Near-Term Product Sequence
 
-**Exit criteria:** current UI intent is unambiguous; all authorized changes are reviewed; relevant validation passes; no fabricated capability or data remains; documentation matches reality; migration state remains clean; and the worktree has an accepted checkpoint rather than an unexplained mixture of UI changes.
+| Step | State | Outcome |
+|---|---|---|
+| 0. Documentation Decision Gate | DONE / STABILIZED | Record the 2026-10-07 Product Owner interaction decisions without product implementation |
+| 1. Recursive subtree architecture | DONE / STABILIZED | Versioned `SUBTREE` architecture selected without redefining historical `WHOLE`; implementation remains unauthorized |
+| 2. Picker-to-Planning checkpoint closeout | DONE / STABILIZED | Current v1 integration committed at `34a6af2`; its Picker UX is not final and no recursive `SUBTREE` behavior was added |
+| 3. Browser / Picker split | NEXT / PLANNED | Keep `/curriculum` browse-only and implement the authorized tri-state recursive Study Task Picker under an explicit milestone |
+| 4. Curriculum navigation cleanup | PLANNED | Remove `/study` from primary navigation and keep one `مباحث درسی` destination while preserving legacy data/history |
+| 5. Read-only 24×4 Daily Timeline | PLANNED | Display existing timed Tasks at 15-minute resolution; show untimed Tasks separately; no drag/drop, resize, edit, create, or move interaction |
+| 6. Profile Center redesign | PLANNED | Preserve the approved information architecture and obtain Product Owner Visual PASS |
+| 7. Account & Security expansion | PLANNED | Add verified email/phone management, verification/change, recovery/reset, and session/device management after Profile visual closeout |
+| 8. Cross-Student Group Assignment | PLANNED | Create independent per-Student Task lifecycles through a bounded atomic command with per-Student Study-track validation |
+| 9. Reports and remaining roadmap | PLANNED | Continue dependency-valid roadmap work without deleting broader future phases |
+| 10. Assessment UX rewrite | PLANNED | Replace the legacy `/assessments` presentation in a dedicated milestone while preserving valid backend/history |
 
-Until this checkpoint closes, no later product-domain implementation is the recommended next milestone.
+Each row is a separate milestone or Decision Gate. Listing it here does not authorize implementation or allow steps to be combined silently.
 
 ## Final High-Level Phase Sequence
 
@@ -136,7 +161,7 @@ Production runtime verification, CI/CD, live deployment, backup/restore rehearsa
 
 ## Phase 3 — Account / Access + Student Operational Core
 
-**State:** PLANNED after Phase 2
+**State:** PLANNED after the applicable near-term checkpoints above
 
 Phase 3 is divided into dependency-ordered stages. A milestone may deliver one stage at a time.
 
@@ -169,7 +194,7 @@ Plan names are never authorization truth. Admin configuration packages existing 
 Build over the implemented `DailyTask`, Curriculum target, exact schedule, StudySession, and AssessmentAttempt foundations:
 
 1. connect the action-first Student Dashboard to real current/next Task and Today Plan data;
-2. complete usable Today and Weekly planning/execution presentation while keeping the raw 96-cell grid out of the primary Student experience;
+2. redesign Today Planning with progressive disclosure while keeping core lifecycle semantics, preserve and polish Weekly Planning, and add the read-only 24×4 Daily Timeline with untimed Tasks shown separately;
 3. complete reporting/closure behavior for `COMPLETED` / `PARTIAL` / `SKIPPED`, item-level remainder, Actual Time, one canonical Quality `/5` where defined, and optional Note, without rewriting historical intent;
 4. expose trustworthy Task-derived Study history and separately sourced Free Study without double counting;
 5. add concise daily/weekly Study summaries and planned-versus-actual evidence from real execution data;
@@ -189,7 +214,7 @@ Sequence:
 
 1. action-oriented Counselor Dashboard based on real assigned-Student work;
 2. assigned/authorized Student list and persistent Student Workspace;
-3. functional professional Planner using the existing exact-time contract, 24×4 visual model, canonical Curriculum picker, multiple targets, and `EXACT` / `WHOLE`;
+3. authorized Student-specific planning operations using the exact-time contract and the new tri-state recursive Study Task Picker only through its separately approved implementation milestone; the 24×4 Daily Timeline remains a read-only visualization;
 4. future-Task create/edit/move behavior under an approved edit-state matrix, while executed history remains immutable;
 5. execution reports, `PARTIAL` remainder, Study evidence, and available AssessmentAttempt/Exam evidence from shared source records;
 6. real Student and caseload Analytics after source data exists, without opaque risk, mastery, or ranking scores;
@@ -401,7 +426,10 @@ A future real recording may become shared Learning Content; it must not create a
 
 ```text
 Verified Foundation
-→ Visual/Shell Stabilization
+→ Documentation Decision Gate
+→ Recursive Subtree Persistence Architecture Decision
+→ Picker-to-Planning Checkpoint Closeout
+→ Browser / Picker Split
 → Account/Auth baseline
 → Roles/Permissions
 → Entitlements/Effective Access
@@ -459,7 +487,7 @@ Only sequencing-blocking gates are tracked here. Detailed UI and implementation 
 | Account suspension consequences | Before Phase 5 suspension UI/API | Safe suspension/reactivation behavior |
 | OTP, MFA, and external identity-provider selection | Before any such method is scheduled | Only that authentication expansion; existing password core may proceed |
 | Counselor/School application fields and review transitions | Before Phase 3A intake and Phase 5 review implementation | Application workflow acceptance |
-| Task edit-state and historical-correction matrix | Before Phase 3B/4 functional planning mutation expands | Student/Counselor edit and drag/move acceptance |
+| Task edit-state and historical-correction matrix | Before Phase 3B/4 functional planning mutation expands | Student/Counselor edit and controlled move acceptance outside the read-only timeline |
 | Chat, attachment, Ticket, Notification, and Audit retention policies | Before the affected Phase 6/5 production release | Retention jobs, deletion/archive, and legal/operational acceptance |
 | Exam scoring, attempt, result, answer-key, explanation, and review-release policies | Before Phase 7C Exam implementation is finalized | Exam result/review and historical contract |
 | Initial PSP and adapter protocol | Before Phase 8 provider implementation | Online Payment launch |
@@ -616,6 +644,6 @@ Do not parallelize milestones that mutate the same unstable auth, Task, Question
 
 ## Next-Milestone Boundary
 
-The next implementation prompt should address **only Phase 2 — Visual/Shell Stabilization Checkpoint**. It should inspect and reconcile the current uncommitted UI work, validate it, update implementation-state documentation after acceptance, and establish a coherent checkpoint.
+The next implementation prompt may address **only the Browser / Picker split** unless the architect explicitly authorizes a different roadmap milestone. It must keep `/curriculum` browse-only, preserve historical `WHOLE`, and implement recursive selection only through the approved versioned `SUBTREE` architecture without claiming Product Owner Visual PASS prematurely.
 
-It must not simultaneously begin access-model expansion, functional Counselor planning, Admin, Business, Communication, Question Bank, Payment, Public Website, Learning, School, or Classroom implementation.
+It must not reinterpret saved targets, backfill historical Tasks, combine later navigation/timeline/Profile work, or begin any later near-term or macro-roadmap milestone unless separately authorized.

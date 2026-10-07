@@ -1,6 +1,6 @@
 # Identity, Profile, Professional Profile, School, and Task Domain Design
 
-**Status:** APPROVED DESIGN — implementation pending
+**Status:** SUPPORTING APPROVED DESIGN — partially implemented; later interaction decisions govern where noted
 
 **Date:** 2026-10-05
 
@@ -8,7 +8,9 @@
 
 **Committed checkpoint inspected:** `81c428c6c8cf82917fc4bbcd97bb6ffafc7dfbc9`
 
-This document separates the current implemented state from the approved future state. It proposes additive, compatibility-safe domain boundaries only. It does not authorize implementation, schema changes, migrations, API changes, UI changes, data backfills, or canonical-document reconciliation.
+This document separates the implementation state at its inspected checkpoint from the approved future domain state. It proposes additive, compatibility-safe domain boundaries only. It does not authorize implementation, schema changes, migrations, API changes, UI changes, data backfills, or canonical-document reconciliation.
+
+**2026-10-07 interaction refinement:** [2026-10-07-planning-curriculum-interaction-design.md](2026-10-07-planning-curriculum-interaction-design.md) governs the later browse-only `/curriculum`, tri-state recursive Study Task Picker, historical `WHOLE` preservation, 24×4 read-only Daily Timeline, Profile visual status, Batch/Group distinction, Account/Security capability boundary, and Assessment UX classification. The identity, privacy, Student-track, TaskContentType, and historical-data boundaries here remain compatible supporting design.
 
 ## 1. Purpose
 
@@ -177,15 +179,12 @@ No automatic conversion from `StudentProfile.schoolName` to a `School` or member
 
 Profile Center is a header-owned account surface, not a sidebar destination.
 
-| Profile Center section | Student source | Counselor source |
-|---|---|---|
-| اطلاعات شخصی | `PersonProfile`; login identifier summary from `User` | `PersonProfile`; login identifier summary from `User` |
-| اطلاعات تحصیلی | `StudentProfile`, including authoritative track | Not applicable |
-| پروفایل حرفه‌ای | Not applicable | private `CounselorProfile` role data |
-| پروفایل عمومی | Not applicable | explicit `ProfessionalProfile` draft/publication workflow |
-| تنظیمات | client/account preferences with explicit persistence boundary | same |
-| امنیت و حساب | password/session/account actions on `User`/auth services | same |
-| اشتراک | hidden until Billing exists | hidden until Billing exists |
+| Student section / source | Counselor section / source |
+|---|---|
+| اطلاعات شخصی — `PersonProfile`; login identifier summary from `User` | اطلاعات شخصی — `PersonProfile`; login identifier summary from `User` |
+| اطلاعات تحصیلی — `StudentProfile`, including authoritative track | اطلاعات حرفه‌ای — private `CounselorProfile` role data |
+| تنظیمات — client/account preferences with explicit persistence boundary | تنظیمات — same boundary |
+| امنیت و حساب — password/session/account actions on `User`/auth services | امنیت و حساب — same boundary |
 
 Mobile/tablet keeps hamburger on the right, page context centered, and a circular profile trigger on the left outside the drawer. Desktop uses a clickable identity area in the header. The compact account menu links to the applicable sections and logout. It does not duplicate profile fields in the menu itself.
 
@@ -280,12 +279,12 @@ Content type is orthogonal to `source` (`PERSONAL | COUNSELOR`) and `status` (`P
 
 ## 17. STUDY invariants
 
-For every new canonical Study write:
+For the checkpoint implementation designed here:
 
 - `contentType = STUDY` is explicit.
-- There are 1–50 Curriculum targets.
+- There are 1–50 Curriculum targets under the current API limit.
 - Every new target uses `referenceKind = NODE`.
-- Each target uses `selectionMode = EXACT | WHOLE` under current direct-child WHOLE semantics.
+- Each target uses `selectionMode = EXACT | WHOLE` under current direct-child `WHOLE` semantics.
 - Every node is validated in the authoritative Student track/catalog context.
 - `subjectId` and `topicId` are null.
 - Catalog entry, grade group, track, and representation ID are never task targets.
@@ -293,6 +292,8 @@ For every new canonical Study write:
 - Snapshots and expanded execution items continue to be persisted as today.
 
 `PLACEMENT` remains readable/executable for legacy records but is rejected for new canonical Study creation. No automatic `PLACEMENT → NODE` mapping occurs.
+
+These target-count and selection-mode bullets do not define the approved future recursive Picker persistence model. The 2026-10-07 architecture Decision Gate preserves historical `WHOLE`, handles target limits explicitly, and selects a new snapshot-safe recursive-subtree contract. That contract remains documentation-only until a separately authorized implementation milestone.
 
 ## 18. GENERAL invariants
 
@@ -533,26 +534,7 @@ Compatibility endpoints may be deprecated only through a later measured retireme
 
 ## 34. Rollout sequencing
 
-Each numbered item is a separately reviewable implementation milestone:
-
-0. **Domain design checkpoint.**
-1. **PersonProfile foundation.**
-2. **Profile Center + StudentTrack UX.**
-3. **TaskContentType + canonical STUDY/GENERAL creation UX.**
-4. **Curriculum navigation and legacy new-write cleanup.**
-5. **Complete/close current Planning Curriculum integration.**
-6. **Cross-Student group assignment.**
-7. **Exact-time creation UX.**
-8. **Finite repeat-by-expansion.**
-9. **Reports v1.**
-10. **ProfessionalProfile.**
-11. **Exam redesign.**
-
-School/Organization, persistent recurrence, Teacher, Articles, Billing, and media storage remain separately sequenced future work after the applicable product decisions.
-
-This sequence is an implementation recommendation only. It does not authorize any later milestone automatically; each item requires explicit milestone approval before implementation.
-
-Canonical documents are reconciled only after Product Owner approval of this spec and through a separate explicitly authorized documentation task.
+This design's original sequencing recommendation is superseded. [ROADMAP.md](../../ROADMAP.md) is the sole current implementation-sequencing authority, including the recursive-subtree persistence Decision Gate, safe Picker-to-Planning closeout, Browser/Picker split, Profile visual closeout, Account/Security expansion, Cross-Student Group Assignment, Reports continuation, and later Assessment UX rewrite. No item in this supporting design authorizes implementation automatically.
 
 ## 35. NOW / NEXT / FUTURE matrix
 

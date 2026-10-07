@@ -1,7 +1,7 @@
 # Assessment Architecture
 
 **Status:** Approved target architecture; not implemented beyond the completed-attempt foundation
-**Last synchronized:** 2026-09-17
+**Last synchronized:** 2026-10-07
 
 Konkourix separates practice, external exam reporting, and internal exam delivery. They may contribute evidence to later reporting, but they do not share one write lifecycle.
 
@@ -51,6 +51,8 @@ Internal exam design must distinguish the exam definition, published exam versio
 ## Current `AssessmentAttempt` Compatibility
 
 The implemented `AssessmentAttempt` stores one completed result bundle with raw counts and timestamps. It remains valid current behavior, but it is not the final write model for all three assessment capabilities. Before expansion, a compatibility decision must determine which existing records can be classified safely, which remain generic legacy evidence, and how their immutable provenance is retained. No discriminator, migration, or inference is authorized here.
+
+The current `/assessments` UI is also legacy, not the final Assessment UX. Its all-in-one form, legacy Subject/Topic selectors, old date-time interaction, old visual language, and simultaneous-input density are classified for a separate future rewrite. Useful backend records and history remain eligible for preservation; this architecture note does not authorize UI or domain implementation.
 
 ## Unresolved Implementation Details
 

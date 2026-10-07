@@ -1,7 +1,7 @@
 # KonkourX Canonical Product Map
 
 **Status:** CANONICAL PRODUCT DEFINITION
-**Product Owner decision:** 2026-10-02
+**Product Owner decision:** 2026-10-07
 
 This document answers: **What is KonkourX / کنکوریکس intended to become?**
 
@@ -405,6 +405,21 @@ Remaining Section 0 design gates are limited to:
 - exact account-suspension consequences.
 
 These details must be resolved when their affected implementation is scheduled. They do not weaken the locked model above.
+
+### 0.24 Profile Center and Account-Security Experience
+
+Profile Center is the header-owned account surface. Its retained information architecture is:
+
+| Student | Counselor |
+|---|---|
+| اطلاعات شخصی | اطلاعات شخصی |
+| اطلاعات تحصیلی | اطلاعات حرفه‌ای |
+| تنظیمات | تنظیمات |
+| امنیت و حساب | امنیت و حساب |
+
+`امنیت و حساب` is mandatory. The current technical Profile Center has not received Product Owner Visual PASS and is classified for redesign, not polish-only continuation. The redesign must improve visual hierarchy, reduce excessive empty space, keep large error states from dominating the page, polish account-menu/header spacing, and give Counselor professional identity an appropriately professional presentation.
+
+Account controls must correspond to real backend capabilities. The existing login, refresh/session handling, logout, logout-all, and current-password change flow remain valid. Verified email/phone management, email/phone change and verification, forgot/reset password, account recovery, session/device listing, and specific-session/device revocation are approved future capability areas sequenced after Profile visual closeout. MFA/2FA remains future-only unless separately approved. No frontend may fabricate these controls before the backend capability exists.
 
 ## 1. Public Website
 
@@ -1096,9 +1111,9 @@ The product must always distinguish **PLAN** from **EXECUTION / REPORT**. Planne
 
 #### 2.2.1 Planning Model
 
-The canonical precise planning model is a 24-hour day, with each hour divided into four 15-minute segments: 96 possible slots per day. For example, `15:45 -> 17:00` is 75 minutes, or five 15-minute segments.
+The canonical precise planning model is a 24-hour day, with each hour divided into four 15-minute segments: 96 visual slots per day. For example, `15:45 -> 17:00` is 75 minutes, or five 15-minute segments.
 
-This model is the planning and time-alignment foundation. It is not a requirement to render a noisy wall of 96 tiny boxes in the Student interface.
+The Student v1 use of this model is a read-only daily timeline derived from existing Task start/end times. It is not 96 database entities and is not a drag/drop scheduler. The timeline is not draggable, resizable, clickable for editing, or used to create or move Tasks. Date-only Tasks without a precise time appear separately, such as under `کارهای بدون ساعت`, and are never assigned an artificial timeline position.
 
 #### 2.2.2 Mini-Box Boundary
 
@@ -1146,7 +1161,9 @@ Its purpose is operational clarity: the Student should not need to inspect multi
 
 #### 2.2.9 Current Task Card
 
-The active or current Task should be prominent. Where supported by the Task, it may show:
+The active or current Task should be prominent and use progressive disclosure. Before execution, it shows the Task identity, relevant Curriculum context, scheduled time, and the primary Start action. During execution, it prioritizes active state, elapsed time, and Finish. After execution, it reveals only the applicable closure inputs—Curriculum coverage, one Task-level Quality Score, and optional Note—followed by the final submit action. The page must not expose every control and form simultaneously.
+
+Where supported by the Task, the presentation may show:
 
 - subject and Task title;
 - exact planned time and planned duration;
@@ -1160,7 +1177,7 @@ Internal implementation data that does not help execution must not be exposed.
 
 #### 2.2.10 Today Timeline
 
-Today Plan should provide a readable timeline or equivalent ordered schedule showing when Tasks occur, gaps or free time, overlaps if the applicable product rules permit them, and completed, partial, or skipped states. The Student must not be forced to navigate or manipulate 96 raw mini-boxes.
+Today Plan should provide the read-only 24×4 daily timeline described above, showing timed Tasks, gaps or free time, overlaps if applicable, and completed, partial, or skipped states. Date-only Tasks remain in a separate untimed area. The Student must not navigate or manipulate 96 raw mini-boxes.
 
 #### 2.2.11 Task Origin Visibility
 
@@ -1170,20 +1187,25 @@ Task provenance must remain understandable through a restrained badge, label, ic
 
 An academic Task may target **one or multiple** canonical Curriculum references. Multiple Curriculum targets per Task are explicitly supported; the model must not be simplified to `one Task = one topic`.
 
-#### 2.2.13 EXACT / WHOLE
+Curriculum selection appears only inside authorized `STUDY` Task create/edit flows. The normal `/curriculum` route is a browse-only explorer and is not a Task Picker.
 
-The canonical Curriculum selection modes are:
+#### 2.2.13 Tri-State Recursive Study Task Picker
 
-- `EXACT`: the selected Curriculum target itself is the intended target;
-- `WHOLE`: the selected node represents its applicable immediate content scope for execution/checklist behavior.
+The approved Picker is one tri-state checkbox tree:
 
-These modes must remain consistent with the established canonical implementation foundation. This section does not define or authorize a different Curriculum expansion model.
+- unchecked means no selectable item in the branch is selected;
+- checked means the complete selectable subtree is selected; and
+- indeterminate/minus means only part of the subtree is selected.
 
-#### 2.2.14 WHOLE Execution Clarity
+Checking a parent selects its complete selectable subtree recursively, including descendants not loaded by the lazy/paginated client. Child changes update every ancestor. Search results and the tree share the same selection state. Multiple selection is inherent in checkboxes; there is no separate single/multiple mode and no user-facing `دامنه`, `دقیق`, `با زیرمبحث`, `EXACT`, `WHOLE`, or `فرزندان مستقیم` terminology.
 
-`WHOLE` must not expand into an overwhelming deep descendant tree during Student execution. The established direction is to expand only the relevant direct children for execution/checklist behavior, with sensible behavior when the selected node is already a leaf.
+Navigation-only wrappers may provide useful bulk checkbox behavior but must never silently become invalid persisted Task targets.
 
-This execution projection must not flatten, normalize, or otherwise rewrite the canonical Curriculum source.
+#### 2.2.14 Historical WHOLE and Recursive Subtree Contract
+
+Existing saved `WHOLE` targets retain their historical direct-child meaning. They must not be reinterpreted as recursive, silently migrated, or converted by an unrelated edit.
+
+The approved future internal contract adds `SUBTREE` without changing `WHOLE`. A compact, versioned selection expression sends canonical roots; the server validates the Student's authoritative track, recursively resolves terminal selectable nodes, and atomically saves both normalized selector intent and immutable item snapshots. Navigation wrappers expand to valid child-node selectors and are never persisted as Task targets. The current 50-target rule remains a normalized selector-root ceiling, while resolved items require a separately capacity-tested server bound before implementation. Exact architecture and legacy-edit rules are governed by [2026-10-07-planning-curriculum-interaction-design.md](superpowers/specs/2026-10-07-planning-curriculum-interaction-design.md).
 
 #### 2.2.15 Overlapping / Duplicate Targets
 
@@ -1395,7 +1417,7 @@ The canonical model is:
 - Today Plan and Weekly Plan;
 - exact scheduling and distinct Task origins;
 - origin-based Counselor versus Student editing authority;
-- one or multiple Curriculum targets with `EXACT` / `WHOLE` behavior;
+- one or multiple Curriculum targets selected through the tri-state recursive Study Task Picker, with historical `EXACT`/`WHOLE` meaning preserved for existing Tasks;
 - `COMPLETED` / `PARTIAL` / `SKIPPED` outcomes;
 - item-level `PARTIAL` Coverage;
 - Actual Time, one Quality Score /5, and optional Note;
@@ -1419,7 +1441,9 @@ The following product decisions are closed:
 - the 24 × 4 precise planning foundation, without a raw 96-box Student UX;
 - Counselor, Personal, and Non-academic Task origins;
 - one or multiple Curriculum targets per academic Task;
-- `EXACT` / `WHOLE` selection behavior;
+- the separate browse-only `/curriculum` surface and authorized Study Task Picker;
+- tri-state recursive checkbox behavior with shared search/tree selection state;
+- preservation of historical direct-child `WHOLE` meaning;
 - no free Student editing of Counselor Task targets;
 - execution and historical immutability;
 - exactly three academic content outcomes: `COMPLETED`, `PARTIAL`, and `SKIPPED`;
@@ -1434,12 +1458,13 @@ The following product decisions are closed:
 
 Remaining implementation-stage choices are limited to:
 
-- exact visual layout of the Today timeline;
+- exact visual styling of the read-only Today timeline;
 - exact simplified non-academic reporting;
 - exact Student reschedule-request workflow;
 - exact skip-reason UX or taxonomy where not already governed elsewhere;
-- exact drag-and-drop interaction details; and
 - exact loading and empty-state copy.
+
+The recursive-subtree persistence/resolution architecture Decision Gate is closed. Implementation remains separately milestone-gated and must follow the approved versioned expression, server-authoritative terminal resolution, immutable intent/item snapshots, capacity validation, wrapper normalization, and historical `WHOLE` preservation contract.
 
 These choices do not reopen closed decisions and do not authorize implementation outside an approved milestone.
 
@@ -1750,6 +1775,8 @@ Remaining implementation-stage choices are limited to:
 These choices do not reopen core product behavior or authorize implementation outside an approved milestone.
 
 ### 2.4 Practice / Exam UX
+
+The current `/assessments` presentation is legacy and is not the final Assessment UX. Its useful completed-attempt backend/history may be preserved, but the surface is classified for a dedicated future rewrite rather than incremental visual polishing. The current giant all-in-one form, legacy Subject/Topic selectors, native/old date-time interaction, old visual language, and simultaneous-input density must not be treated as the target design. This classification does not authorize the rewrite.
 
 Practice Mode and Exam Mode are intentionally two different Student experiences. **Practice** supports learning, feedback, repetition, and improvement. **Exam** supports assessment through a deliberately minimal interface. This is a hard Product Owner decision; the product must not reuse one generic rich question screen for both modes with only minor visual differences.
 
@@ -3555,7 +3582,7 @@ It is not a generic calendar, checklist, 96-cell spreadsheet, freeform note page
 
 #### 3.3.1 Canonical Time Foundation
 
-Professional Planning uses a 24-hour day with four 15-minute segments per hour: 96 possible slots. For example, `15:45 → 17:00` is 75 minutes or five segments. This enables precision without requiring 96 raw interactive boxes.
+Professional Planning reuses the same 15-minute exact-time contract as Student planning. The 24×4 v1 visualization is a read-only daily Task timeline, not an interactive scheduler. Counselor surfaces may later reuse it in Student Detail or an operational overview, but it is not draggable, resizable, clickable for editing, or used to create or move Tasks.
 
 #### 3.3.2 Task Remains the Planning Object
 
@@ -3571,7 +3598,7 @@ A Student-specific daily surface should show date, scheduled Tasks, start/end ti
 
 #### 3.3.5 Daily Timeline
 
-Desktop may use a timeline or grid that reflects 15-minute precision while visually prioritizing Task blocks. The main experience must not become a matrix of 96 tiny boxes.
+Desktop may reuse the read-only daily timeline to reflect 15-minute precision while visually prioritizing existing Task blocks. Date-only Tasks appear separately and are not artificially positioned. The current Counselor `/planning` shell must not be described as an interactive scheduler.
 
 #### 3.3.6 Weekly Planning
 
@@ -3587,7 +3614,7 @@ Mobile must not compress seven columns into an unreadable grid. Preferred direct
 
 #### 3.3.9 Task Creation
 
-The Counselor may create an academic Task for an assigned Student with conceptual inputs such as title, instruction, date, start/end time, controlled Task category, Subject context, one or more Curriculum targets, selection mode, and optional planning context. Exact form layout is not locked.
+The Counselor may create an academic Task for an assigned Student with conceptual inputs such as title, instruction, date, start/end time, controlled Task category, Subject context, one or more Curriculum targets, and optional planning context. The Study Task Picker owns recursive checkbox selection without a separate user-facing scope mode. Exact form layout is not locked.
 
 #### 3.3.10 Task Title
 
@@ -3613,13 +3640,13 @@ Academic planning uses canonical Curriculum. A Counselor taxonomy, simplified pa
 
 One academic Task may target one or multiple canonical Curriculum references. The model must not be simplified to `one Task = one topic`; a single 90-minute Task may legitimately cover several related targets.
 
-#### 3.3.16 EXACT / WHOLE
+#### 3.3.16 Study Task Picker
 
-Canonical selection modes remain `EXACT` and `WHOLE`. `EXACT` targets the selected reference itself; `WHOLE` represents its applicable immediate execution scope. No additional selection mode is authorized here.
+Counselor `STUDY` Task create/edit uses the same tri-state recursive checkbox Picker as authorized Student flows. Checking a parent selects the complete selectable subtree; partial descendants produce an indeterminate ancestor; search and tree share one state. There is no single/multiple switch and no user-facing `EXACT`/`WHOLE` scope choice.
 
-#### 3.3.17 WHOLE Expansion
+#### 3.3.17 Historical Target Compatibility
 
-`WHOLE` expands relevant direct children for execution, with sensible leaf behavior. It must not recursively explode a deep descendant tree or normalize the canonical hierarchy.
+Existing saved `WHOLE` targets keep their historical direct-child meaning. New recursive-subtree persistence uses the separately approved versioned `SUBTREE` contract and must not reinterpret or silently rewrite historical Tasks.
 
 #### 3.3.18 Multi-Target Task Clarity
 
@@ -3705,13 +3732,13 @@ Copy-week, planning-template duplication, or prior-structure reuse may later sup
 
 Future-plan duplicate or repeat operations may exist, but advanced recurrence remains extensible and must not obscure direct planning.
 
-#### 3.3.39 Drag / Drop
+#### 3.3.39 Timeline Interaction Boundary
 
-Desktop may support drag-and-drop for moving or reordering future planned work. Drag-and-drop is an interaction method, not permission; every authorization and integrity rule still applies.
+The 24×4 daily timeline is read-only. Desktop and mobile do not use it to drag, resize, create, move, or edit Tasks.
 
-#### 3.3.40 Drag / Drop Historical Boundary
+#### 3.3.40 Historical Movement Boundary
 
-Already executed historical Tasks cannot be silently moved by drag-and-drop. New future work must be created, duplicated, or rescheduled without altering past truth.
+Already executed historical Tasks cannot be silently moved. New future work must be created, duplicated, or rescheduled through authorized controls without altering past truth.
 
 #### 3.3.41 Transfer / Move Future Task
 
@@ -3755,7 +3782,7 @@ The Counselor may initiate creation of a new Task from remaining `PARTIAL` Curri
 
 #### 3.3.51 Task Creation from Curriculum
 
-Task creation should allow navigation and selection of canonical Curriculum rather than forcing manual topic text where valid references exist. Exact picker UX remains open.
+Task creation should use the authorized tri-state recursive Picker for canonical Curriculum rather than forcing manual topic text where valid references exist. The Picker layout uses one primary scroll region, search, compact selected count, and `انصراف` / `تأیید` footer actions; final visual styling remains milestone-specific.
 
 #### 3.3.52 Curriculum Search
 
@@ -3777,9 +3804,11 @@ Exact draft, save, and publish semantics remain implementation-stage choices. St
 
 Reusable structures such as common weeks, review patterns, or Exam-week patterns remain future/extensible until scheduled. Templates must not create duplicate Curriculum truth.
 
-#### 3.3.57 Multi-Student Productivity
+#### 3.3.57 Batch vs. Cross-Student Group Assignment
 
-Future productivity may include applying Templates, copying structures, batch preparation, or multi-Student planning assistance. Each Student's final plan remains clear and attributable; automatic mass generation is not a current requirement.
+Current batch creation means several independent Tasks for one Student; it is not group assignment and should use wording equivalent to `ثبت چند وظیفه برای این دانش‌آموز` if retained.
+
+Future true Group Assignment begins from the Students list, selects multiple Students, issues one bounded atomic assignment command, and creates one independent `DailyTask` lifecycle per Student. A `STUDY` assignment must validate the complete Curriculum selection against every selected Student's authoritative track. Any invalid authorization or target prevents partial creation.
 
 #### 3.3.58 Automation Boundary
 
@@ -3823,11 +3852,11 @@ Restrained semantic treatment may distinguish origin/type and execution state, i
 
 #### 3.3.68 Mobile Task Creation
 
-Essential planning must remain possible on mobile, although mobile need not copy every desktop productivity affordance. Mobile may use editing sheets, time/day selection, and direct Task actions instead of rich drag-and-drop.
+Essential planning must remain possible on mobile, although mobile need not copy every desktop productivity affordance. Mobile may use editing sheets, time/day selection, and direct Task actions. The 24×4 daily timeline remains read-only.
 
 #### 3.3.69 Desktop Productivity
 
-Desktop is the primary heavy-planning surface and may provide richer weekly views, drag-and-drop, multi-column layouts, faster Curriculum selection, and copy/duplicate helpers without becoming cluttered.
+Desktop is the primary heavy-planning surface and may provide richer weekly views, multi-column layouts, faster Curriculum selection, and copy/duplicate helpers without becoming cluttered. The 24×4 daily timeline is not a drag/drop creation, move, resize, or edit surface.
 
 #### 3.3.70 Responsive Consistency
 
@@ -3839,7 +3868,7 @@ Canonical Light and Dark themes must preserve time structure, Task hierarchy, st
 
 #### 3.3.72 Accessibility
 
-The Planner must preserve RTL, readable labels, non-color-only status, relevant keyboard/focus support, usable touch targets, accessible time selection, and alternatives for critical drag-and-drop operations.
+The Planner must preserve RTL, readable labels, non-color-only status, relevant keyboard/focus support, usable touch targets, and accessible time selection.
 
 #### 3.3.73 Empty States
 
@@ -3875,7 +3904,7 @@ Meaningful persisted planning changes affecting accountability should remain att
 
 #### 3.3.81 No Every-Action Logging
 
-Every drag, hover, filter, or temporary UI state does not need an Audit event. Only meaningful persisted changes may warrant traceability.
+Every hover, filter, or temporary UI state does not need an Audit event. Only meaningful persisted changes may warrant traceability.
 
 #### 3.3.82 Professional Planning Anti-Drift
 
@@ -3883,18 +3912,18 @@ Future implementation must not reduce Professional Planning to a generic calenda
 
 The canonical model is:
 
-**Precise Time Plan + Task + Multiple Canonical Curriculum Targets + EXACT / WHOLE + Counselor Instruction + Student Execution Evidence + PARTIAL Remainder + Manual Counselor Compensation + Historical Integrity**
+**Precise Time Plan + Task + Tri-State Recursive Curriculum Picker + Counselor Instruction + Student Execution Evidence + PARTIAL Remainder + Manual Counselor Compensation + Historical Integrity**
 
 #### 3.3.83 Current vs. Future
 
 `APPROVED FUTURE STATE — CORE PROFESSIONAL PLANNING DIRECTION`:
 
-- precise 24×4 Daily and Weekly Planning;
+- precise scheduling, read-only 24×4 Daily Timeline, and Weekly Planning;
 - Task creation and appropriate future-Task editing;
-- title, instruction, multiple Curriculum targets, `EXACT` / `WHOLE`, and canonical Curriculum picker;
+- title, instruction, multiple Curriculum targets, and the tri-state recursive Study Task Picker, while preserving historical `EXACT`/`WHOLE` meaning;
 - planned-versus-actual execution visibility with `COMPLETED` / `PARTIAL` / `SKIPPED`, Quality /5, and `PARTIAL` remainder;
 - manual compensatory Tasks;
-- future-Task movement and desktop drag-and-drop direction;
+- controlled future-Task editing outside the read-only 24×4 timeline;
 - copy/duplicate productivity direction;
 - responsive mobile planning; and
 - historical integrity.
@@ -3913,11 +3942,11 @@ Future automation must never silently take control from the Counselor. These dir
 
 The following product decisions are closed:
 
-- the precise 24×4 foundation, without a raw 96-box UX requirement;
+- the read-only 24×4 daily timeline, without a raw 96-box interactive UX;
 - Task remains the planning object with 15-minute scheduling;
 - Daily and Weekly Counselor Planning;
 - one or multiple canonical Curriculum targets per Task;
-- `EXACT` / `WHOLE`, with controlled direct-child execution behavior for `WHOLE`;
+- the tri-state recursive Study Task Picker, with historical direct-child `WHOLE` meaning preserved;
 - deterministic target coverage without duplicates or ambiguity;
 - Counselor Instruction remains distinct from Curriculum;
 - planned and actual data remain separate;
@@ -3928,7 +3957,7 @@ The following product decisions are closed:
 - executed historical planning cannot be silently rewritten;
 - future unexecuted Tasks may be adjusted appropriately;
 - Students cannot freely edit Counselor Tasks;
-- drag-and-drop cannot bypass permissions or integrity;
+- the 24×4 daily timeline is never a drag/drop creation, move, resize, or edit surface;
 - mobile preserves the same planning truth with different interaction;
 - School reuses the shared Planning engine; and
 - advanced AI and automation remain future, with Counselor control preserved.
@@ -3939,11 +3968,10 @@ Remaining implementation-stage choices are limited to:
 - exact overlap and conflict policy;
 - exact draft, save, and publish semantics;
 - exact future-Task editable-state matrix;
-- exact drag-and-drop behavior;
 - exact copy-day, copy-week, and recurrence behavior;
 - exact visibility/edit authority for Student personal and non-academic blocks;
 - exact Plan preview and Planner layout;
-- exact Curriculum-picker interaction;
+- measured resolved-item capacity and rollout evidence for the approved recursive-subtree persistence/resolution architecture;
 - exact set of persisted changes requiring traceability;
 - exact future Template system; and
 - exact future AI-assistance behavior.
@@ -12246,6 +12274,10 @@ These choices do not reopen any closed product decision.
 
 Curriculum is a shared reference/map for Planning, Progress, Question Bank, Exams/analysis, and Learning Content. It is not an educational knowledge graph, scientific approval engine, or content-generation governance system.
 
+The canonical Student-facing Curriculum route is `/curriculum`, labeled `مباحث درسی`. It is a browse-only official Curriculum explorer for navigation, search, expand/collapse, hierarchy, and breadcrumb/path context. It is not a Task Picker and contains no selection tray, save-to-Task action, single/multiple selection switch, or `EXACT`/`WHOLE` scope language. Curriculum selection exists only inside authorized `STUDY` Task create/edit flows.
+
+`/study` and personal Subject/Topic authoring are legacy compatibility only. Future primary navigation removes that duplicate destination while preserving historical data and compatible backend behavior safely. The final official-Curriculum navigation has one `مباحث درسی` destination.
+
 ## Visual and Experience Boundary
 
 Only Product Owner-approved references for a specific surface are that surface's visual source of truth. Historical images must not be applied indiscriminately across surfaces.
@@ -12260,6 +12292,18 @@ Only Product Owner-approved references for a specific surface are that surface's
 - no fake analytics.
 
 Detailed visual rules live in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
+The current planning/profile/curriculum/assessment interaction surfaces are classified as follows:
+
+| Classification | Surface |
+|---|---|
+| KEEP + POLISH | App Shell, Sidebar structure, Header structure, Weekly Planning, core Task lifecycle semantics |
+| REDESIGN | Today Planning Task presentation, Curriculum Picker, Profile Center |
+| SIMPLIFY HEAVILY | `/curriculum` as the browse-only explorer above |
+| RETIRE FROM PRIMARY UI | `/study` personal Subject/Topic authoring |
+| REWRITE LATER | Assessment UX |
+
+An implementation milestone must not treat a RETIRE or REWRITE item as polish-only work.
 
 ## Future / Extensible Capabilities
 
@@ -12285,7 +12329,7 @@ The following product choices remain open until their affected milestone:
 - detailed scope and provider choice for a future internal Classroom/video platform;
 - detailed deep-LMS, advanced gamification, intelligent-recommendation, and advanced-automation behavior.
 
-The following are no longer open gates: Question ↔ Curriculum cardinality, current external-link Classroom direction, the School organizational-layer model, separation of Product/Plan/Entitlement/Subscription/Payment, provider-abstracted payments, and manual Card-to-Card review.
+The following are no longer open gates: recursive-subtree persistence architecture, Question ↔ Curriculum cardinality, current external-link Classroom direction, the School organizational-layer model, separation of Product/Plan/Entitlement/Subscription/Payment, provider-abstracted payments, and manual Card-to-Card review.
 
 ## Anti-Drift Principles
 
