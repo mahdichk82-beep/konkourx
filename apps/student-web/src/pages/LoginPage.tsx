@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { BrandLogo } from '@konkourx/brand'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/ui/Button'
+import { BrandLogo } from '@konkourx/brand'
+import { useTheme } from '../theme/useTheme'
+import { nextTheme } from '../components/layout/shell-state'
 
 export function LoginPage({ onSuccess }: { onSuccess(): void }) {
   const { error, login, status } = useAuth()
   const [submitting, setSubmitting] = useState(false)
+  const { setTheme, theme } = useTheme()
 
   useEffect(() => {
     if (status === 'authenticated') onSuccess()
@@ -26,22 +29,33 @@ export function LoginPage({ onSuccess }: { onSuccess(): void }) {
   }
 
   return (
-    <main className="auth-layout" dir="rtl">
+    <main className="auth-layout auth-layout--student" dir="rtl">
       <section className="brand-panel" aria-label="کنکوریکس دانش‌آموز">
         <BrandLogo context="dark" />
-        <p className="eyebrow">Konkourix Student</p>
-        <h1>مسیر مطالعه‌ات را با تمرکز ادامه بده.</h1>
-        <p>برنامه، هدف‌ها و پیشرفت روزانه‌ات در فضای مستقل دانش‌آموزی.</p>
+        <div className="brand-panel__content">
+          <p className="eyebrow">فضای دانش‌آموز کنکوریکس</p>
+          <h1>هر روز، یک قدم روشن‌تر به سمت هدفت.</h1>
+          <p>برنامه‌ریزی، اجرای مطالعه و مسیر پیشرفتت در یک فضای آرام و متمرکز.</p>
+          <div className="brand-promise"><span>برنامه روشن</span><span>تمرکز بیشتر</span><span>پیشرفت قابل دیدن</span></div>
+        </div>
+        <div className="student-login-art" aria-hidden="true">
+          <span className="student-login-art__ring student-login-art__ring--outer" />
+          <span className="student-login-art__ring student-login-art__ring--inner" />
+          <span className="student-login-art__dot" />
+          <strong>X</strong>
+        </div>
+        <div className="brand-signature"><p className="brand-tagline">جایی که موفقیت مهندسی می‌شود</p><p className="brand-secondary-line">آموزش مفهومی؛ مشاوره تخصصی؛ برنامه‌ریزی هدفمند</p></div>
       </section>
       <section className="login-panel">
+        <button className="auth-theme-toggle" aria-label={theme === 'light' ? 'فعال‌کردن حالت تاریک' : 'فعال‌کردن حالت روشن'} onClick={() => setTheme(nextTheme(theme))} type="button">{theme === 'light' ? '☾' : '☀'}</button>
         <form className="login-card" onSubmit={submit}>
           <div>
             <p className="eyebrow">ورود دانش‌آموز</p>
             <h2>خوش برگشتی</h2>
             <p className="muted">ایمیل یا شماره موبایل و رمز عبورت را وارد کن.</p>
           </div>
-          <label>ایمیل یا شماره موبایل<input name="identifier" autoComplete="username" required /></label>
-          <label>رمز عبور<input name="password" type="password" autoComplete="current-password" required /></label>
+          <label>ایمیل یا شماره موبایل<input name="identifier" autoComplete="username" placeholder="example@email.com" required /></label>
+          <label>رمز عبور<input name="password" type="password" autoComplete="current-password" placeholder="••••••••••••" required /></label>
           {error && <p className="form-error" role="alert">{error}</p>}
           <Button type="submit" disabled={submitting || status === 'initializing'}>
             {submitting ? 'در حال ورود…' : 'ورود به پنل دانش‌آموز'}

@@ -16,6 +16,7 @@ import { CounselorProfilePage } from './profile/CounselorProfilePage'
 import { profileSectionForPath } from './profile/profile-state'
 import { usePersonProfile } from './profile/usePersonProfile'
 import './App.css'
+import './phase2c.css'
 
 const navigation: NavigationItem[] = [
   { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
@@ -62,7 +63,7 @@ function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, 
   if (!user) return null
 
   let content
-  if (path === '/') content = <DashboardPage user={user} />
+  if (path === '/') content = <DashboardPage navigate={navigate} user={user} />
   else if (path === '/students') content = <StudentsPage navigate={navigate} />
   else if (studentCurriculumMatch && studentId) content = <CounselorCurriculumPage key={studentId} navigate={navigate} studentId={studentId} />
   else if (studentId) content = <StudentDetailPage key={studentId} navigate={navigate} studentId={studentId} />

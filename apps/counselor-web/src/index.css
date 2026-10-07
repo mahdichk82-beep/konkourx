@@ -20,6 +20,8 @@ h3, h4, strong { font-weight: var(--font-weight-card); line-height: 1.45; }
 button, input, select, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+img { max-width: 100%; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus-ring) 45%, transparent); outline-offset: 2px; }
 ::selection { color: var(--text-on-action); background: var(--action-primary); }
 

@@ -18,6 +18,7 @@ import { StudentProfilePage } from './profile/StudentProfilePage'
 import { profileSectionForPath } from './profile/profile-state'
 import { usePersonProfile } from './profile/usePersonProfile'
 import './App.css'
+import './phase2c.css'
 
 const navigation: NavigationItem[] = [
   { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
@@ -64,7 +65,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
   if (!user) return null
 
   let content
-  if (path === '/') content = <DashboardPage user={user} />
+  if (path === '/') content = <DashboardPage navigate={navigate} user={user} />
   else if (path === '/planning') content = <TodayPlanningPage navigate={navigate} />
   else if (path === '/planning/weekly') content = <WeeklyPlanningPage navigate={navigate} />
   else if (path === '/study') content = <SubjectTopicsPage />
@@ -83,9 +84,9 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
       onThemeChange={setTheme}
       pageDescription={meta.description}
       pageTitle={meta.title}
-      personProfile={personProfile.profile}
       theme={theme}
       user={user}
+      personProfile={personProfile.profile}
     >
       {content}
     </AppShell>
