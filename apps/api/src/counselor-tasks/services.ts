@@ -1,7 +1,11 @@
 import { ApiError } from '../errors/api-error.js'
 import type { CurriculumReadStore } from '../curriculum/store.js'
-import { resolveNewTaskTargets, validateTaskContent } from '../task-domain/validation.js'
-import type { CurriculumTargetInput } from '../task-curriculum/types.js'
+import {
+  curriculumWriteItems,
+  resolveNewTaskCurriculum,
+  validateTaskContent,
+} from '../task-domain/validation.js'
+import type { CurriculumWriteInput } from '../task-curriculum/types.js'
 import { curriculumCoverage } from '../task-curriculum/view.js'
 import { deriveMiniBoxSpan, validateTaskScheduleWindow } from '../task-scheduling/schedule.js'
 import type { DailyTaskRecord } from '../student-core/types.js'
@@ -229,7 +233,7 @@ export const createCounselorTaskServices = (
     input: CreateCounselorTaskInput,
   ): Promise<CounselorTaskView> {
     ensureCounselor(actor)
-    validateTaskContent(input.contentType, input.subjectId, input.topicId, input.curriculumTargets ?? [])
+    validateTaskContent(input.contentType, input.subjectId, input.topicId, curriculumWriteItems(input))
     if (!validDate(input.scheduledFor)) {
       throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
     }
@@ -238,11 +242,11 @@ export const createCounselorTaskServices = (
       throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
     }
 
-    const track = (input.curriculumTargets?.length ?? 0) > 0
+    const track = curriculumWriteItems(input).length > 0
       ? await assignedTrack(actor.id, studentProfileId)
       : null
-    const resolvedTargets = (input.curriculumTargets?.length ?? 0) > 0
-      ? resolveNewTaskTargets(requireCurriculum(curriculum), track, input.curriculumTargets!)
+    const resolvedTargets = curriculumWriteItems(input).length > 0
+      ? resolveNewTaskCurriculum(requireCurriculum(curriculum), track, input)
       : []
     const result = await store.createAssignedStudentTask(actor.id, studentProfileId,
       {
@@ -281,7 +285,7 @@ export const createCounselorTaskServices = (
   ): Promise<CreateCounselorTaskBatchView> {
     ensureCounselor(actor)
     for (const task of input.tasks) {
-      validateTaskContent(task.contentType, task.subjectId, task.topicId, task.curriculumTargets ?? [])
+      validateTaskContent(task.contentType, task.subjectId, task.topicId, curriculumWriteItems(task))
       if (!validDate(task.scheduledFor)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       }
@@ -291,7 +295,7 @@ export const createCounselorTaskServices = (
       }
     }
 
-    const track = input.tasks.some((task) => (task.curriculumTargets?.length ?? 0) > 0)
+    const track = input.tasks.some((task) => curriculumWriteItems(task).length > 0)
       ? await assignedTrack(actor.id, studentProfileId)
       : null
 
@@ -319,8 +323,8 @@ export const createCounselorTaskServices = (
           title: task.title.trim(),
           topicId: task.topicId,
       })),
-      input.tasks.map((task) => (task.curriculumTargets?.length ?? 0) > 0
-        ? resolveNewTaskTargets(requireCurriculum(curriculum), track, task.curriculumTargets!)
+      input.tasks.map((task) => curriculumWriteItems(task).length > 0
+        ? resolveNewTaskCurriculum(requireCurriculum(curriculum), track, task)
         : []),
       track,
     )
@@ -391,16 +395,16 @@ export const createCounselorTaskServices = (
     actor: CounselorTaskActor,
     studentProfileId: string,
     taskId: string,
-    input: { curriculumTargets: CurriculumTargetInput[] },
+    input: CurriculumWriteInput,
   ) {
     ensureCounselor(actor)
     const method = store.replaceAssignedTaskCurriculumTargets
     if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
-    const track = input.curriculumTargets.length > 0
+    const track = curriculumWriteItems(input).length > 0
       ? await assignedTrack(actor.id, studentProfileId)
       : null
-    const targets = input.curriculumTargets.length > 0
-      ? resolveNewTaskTargets(requireCurriculum(curriculum), track, input.curriculumTargets)
+    const targets = curriculumWriteItems(input).length > 0
+      ? resolveNewTaskCurriculum(requireCurriculum(curriculum), track, input)
       : []
     const result = await method(actor.id, studentProfileId, taskId, targets, track)
     if (!result.ok) {

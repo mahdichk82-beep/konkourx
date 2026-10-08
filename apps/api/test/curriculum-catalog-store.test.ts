@@ -58,6 +58,15 @@ test('Humanities Arabic roots and node views retain groups, paths, and arbitrary
   const firstGroup = roots[0]!
   assert.equal(firstGroup.itemKind, 'GROUP')
   if (firstGroup.itemKind !== 'GROUP') return
+  assert.deepEqual(
+    store.getNavigationGroupChildNodeIds('HUMANITIES', firstGroup.id),
+    firstGroup.childNodeIds,
+  )
+  assert.throws(
+    () => store.getNavigationGroupChildNodeIds('EXPERIMENTAL', firstGroup.id),
+    (error: unknown) => typeof error === 'object' && error !== null
+      && 'code' in error && error.code === 'CURRICULUM_NAVIGATION_GROUP_NOT_FOUND',
+  )
   const rootNodeId = firstGroup.childNodeIds[0]!
   const rootView = store.getCatalogNode('HUMANITIES', entry.id, rootNodeId)
   assert.deepEqual(rootView.breadcrumb.slice(0, 3).map(({ kind }) => kind), [

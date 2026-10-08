@@ -4,7 +4,11 @@ import { readFile } from 'node:fs/promises'
 import { canonicalCurriculumStore } from '../src/curriculum/artifact.js'
 import { ApiError } from '../src/errors/api-error.js'
 import { TaskContentType } from '../src/generated/prisma/enums.js'
-import { resolveNewTaskTargets, validateTaskContent } from '../src/task-domain/validation.js'
+import {
+  resolveNewTaskSelectionV2,
+  resolveNewTaskTargets,
+  validateTaskContent,
+} from '../src/task-domain/validation.js'
 
 const nodeIn = (track: 'EXPERIMENTAL' | 'MATHEMATICS' | 'HUMANITIES') => {
   for (const entry of canonicalCurriculumStore.listTrackCatalog(track)) {
@@ -75,4 +79,17 @@ test('one invalid replacement target rejects the whole set before resolution', (
   const valid = exact(nodeIn('EXPERIMENTAL'))
   assert.throws(() => resolveNewTaskTargets(canonicalCurriculumStore, 'EXPERIMENTAL', [valid, exact('unknown')]), hasCode('CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK'))
   assert.equal(resolveNewTaskTargets(canonicalCurriculumStore, 'EXPERIMENTAL', [valid]).length, 1)
+})
+
+test('v2 task resolution requires server-derived track authority', () => {
+  const rootId = nodeIn('EXPERIMENTAL')
+  const input = {
+    version: 2 as const,
+    selectors: [{ rootKind: 'NODE' as const, rootId, selector: 'SUBTREE' as const }],
+  }
+  assert.ok(resolveNewTaskSelectionV2(canonicalCurriculumStore, 'EXPERIMENTAL', input).length > 0)
+  assert.throws(
+    () => resolveNewTaskSelectionV2(canonicalCurriculumStore, null, input),
+    hasCode('STUDENT_TRACK_NOT_SET'),
+  )
 })

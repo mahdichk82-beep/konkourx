@@ -876,9 +876,11 @@ test('student task creates persist nullable content type and enforce own-track w
     .flatMap((item) => item.itemKind === 'NODE' ? [item.nodeId] : item.childNodeIds)
     .find((id) => !canonicalCurriculumStore.isSelectableNodeInTrack('EXPERIMENTAL', id))!
   const saved: DailyTaskRecord[] = []
+  const capturedSelections: unknown[] = []
   const taskStore: StudentCoreStore = {
     ...store,
-    createTask: async (input) => {
+    createTask: async (input, targets = []) => {
+      capturedSelections.push(targets)
       const result = { ...input, id: `task-${saved.length + 1}`, createdAt: user.createdAt, updatedAt: user.updatedAt }
       saved.push(result)
       return result
@@ -900,7 +902,28 @@ test('student task creates persist nullable content type and enforce own-track w
   const study = await create({ contentType: 'STUDY', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: validNode, selectionMode: 'EXACT' }] })
   assert.equal(study.statusCode, 201)
   assert.equal(study.json().data.contentType, 'STUDY')
-  assert.deepEqual(saved.map((item) => item.contentType), [null, 'GENERAL', 'STUDY'])
+  const v2Study = await create({
+    contentType: 'STUDY',
+    curriculumSelection: {
+      version: 2,
+      selectors: [{ rootKind: 'NODE', rootId: validNode, selector: 'SUBTREE' }],
+    },
+  })
+  assert.equal(v2Study.statusCode, 201)
+  assert.equal((capturedSelections.at(-1) as Array<{ selectionMode: string }>)[0]?.selectionMode, 'SUBTREE')
+  const mixed = await create({
+    curriculumTargets: [],
+    curriculumSelection: { version: 2, selectors: [] },
+  })
+  assert.equal(mixed.statusCode, 400)
+  const invalidV2 = await create({
+    curriculumSelection: {
+      version: 2,
+      selectors: [{ rootKind: 'NODE', rootId: validNode, selector: 'WHOLE' }],
+    },
+  })
+  assert.equal(invalidV2.statusCode, 400)
+  assert.deepEqual(saved.map((item) => item.contentType), [null, 'GENERAL', 'STUDY', 'STUDY'])
   assert.equal(saved.every((item) => item.subjectId === null && item.topicId === null), true)
   const bad = await create({ contentType: 'STUDY', curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: wrongNode, selectionMode: 'EXACT' }] })
   assert.equal(bad.statusCode, 409)
@@ -912,7 +935,7 @@ test('student task creates persist nullable content type and enforce own-track w
     payload: { contentType: 'GENERAL' }, url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000410',
   })
   assert.equal(conversion.statusCode, 400)
-  assert.equal(saved.length, 3)
+  assert.equal(saved.length, 4)
   await app.close()
 
   const noTrackApp = createApp({
@@ -926,6 +949,6 @@ test('student task creates persist nullable content type and enforce own-track w
   })
   assert.equal(noTrack.statusCode, 409)
   assert.equal(noTrack.json().error.code, 'STUDENT_TRACK_NOT_SET')
-  assert.equal(saved.length, 3)
+  assert.equal(saved.length, 4)
   await noTrackApp.close()
 })

@@ -9,7 +9,12 @@ import type { TaskContentType } from '../task-domain/validation.js'
 
 export type StudentProfileRef = { id: string; userId: string; track?: CurriculumTrackId | null }
 export type StudyPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
-import type { CurriculumTargetRecord, CurriculumTargetInput, TaskCurriculumCoverage } from '../task-curriculum/types.js'
+import type {
+  CurriculumSelectionV2Input,
+  CurriculumTargetRecord,
+  CurriculumTargetInput,
+  TaskCurriculumCoverage,
+} from '../task-curriculum/types.js'
 
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
@@ -98,6 +103,7 @@ export type StudentTaskCreateInput = {
   status: DailyTaskStatus
   skipReason?: DailyTaskSkipReason | null
   curriculumTargets?: CurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2Input
 }
 
 export type RescheduleTaskInput = {

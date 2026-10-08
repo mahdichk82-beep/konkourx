@@ -241,10 +241,15 @@ test('replacement validates the entire proposed set before touching stored histo
   const historical = record(0, 2)
   historical.contentType = null
   let writes = 0
+  const writtenTargets: unknown[] = []
   const store = {
     findStudentProfileByUserId: async () => ({ id: 'profile-1', userId: 'user-1', track: 'EXPERIMENTAL' as const }),
     findTaskById: async () => historical,
-    replacePersonalTaskCurriculumTargets: async () => { writes++; return { ok: true as const, value: historical } },
+    replacePersonalTaskCurriculumTargets: async (_profileId, _taskId, targets) => {
+      writes++
+      writtenTargets.push(targets)
+      return { ok: true as const, value: historical }
+    },
   } as unknown as StudentCoreStore
   const service = createStudentCoreServices(store, () => now, canonicalCurriculumStore)
   const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
@@ -259,6 +264,14 @@ test('replacement validates the entire proposed set before touching stored histo
   assert.equal(historical.curriculumTargets?.[0]?.selectionMode, 'WHOLE')
   await service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [valid] })
   assert.equal(writes, 1)
+  await service.tasks.replaceCurriculumTargets(actor, historical.id, {
+    curriculumSelection: {
+      version: 2,
+      selectors: [{ rootKind: 'NODE', rootId: nodeId, selector: 'SUBTREE' }],
+    },
+  })
+  assert.equal(writes, 2)
+  assert.equal((writtenTargets.at(-1) as Array<{ selectionMode: string }>)[0]?.selectionMode, 'SUBTREE')
   historical.contentType = 'GENERAL'
   await assert.rejects(
     service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [valid] }),
@@ -269,5 +282,5 @@ test('replacement validates the entire proposed set before touching stored histo
     service.tasks.replaceCurriculumTargets(actor, historical.id, { curriculumTargets: [] }),
     (error: unknown) => error instanceof ApiError && error.code === 'TASK_STUDY_TARGET_REQUIRED',
   )
-  assert.equal(writes, 1)
+  assert.equal(writes, 2)
 })

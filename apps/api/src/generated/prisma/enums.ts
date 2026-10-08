@@ -100,7 +100,8 @@ export type CurriculumReferenceKind = (typeof CurriculumReferenceKind)[keyof typ
 
 export const CurriculumSelectionMode = {
   EXACT: 'EXACT',
-  WHOLE: 'WHOLE'
+  WHOLE: 'WHOLE',
+  SUBTREE: 'SUBTREE'
 } as const
 
 export type CurriculumSelectionMode = (typeof CurriculumSelectionMode)[keyof typeof CurriculumSelectionMode]

@@ -36,7 +36,7 @@ const selection = (nodeId: string, mode: 'EXACT' | 'WHOLE'): CurriculumSelection
 const snapshot = (
   referenceKind: 'NODE' | 'PLACEMENT',
   curriculumRefId: string,
-  selectionMode: 'EXACT' | 'WHOLE',
+  selectionMode: 'EXACT' | 'WHOLE' | 'SUBTREE',
   position: number,
 ): PlanningCurriculumTargetSnapshot => ({
   curriculumRefId,
@@ -155,6 +155,44 @@ test('saved targets render from snapshots in stored order before any catalog req
     { kind: 'UNRESOLVED_NODE', target: targets[2] },
     { kind: 'UNRESOLVED_NODE', target: targets[0] },
   ]);
+});
+
+test('stored SUBTREE snapshots publish immediately and remain read-only after catalog enrichment', async () => {
+  const target = snapshot('NODE', 'node-1', 'SUBTREE', 0);
+  const published: unknown[] = [];
+  const requested: string[] = [];
+  const client = {
+    listCatalog: async () => [{ id: 'biology', representationIds: ['rep-biology'] }],
+    getNode: async (entryId: string, nodeId: string) => {
+      requested.push(`${entryId}:${nodeId}`);
+      return {
+        id: nodeId,
+        entryId,
+        trackId: 'EXPERIMENTAL',
+      };
+    },
+  } as unknown as CurriculumBrowserClient;
+
+  await loadPlanningTaskDrafts(
+    [{ id: 'task-1', curriculum: { targets: [target] } }],
+    client,
+    (drafts) => published.push(drafts),
+  );
+
+  const expected = { 'task-1': [{ kind: 'UNRESOLVED_NODE', target }] };
+  assert.deepEqual(published, [expected, expected]);
+  assert.deepEqual(requested, []);
+  assert.deepEqual(await restorePlanningDraft([target], client), expected['task-1']);
+  assert.throws(
+    () => planningDraftToTargetInputs(expected['task-1']),
+    /SUBTREE snapshots are read-only/,
+  );
+  assert.deepEqual(await replaceChangedPlanningTargets(
+    [target],
+    [{ kind: 'NODE', selection: selection('node-2', 'EXACT'), displayPath: ['two'] }],
+    editableContext,
+    async () => assert.fail('stored SUBTREE must never enter the v1 replacement flow'),
+  ), { kind: 'READ_ONLY' });
 });
 
 test('catalog failure, including null track, leaves stored summaries readable', async () => {

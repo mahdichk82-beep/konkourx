@@ -1,5 +1,8 @@
 import { z } from 'zod'
-import { curriculumTargetsSchema } from './task-curriculum.js'
+import {
+  curriculumWriteContractShape,
+  refineCurriculumWriteContract,
+} from './task-curriculum.js'
 import {
   defaultTaskScheduleFields,
   optionalTaskScheduleFields,
@@ -66,8 +69,9 @@ export const createTaskSchema = z.object({
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
   status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional().default('PENDING'),
   skipReason: taskSkipReason.nullable().optional().default(null),
-  curriculumTargets: curriculumTargetsSchema,
+  ...curriculumWriteContractShape,
 }).strict().superRefine((value, context) => {
+  refineCurriculumWriteContract(value, context)
   refineTaskSchedule(value, context)
   if (value.skipReason !== null && value.status !== 'SKIPPED') {
     context.addIssue({

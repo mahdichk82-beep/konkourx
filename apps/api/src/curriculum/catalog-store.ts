@@ -25,6 +25,7 @@ export type CurriculumCatalogReadStore = {
   getCatalogNode(track: CurriculumTrackId, entryId: string, nodeId: string): CurriculumCatalogNodeView
   isSelectableNodeInTrack(track: CurriculumTrackId, nodeId: string): boolean
   isNavigationGroup(id: string): boolean
+  getNavigationGroupChildNodeIds(track: CurriculumTrackId, id: string): readonly string[]
   listCatalogChildren(
     track: CurriculumTrackId,
     entryId: string,
@@ -102,6 +103,10 @@ export const createCurriculumCatalogReadStore = (
   const membershipByEntry = new Map<string, Set<string>>()
   const groupByEntryNode = new Map<string, CurriculumCatalogRootItem & { itemKind: 'GROUP' }>()
   const navigationGroupIds = new Set<string>()
+  const navigationGroupsById = new Map<string, Array<{
+    entryId: string
+    childNodeIds: readonly string[]
+  }>>()
 
   const addDescendants = (
     entryId: string,
@@ -125,6 +130,9 @@ export const createCurriculumCatalogReadStore = (
       if (root.itemKind === 'NODE') addDescendants(entry.id, root.nodeId)
       else {
         navigationGroupIds.add(root.id)
+        const groups = navigationGroupsById.get(root.id) ?? []
+        groups.push({ entryId: entry.id, childNodeIds: root.childNodeIds })
+        navigationGroupsById.set(root.id, groups)
         for (const childId of root.childNodeIds) addDescendants(entry.id, childId, root)
       }
     }
@@ -205,6 +213,19 @@ export const createCurriculumCatalogReadStore = (
     isSelectableNodeInTrack: (trackId, nodeId) =>
       getTrack(trackId).entryIds.some((entryId) => membershipByEntry.get(entryId)?.has(nodeId) ?? false),
     isNavigationGroup: (id) => navigationGroupIds.has(id),
+    getNavigationGroupChildNodeIds: (trackId, id) => {
+      const track = getTrack(trackId)
+      const group = navigationGroupsById.get(id)
+        ?.find(({ entryId }) => track.entryIds.includes(entryId))
+      if (!group) {
+        throw new ApiError(
+          404,
+          'CURRICULUM_NAVIGATION_GROUP_NOT_FOUND',
+          'Curriculum navigation group not found in track',
+        )
+      }
+      return group.childNodeIds
+    },
     listCatalogChildren: (trackId, entryId, nodeId, query) => {
       getMemberNode(trackId, entryId, nodeId)
       const membership = membershipByEntry.get(entryId)!

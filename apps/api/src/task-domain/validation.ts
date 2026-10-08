@@ -1,8 +1,16 @@
 import type { CurriculumReadStore } from '../curriculum/store.js'
 import type { CurriculumTrackId } from '../curriculum/types.js'
 import { ApiError } from '../errors/api-error.js'
-import { resolveCurriculumTargets } from '../task-curriculum/resolver.js'
-import type { CurriculumTargetInput, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
+import {
+  resolveCurriculumSelectionV2,
+  resolveCurriculumTargets,
+} from '../task-curriculum/resolver.js'
+import type {
+  CurriculumSelectionV2Input,
+  CurriculumTargetInput,
+  CurriculumWriteInput,
+  ResolvedCurriculumTarget,
+} from '../task-curriculum/types.js'
 
 export type TaskContentType = 'STUDY' | 'GENERAL'
 
@@ -21,7 +29,7 @@ export const validateTaskContent = (
   contentType: TaskContentType | null | undefined,
   subjectId: string | null,
   topicId: string | null,
-  targets: readonly CurriculumTargetInput[],
+  targets: readonly unknown[],
 ): void => {
   if (contentType === undefined || contentType === null) return
   if (contentType === 'GENERAL' && targets.length > 0) {
@@ -51,4 +59,39 @@ export const resolveNewTaskTargets = (
     }
   }
   return resolveCurriculumTargets(curriculum, targets)
+}
+
+export const resolveNewTaskSelectionV2 = (
+  curriculum: CurriculumReadStore,
+  track: CurriculumTrackId | null,
+  selection: CurriculumSelectionV2Input,
+): ResolvedCurriculumTarget[] => {
+  if (!track) throw new ApiError(409, 'STUDENT_TRACK_NOT_SET', 'Student track is not set')
+  return resolveCurriculumSelectionV2(curriculum, track, selection)
+}
+
+export const curriculumWriteItems = (
+  input: CurriculumWriteInput,
+): readonly unknown[] => input.curriculumSelection?.selectors ?? input.curriculumTargets ?? []
+
+export const resolveNewTaskCurriculum = (
+  curriculum: CurriculumReadStore,
+  track: CurriculumTrackId | null,
+  input: CurriculumWriteInput,
+): ResolvedCurriculumTarget[] => {
+  if (input.curriculumTargets !== undefined && input.curriculumSelection !== undefined) {
+    throw new ApiError(
+      400,
+      'CURRICULUM_WRITE_CONTRACT_MIXED',
+      'Curriculum v1 and v2 write contracts are mutually exclusive',
+    )
+  }
+  if (input.curriculumSelection) {
+    return input.curriculumSelection.selectors.length > 0
+      ? resolveNewTaskSelectionV2(curriculum, track, input.curriculumSelection)
+      : []
+  }
+  return (input.curriculumTargets?.length ?? 0) > 0
+    ? resolveNewTaskTargets(curriculum, track, input.curriculumTargets!)
+    : []
 }

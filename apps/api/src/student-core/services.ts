@@ -1,7 +1,11 @@
 import { ApiError } from '../errors/api-error.js'
 import type { CurriculumReadStore } from '../curriculum/store.js'
-import { resolveNewTaskTargets, validateTaskContent } from '../task-domain/validation.js'
-import type { CurriculumTargetInput } from '../task-curriculum/types.js'
+import {
+  curriculumWriteItems,
+  resolveNewTaskCurriculum,
+  validateTaskContent,
+} from '../task-domain/validation.js'
+import type { CurriculumWriteInput } from '../task-curriculum/types.js'
 import { curriculumCoverage } from '../task-curriculum/view.js'
 import { deriveMiniBoxSpan, validateTaskScheduleWindow } from '../task-scheduling/schedule.js'
 import type { StudentCoreStore } from './store.js'
@@ -303,7 +307,7 @@ export const createStudentCoreServices = (
     },
     async create(actor: DomainStudent, input: StudentTaskCreateInput) {
       const profile = await requireProfile(store, actor)
-      validateTaskContent(input.contentType, input.subjectId, input.topicId, input.curriculumTargets ?? [])
+      validateTaskContent(input.contentType, input.subjectId, input.topicId, curriculumWriteItems(input))
       if (!validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       requireValidSchedule(input)
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
@@ -313,13 +317,17 @@ export const createStudentCoreServices = (
         if (subject.archivedAt) throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be assigned to new tasks')
       }
       await requireTaskTopicConsistency(store, profile.id, input.subjectId, input.topicId)
-      const resolvedTargets = (input.curriculumTargets?.length ?? 0) > 0
-        ? resolveNewTaskTargets(requireCurriculum(curriculum), profile.track ?? null, input.curriculumTargets!)
+      const resolvedTargets = curriculumWriteItems(input).length > 0
+        ? resolveNewTaskCurriculum(requireCurriculum(curriculum), profile.track ?? null, input)
         : []
       if (input.status === 'PARTIAL' || (resolvedTargets.length > 0 && input.status === 'COMPLETED')) {
         throw new ApiError(409, 'TASK_OUTCOME_INVALID', 'New Curriculum tasks have no completed execution items')
       }
-      const { curriculumTargets: _curriculumTargets, ...taskInput } = input
+      const {
+        curriculumTargets: _curriculumTargets,
+        curriculumSelection: _curriculumSelection,
+        ...taskInput
+      } = input
       const result = await store.createTask({
         ...taskInput,
         contentType: input.contentType ?? null,
@@ -427,16 +435,21 @@ export const createStudentCoreServices = (
     async replaceCurriculumTargets(
       actor: DomainStudent,
       id: string,
-      input: { curriculumTargets: CurriculumTargetInput[] },
+      input: CurriculumWriteInput,
     ) {
       const profile = await requireProfile(store, actor)
       const method = store.replacePersonalTaskCurriculumTargets
       if (!method) throw new ApiError(503, 'TASK_CURRICULUM_UNAVAILABLE', 'Task Curriculum persistence is unavailable')
       const current = await store.findTaskById(profile.id, id)
       if (!current) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
-      validateTaskContent(current.contentType, current.subjectId, current.topicId, input.curriculumTargets)
-      const targets = input.curriculumTargets.length > 0
-        ? resolveNewTaskTargets(requireCurriculum(curriculum), profile.track ?? null, input.curriculumTargets)
+      validateTaskContent(
+        current.contentType,
+        current.subjectId,
+        current.topicId,
+        curriculumWriteItems(input),
+      )
+      const targets = curriculumWriteItems(input).length > 0
+        ? resolveNewTaskCurriculum(requireCurriculum(curriculum), profile.track ?? null, input)
         : []
       const result = await method(profile.id, id, targets, profile.track ?? null)
       if (!result.ok) {

@@ -242,6 +242,7 @@ const createStore = (): CounselorTaskStore & {
       counselorUserId: string,
       studentProfileId: string,
       inputs: CreateCounselorTaskRecordInput[],
+      curriculumTargetsByTask: ResolvedCurriculumTarget[][] = [],
     ) {
       if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
@@ -273,12 +274,30 @@ const createStore = (): CounselorTaskStore & {
           if (topic.archived) return { ok: false as const, reason: 'TOPIC_ARCHIVED' as const }
         }
       }
-      const records = inputs.map((input, index): DailyTaskRecord => ({
-        id: `61000000-0000-4000-8000-${String(store.tasks.length + index + 1).padStart(12, '0')}`,
-        ...input,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      }))
+      const records = inputs.map((input, index): DailyTaskRecord => {
+        const taskId = `61000000-0000-4000-8000-${String(store.tasks.length + index + 1).padStart(12, '0')}`
+        return {
+          id: taskId,
+          ...input,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          curriculumTargets: (curriculumTargetsByTask[index] ?? []).map((target, targetIndex) => {
+            const targetId = `74000000-0000-4000-8000-${String(targetIndex + 1).padStart(12, '0')}`
+            return {
+              ...target,
+              id: targetId,
+              createdAt: timestamp,
+              items: target.items.map((item, itemIndex) => ({
+                ...item,
+                id: `75000000-0000-4000-8000-${String(itemIndex + 1).padStart(12, '0')}`,
+                targetId,
+                completedAt: null,
+                createdAt: timestamp,
+              })),
+            }
+          }),
+        }
+      })
       store.tasks.push(...records)
       return { ok: true as const, value: records }
     },
@@ -1184,6 +1203,23 @@ test('assigned counselor reads Curriculum execution coverage and alone may edit 
   assert.equal(editable.statusCode, 200)
   assert.equal(editable.json().data.curriculum.totalItemCount, 0)
 
+  const entry = canonicalCurriculumStore.listTrackCatalog('EXPERIMENTAL')[0]!
+  const root = canonicalCurriculumStore.listCatalogRoots('EXPERIMENTAL', entry.id)[0]!
+  const validNode = root.itemKind === 'NODE' ? root.nodeId : root.childNodeIds[0]!
+  const v2Replacement = await app.inject({
+    headers: { authorization: 'Bearer counselor-a' },
+    method: 'PATCH',
+    payload: {
+      curriculumSelection: {
+        version: 2,
+        selectors: [{ rootKind: 'NODE', rootId: validNode, selector: 'SUBTREE' }],
+      },
+    },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/${editableTaskId}/curriculum-targets`,
+  })
+  assert.equal(v2Replacement.statusCode, 200)
+  assert.equal(v2Replacement.json().data.curriculum.targets[0].selectionMode, 'SUBTREE')
+
   const foreign = await app.inject({
     headers: { authorization: 'Bearer counselor-b' },
     method: 'PATCH',
@@ -1210,6 +1246,22 @@ test('counselor writes use assigned Student track and preserve one-Student batch
   })
   assert.equal(valid.statusCode, 201)
   assert.equal(valid.json().data.contentType, 'STUDY')
+  const v2 = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'Recursive study',
+    scheduledFor: '2026-10-01',
+    contentType: 'STUDY',
+    curriculumSelection: {
+      version: 2,
+      selectors: [{ rootKind: 'NODE', rootId: validNode, selector: 'SUBTREE' }],
+    },
+  })
+  assert.equal(v2.statusCode, 201)
+  assert.equal(v2.json().data.curriculum.targets[0].selectionMode, 'SUBTREE')
+  const mixed = await createRequest(app, 'counselor-a', ids.studentA, {
+    title: 'Mixed', scheduledFor: '2026-10-01', curriculumTargets: [],
+    curriculumSelection: { version: 2, selectors: [] },
+  })
+  assert.equal(mixed.statusCode, 400)
   const wrong = await createRequest(app, 'counselor-a', ids.studentA, {
     title: 'Wrong track', scheduledFor: '2026-10-01', contentType: 'STUDY', curriculumTargets: target(wrongNode),
   })
@@ -1230,6 +1282,7 @@ test('counselor writes use assigned Student track and preserve one-Student batch
   assert.equal(noTrack.statusCode, 409)
   assert.equal(noTrack.json().error.code, 'STUDENT_TRACK_NOT_SET')
   store.studentTracks.set(ids.studentA, 'EXPERIMENTAL')
+  const beforeBatch = store.tasks.length
   const batch = await app.inject({
     headers: { authorization: 'Bearer counselor-a' }, method: 'POST',
     payload: { tasks: [
@@ -1240,6 +1293,22 @@ test('counselor writes use assigned Student track and preserve one-Student batch
   })
   assert.equal(batch.statusCode, 409)
   assert.equal(batch.json().error.code, 'CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK')
-  assert.equal(store.tasks.length, 1)
+  assert.equal(store.tasks.length, beforeBatch)
+
+  const v2Batch = await app.inject({
+    headers: { authorization: 'Bearer counselor-a' }, method: 'POST',
+    payload: { tasks: [
+      {
+        title: 'Recursive batch', scheduledFor: '2026-10-01', contentType: 'STUDY',
+        curriculumSelection: {
+          version: 2,
+          selectors: [{ rootKind: 'NODE', rootId: validNode, selector: 'SUBTREE' }],
+        },
+      },
+    ] },
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/batch`,
+  })
+  assert.equal(v2Batch.statusCode, 201)
+  assert.equal(v2Batch.json().data.tasks[0].curriculum.targets[0].selectionMode, 'SUBTREE')
   await app.close()
 })

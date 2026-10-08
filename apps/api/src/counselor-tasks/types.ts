@@ -2,7 +2,11 @@ import type {
   DailyTaskRecord,
   DailyTaskView,
 } from '../student-core/types.js'
-import type { CurriculumTargetInput, ResolvedCurriculumTarget } from '../task-curriculum/types.js'
+import type {
+  CurriculumSelectionV2Input,
+  CurriculumTargetInput,
+  ResolvedCurriculumTarget,
+} from '../task-curriculum/types.js'
 import type { TaskSchedulePatch } from '../student-core/types.js'
 import type { TaskContentType } from '../task-domain/validation.js'
 import type { CurriculumTrackId } from '../curriculum/types.js'
@@ -55,6 +59,7 @@ export type CreateCounselorTaskInput = {
   subjectId: string | null
   topicId: string | null
   curriculumTargets?: CurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2Input
 }
 
 export type CreateCounselorTaskBatchItemInput = {
@@ -69,6 +74,7 @@ export type CreateCounselorTaskBatchItemInput = {
   subjectId: string | null
   topicId: string | null
   curriculumTargets?: CurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2Input
 }
 
 export type CreateCounselorTaskBatchView = {

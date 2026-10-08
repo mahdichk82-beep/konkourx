@@ -1,5 +1,8 @@
 import { z } from 'zod'
-import { curriculumTargetsSchema } from './task-curriculum.js'
+import {
+  curriculumWriteContractShape,
+  refineCurriculumWriteContract,
+} from './task-curriculum.js'
 import {
   defaultTaskScheduleFields,
   optionalTaskScheduleFields,
@@ -46,8 +49,11 @@ export const createCounselorTaskSchema = z.object({
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),
-  curriculumTargets: curriculumTargetsSchema,
-}).strict().superRefine(refineTaskSchedule)
+  ...curriculumWriteContractShape,
+}).strict().superRefine((value, context) => {
+  refineCurriculumWriteContract(value, context)
+  refineTaskSchedule(value, context)
+})
 
 const createCounselorTaskBatchItemSchema = z.object({
   contentType: z.enum(['STUDY', 'GENERAL']).optional(),
@@ -59,8 +65,11 @@ const createCounselorTaskBatchItemSchema = z.object({
   plannedTestCount: z.number().int().min(0).optional().default(0),
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),
-  curriculumTargets: curriculumTargetsSchema,
-}).strict().superRefine(refineTaskSchedule)
+  ...curriculumWriteContractShape,
+}).strict().superRefine((value, context) => {
+  refineCurriculumWriteContract(value, context)
+  refineTaskSchedule(value, context)
+})
 
 export const createCounselorTaskBatchSchema = z.object({
   tasks: z.array(createCounselorTaskBatchItemSchema).min(1).max(50),

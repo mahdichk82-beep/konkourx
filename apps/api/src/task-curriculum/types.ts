@@ -1,10 +1,25 @@
 export type CurriculumReferenceKind = 'NODE' | 'PLACEMENT'
 export type CurriculumSelectionMode = 'EXACT' | 'WHOLE'
+export type CurriculumStoredSelectionMode = CurriculumSelectionMode | 'SUBTREE'
 
 export type CurriculumTargetInput = {
   referenceKind: CurriculumReferenceKind
   curriculumRefId: string
   selectionMode: CurriculumSelectionMode
+}
+
+export type CurriculumSelectorV2Input =
+  | { rootKind: 'NODE'; rootId: string; selector: 'EXACT' | 'SUBTREE' }
+  | { rootKind: 'NAVIGATION_GROUP'; rootId: string; selector: 'SUBTREE' }
+
+export type CurriculumSelectionV2Input = {
+  version: 2
+  selectors: CurriculumSelectorV2Input[]
+}
+
+export type CurriculumWriteInput = {
+  curriculumTargets?: CurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2Input
 }
 
 export type ResolvedCurriculumItem = {
@@ -15,7 +30,8 @@ export type ResolvedCurriculumItem = {
   position: number
 }
 
-export type ResolvedCurriculumTarget = CurriculumTargetInput & {
+export type ResolvedCurriculumTarget = Omit<CurriculumTargetInput, 'selectionMode'> & {
+  selectionMode: CurriculumStoredSelectionMode
   position: number
   labelSnapshot: string
   pathSnapshot: string[]

@@ -11,11 +11,14 @@ export type PlanningCurriculumTargetInput = {
   selectionMode: CurriculumSelectionMode;
 };
 
-export type PlanningCurriculumTargetSnapshot = PlanningCurriculumTargetInput & {
+export type PlanningStoredCurriculumSelectionMode = CurriculumSelectionMode | 'SUBTREE';
+
+export type PlanningCurriculumTargetSnapshot = Omit<PlanningCurriculumTargetInput, 'selectionMode'> & {
   labelSnapshot: string;
   pathSnapshot: readonly string[];
   position: number;
   representationIdSnapshot: string | null;
+  selectionMode: PlanningStoredCurriculumSelectionMode;
 };
 
 export type PlanningTargetDraftItem =
@@ -80,6 +83,7 @@ export async function restorePlanningDraft(
   return Promise.all(snapshots.map(async (item): Promise<PlanningTargetDraftItem> => {
     if (item.kind !== 'UNRESOLVED_NODE') return item;
     const target = item.target;
+    if (target.selectionMode === 'SUBTREE') return item;
 
     const entry = target.representationIdSnapshot
       ? entries.find(({ representationIds }) => (
@@ -176,6 +180,9 @@ export function planningDraftToTargetInputs(
         selectionMode: item.selection.mode,
       };
     }
+    if (item.target.selectionMode === 'SUBTREE') {
+      throw new Error('Stored SUBTREE snapshots are read-only in the v1 Planning editor');
+    }
     return {
       referenceKind: item.target.referenceKind,
       curriculumRefId: item.target.curriculumRefId,
@@ -197,6 +204,7 @@ export function canEditPlanningCurriculum(
     && !context.hasStudyHistory
     && !context.hasValidAssessmentAttempt
     && !originals.some((target) => target.referenceKind === 'PLACEMENT')
+    && !originals.some((target) => target.selectionMode === 'SUBTREE')
     && draft.every((item) => item.kind === 'NODE');
 }
 
@@ -206,6 +214,10 @@ export async function replaceChangedPlanningTargets<T>(
   context: PlanningCurriculumEditContext,
   replace: (targets: PlanningCurriculumTargetInput[]) => Promise<T>,
 ): Promise<{ kind: 'UNCHANGED' | 'READ_ONLY' } | { kind: 'REPLACED'; value: T }> {
+  if (originals.some((target) => target.selectionMode === 'SUBTREE')
+    || draft.some((item) => item.kind !== 'NODE' && item.target.selectionMode === 'SUBTREE')) {
+    return { kind: 'READ_ONLY' };
+  }
   const before = [...originals]
     .sort((left, right) => left.position - right.position)
     .map(({ referenceKind, curriculumRefId, selectionMode }) => ({
