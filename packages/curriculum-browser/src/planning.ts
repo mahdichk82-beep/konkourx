@@ -1,4 +1,9 @@
 import { selectionKey } from './state.ts';
+import { createTriStateSelectionState } from './selection-engine.ts';
+import type {
+  CurriculumSelectionAuthority,
+  TriStateSelectionState,
+} from './selection-engine.ts';
 import type {
   CurriculumBrowserClient,
   CurriculumSelection,
@@ -20,6 +25,36 @@ export type PlanningCurriculumTargetSnapshot = Omit<PlanningCurriculumTargetInpu
   representationIdSnapshot: string | null;
   selectionMode: PlanningStoredCurriculumSelectionMode;
 };
+
+export type PlanningCurriculumSelectionSession =
+  | { kind: 'EDITABLE_V2'; state: TriStateSelectionState }
+  | {
+      kind: 'PRESERVED_HISTORICAL';
+      snapshots: readonly PlanningCurriculumTargetSnapshot[];
+    };
+
+export function preserveHistoricalCurriculumSelection(
+  snapshots: readonly PlanningCurriculumTargetSnapshot[],
+): Extract<PlanningCurriculumSelectionSession, { kind: 'PRESERVED_HISTORICAL' }> {
+  return Object.freeze({
+    kind: 'PRESERVED_HISTORICAL',
+    snapshots: Object.freeze(snapshots.map((snapshot) => Object.freeze({
+      ...snapshot,
+      pathSnapshot: Object.freeze([...snapshot.pathSnapshot]),
+    }))),
+  });
+}
+
+export function beginHistoricalCurriculumReplacement(
+  session: PlanningCurriculumSelectionSession,
+  authority: CurriculumSelectionAuthority,
+): Extract<PlanningCurriculumSelectionSession, { kind: 'EDITABLE_V2' }> {
+  void session;
+  return Object.freeze({
+    kind: 'EDITABLE_V2',
+    state: createTriStateSelectionState(authority),
+  });
+}
 
 export type PlanningTargetDraftItem =
   | {

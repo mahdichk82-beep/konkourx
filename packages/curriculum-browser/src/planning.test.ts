@@ -2,15 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  beginHistoricalCurriculumReplacement,
   mergePlanningSelections,
   loadPlanningTaskDrafts,
   planningDraftToTargetInputs,
+  preserveHistoricalCurriculumSelection,
   replaceChangedPlanningTargets,
   restorePlanningDraft,
   snapshotPlanningDraft,
   selectionsToNodeTargets,
   type PlanningCurriculumTargetSnapshot,
 } from './planning.ts';
+import type { CurriculumSelectionAuthority } from './selection-engine.ts';
 import type {
   CurriculumBrowserClient,
   CurriculumCatalogEntry,
@@ -253,6 +256,65 @@ const editableContext = {
   hasStudyHistory: false,
   hasValidAssessmentAttempt: false,
 };
+
+const v2Authority: CurriculumSelectionAuthority = {
+  trackId: 'EXPERIMENTAL',
+  catalogRevision: 'catalog-2026-10-08',
+};
+
+test('historical WHOLE and PLACEMENT snapshots remain unchanged in a preserved session', () => {
+  const snapshots = [
+    snapshot('NODE', 'node-whole', 'WHOLE', 0),
+    snapshot('PLACEMENT', 'placement-legacy', 'EXACT', 1),
+  ];
+  const before = JSON.stringify(snapshots);
+  const session = preserveHistoricalCurriculumSelection(snapshots);
+
+  assert.equal(session.kind, 'PRESERVED_HISTORICAL');
+  assert.deepEqual(session.snapshots, snapshots);
+  assert.equal(JSON.stringify(session.snapshots), before);
+  assert.equal('state' in session, false);
+  assert.equal(JSON.stringify(session).includes('"version":2'), false);
+  assert.deepEqual(session.snapshots.map(({ labelSnapshot, pathSnapshot }) => ({
+    labelSnapshot,
+    pathSnapshot,
+  })), snapshots.map(({ labelSnapshot, pathSnapshot }) => ({ labelSnapshot, pathSnapshot })));
+});
+
+test('beginning explicit replacement creates a separate empty v2 state without converting history', () => {
+  const snapshots = [snapshot('NODE', 'node-whole', 'WHOLE', 0)];
+  const historical = preserveHistoricalCurriculumSelection(snapshots);
+  const editable = beginHistoricalCurriculumReplacement(historical, v2Authority);
+
+  assert.equal(editable.kind, 'EDITABLE_V2');
+  assert.deepEqual(editable.state.authority, v2Authority);
+  assert.deepEqual(editable.state.selection, { version: 2, selectors: [] });
+  assert.deepEqual(historical, preserveHistoricalCurriculumSelection(snapshots));
+  assert.equal(historical.snapshots[0]?.selectionMode, 'WHOLE');
+});
+
+test('cancelling replacement leaves historical labels, paths, and modes untouched', () => {
+  const snapshots = [snapshot('PLACEMENT', 'placement-legacy', 'EXACT', 0)];
+  const historical = preserveHistoricalCurriculumSelection(snapshots);
+  const before = JSON.stringify(historical);
+  void beginHistoricalCurriculumReplacement(historical, v2Authority);
+
+  assert.equal(JSON.stringify(historical), before);
+  assert.equal(historical.snapshots[0]?.referenceKind, 'PLACEMENT');
+  assert.equal(historical.snapshots[0]?.labelSnapshot, 'historical-placement-legacy');
+  assert.deepEqual(historical.snapshots[0]?.pathSnapshot, snapshots[0]?.pathSnapshot);
+});
+
+test('stored SUBTREE stays preserved and read-only until explicit empty v2 replacement begins', () => {
+  const snapshots = [snapshot('NODE', 'stored-subtree', 'SUBTREE', 0)];
+  const historical = preserveHistoricalCurriculumSelection(snapshots);
+  assert.equal(historical.kind, 'PRESERVED_HISTORICAL');
+  assert.equal(historical.snapshots[0]?.selectionMode, 'SUBTREE');
+
+  const replacement = beginHistoricalCurriculumReplacement(historical, v2Authority);
+  assert.deepEqual(replacement.state.selection.selectors, []);
+  assert.equal(historical.snapshots[0]?.selectionMode, 'SUBTREE');
+});
 
 test('historical null and explicit GENERAL tasks keep Curriculum read-only', async () => {
   const originals = [snapshot('NODE', 'node-1', 'EXACT', 0)];

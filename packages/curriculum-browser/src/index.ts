@@ -4,6 +4,7 @@ export { PlanningCurriculumField } from './PlanningCurriculumField.tsx';
 export type { PlanningCurriculumFieldProps } from './PlanningCurriculumField.tsx';
 export * from './client.ts';
 export * from './planning.ts';
+export * from './selection-engine.ts';
 export * from './state.ts';
 export * from './types.ts';
 export * from './view-model.ts';
