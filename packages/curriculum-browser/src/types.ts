@@ -82,6 +82,7 @@ export type CurriculumBrowserClient = {
     entryId: string,
     nodeId: string,
     offset?: number,
+    limit?: number,
   ): Promise<CurriculumPage<CurriculumCatalogNodeView>>;
   search(query: string, offset?: number): Promise<CurriculumPage<CurriculumCatalogSearchResult>>;
 };

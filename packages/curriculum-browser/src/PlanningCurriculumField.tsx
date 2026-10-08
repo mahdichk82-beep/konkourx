@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { CurriculumBrowser } from './CurriculumBrowser.tsx';
+import { TriStateCurriculumPicker } from './TriStateCurriculumPicker.tsx';
 import {
-  mergePlanningSelections,
-  resolvedSelections,
-  type PlanningTargetDraftItem,
+  createEmptyPlanningCurriculumValue,
+  type PlanningCurriculumValue,
 } from './planning.ts';
-import type { CurriculumBrowserClient, CurriculumSelection } from './types.ts';
-import { presentBreadcrumb, type CurriculumAudience } from './view-model.ts';
+import type { CurriculumBrowserClient } from './types.ts';
+import type { CurriculumAudience } from './view-model.ts';
 
 export type PlanningCurriculumFieldProps = {
   audience: CurriculumAudience;
@@ -16,8 +15,8 @@ export type PlanningCurriculumFieldProps = {
   disabled?: boolean;
   disabledReason?: string;
   minimumOne?: boolean;
-  onChange(value: readonly PlanningTargetDraftItem[]): void;
-  value: readonly PlanningTargetDraftItem[];
+  onChange(value: PlanningCurriculumValue): void;
+  value: PlanningCurriculumValue;
 };
 
 export function PlanningCurriculumField({
@@ -31,8 +30,10 @@ export function PlanningCurriculumField({
   value,
 }: PlanningCurriculumFieldProps) {
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<readonly CurriculumSelection[]>([]);
+  const [draftInitial, setDraftInitial] = useState<Extract<PlanningCurriculumValue, { kind: 'V2' }> | null>(null);
+  const [replacingHistorical, setReplacingHistorical] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const replacementTriggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -61,19 +62,34 @@ export function PlanningCurriculumField({
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
-      triggerRef.current?.focus();
+      (replacingHistorical ? replacementTriggerRef : triggerRef).current?.focus();
     };
-  }, [open]);
+  }, [open, replacingHistorical]);
 
   const beginEditing = () => {
-    setDraft(resolvedSelections(value));
+    if (value.kind !== 'V2') return;
+    setReplacingHistorical(false);
+    setDraftInitial(value);
     setOpen(true);
   };
 
-  const confirm = () => {
-    onChange(mergePlanningSelections(value, draft));
-    setOpen(false);
+  const beginHistoricalReplacement = () => {
+    setReplacingHistorical(true);
+    setDraftInitial(createEmptyPlanningCurriculumValue());
+    setOpen(true);
   };
+
+  const summaries = value.kind === 'V2'
+    ? value.summaries.map((summary) => ({
+        key: `${summary.rootKind}:${summary.rootId}`,
+        label: summary.label,
+        path: summary.path,
+      }))
+    : value.snapshots.map((snapshot, index) => ({
+        key: `historical:${snapshot.curriculumRefId}:${index}`,
+        label: snapshot.labelSnapshot,
+        path: snapshot.pathSnapshot,
+      }));
 
   return (
     <section className="planning-curriculum-field" aria-label="مباحث درسی">
@@ -82,63 +98,64 @@ export function PlanningCurriculumField({
           <strong>مباحث درسی</strong>
           <small>انتخاب از ساختار رسمی برنامه درسی</small>
         </div>
-        <button disabled={disabled} onClick={beginEditing} ref={triggerRef} type="button">
-          {value.length > 0 ? 'ویرایش مباحث' : 'انتخاب مبحث'}
-        </button>
+        {value.kind === 'V2' ? (
+          <button disabled={disabled} onClick={beginEditing} ref={triggerRef} type="button">
+            {summaries.length > 0 ? 'ویرایش مباحث' : 'انتخاب مبحث'}
+          </button>
+        ) : null}
       </div>
 
       {disabled && disabledReason ? <p className="planning-curriculum-field__notice">{disabledReason}</p> : null}
-      {value.length === 0 ? (
+      {summaries.length === 0 ? (
         <p className="planning-curriculum-field__empty">هنوز مبحث رسمی برای این کار انتخاب نشده است.</p>
       ) : (
         <ol className="planning-curriculum-field__targets">
-          {value.map((item, index) => {
-            if (item.kind === 'NODE') {
-              return (
-                <li key={`node:${item.selection.entryId}:${item.selection.nodeId}`}>
-                  <div>
-                    <strong>{item.selection.label}</strong>
-                    <small>{item.displayPath.join(' ← ') || presentBreadcrumb(item.selection.breadcrumb)}</small>
-                    {item.selection.mode === 'WHOLE' ? <small>انتخاب تاریخی با دامنه ذخیره‌شده</small> : null}
-                  </div>
-                  {!disabled && (!minimumOne || value.length > 1) ? <button aria-label={`حذف ${item.selection.label}`} onClick={() => onChange(value.filter((_, itemIndex) => itemIndex !== index))} type="button">حذف</button> : null}
-                </li>
-              );
-            }
-            const legacy = item.kind === 'PLACEMENT';
-            const unresolved = item.kind === 'UNRESOLVED_NODE';
-            return (
-              <li className="is-legacy" key={`${item.kind}:${item.target.curriculumRefId}:${index}`}>
-                <div>
-                  <strong>{item.target.labelSnapshot}</strong>
-                  <small>{item.target.pathSnapshot.join(' ← ')}</small>
-                </div>
-                <span>{legacy ? 'هدف قدیمی · فقط خواندنی' : unresolved ? 'مبحث تاریخی · فقط خواندنی' : null}</span>
-              </li>
-            );
-          })}
+          {summaries.map((summary) => (
+            <li className={value.kind === 'PRESERVED_HISTORICAL' ? 'is-legacy' : undefined} key={summary.key}>
+              <div>
+                <strong>{summary.label}</strong>
+                <small>{summary.path.join(' ← ')}</small>
+              </div>
+              {value.kind === 'PRESERVED_HISTORICAL' ? <span>انتخاب ذخیره‌شده · فقط خواندنی</span> : null}
+            </li>
+          ))}
         </ol>
       )}
 
-      {open ? (
+      {value.kind === 'PRESERVED_HISTORICAL' && !disabled ? (
+        <div className="planning-curriculum-field__historical-action">
+          <p>این انتخاب تاریخی بدون تغییر حفظ می‌شود. تأیید انتخاب تازه، کل مجموعه ذخیره‌شده را جایگزین می‌کند.</p>
+          <button onClick={beginHistoricalReplacement} ref={replacementTriggerRef} type="button">انتخاب مباحث جدید</button>
+        </div>
+      ) : null}
+
+      {open && draftInitial ? (
         <div className="planning-curriculum-modal" role="presentation">
-          <button aria-label="بستن انتخاب مباحث" className="planning-curriculum-modal__backdrop" onClick={() => setOpen(false)} type="button" />
-          <section aria-label="انتخاب مباحث درسی" aria-modal="true" className="planning-curriculum-modal__panel" ref={panelRef} role="dialog">
+          <div aria-hidden="true" className="planning-curriculum-modal__backdrop" />
+          <section
+            aria-label="انتخاب مباحث درسی"
+            aria-modal="true"
+            className="planning-curriculum-modal__panel"
+            ref={panelRef}
+            role="dialog"
+          >
             <div className="planning-curriculum-modal__body">
-              <CurriculumBrowser
+              <TriStateCurriculumPicker
                 audience={audience}
                 client={client}
                 contextLabel={contextLabel}
-                mode="PICKER"
-                onSelectedNodesChange={setDraft}
-                selectedNodes={draft}
+                initialValue={draftInitial}
+                minimumOne={minimumOne}
+                onCancel={() => setOpen(false)}
+                onConfirm={(next) => {
+                  onChange(next);
+                  setOpen(false);
+                }}
+                replacementNotice={replacingHistorical
+                  ? 'با تأیید، مباحث جدید جایگزین همه مباحث ذخیره‌شده قبلی می‌شوند.'
+                  : undefined}
               />
             </div>
-            <footer className="planning-curriculum-modal__actions">
-              <span role="status">{draft.length.toLocaleString('fa-IR')} مبحث انتخاب شده</span>
-              <button onClick={() => setOpen(false)} type="button">انصراف</button>
-              <button className="is-primary" disabled={minimumOne && draft.length === 0} onClick={confirm} type="button">تأیید انتخاب</button>
-            </footer>
           </section>
         </div>
       ) : null}

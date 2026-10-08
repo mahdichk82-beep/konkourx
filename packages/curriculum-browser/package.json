@@ -9,7 +9,7 @@
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
-    "test": "node --test src/state.test.ts src/view-model.test.ts src/component-contract.test.ts src/planning.test.ts src/planning-field-contract.test.ts src/selection-engine.test.ts",
+    "test": "node --test src/state.test.ts src/view-model.test.ts src/component-contract.test.ts src/planning.test.ts src/planning-field-contract.test.ts src/selection-engine.test.ts src/selection-adapter.test.ts src/tri-state-picker-contract.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

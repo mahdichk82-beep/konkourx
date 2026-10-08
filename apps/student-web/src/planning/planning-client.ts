@@ -1,6 +1,6 @@
 import { authClient } from '../auth/auth-client'
 import type {
-  PlanningCurriculumTargetInput,
+  CurriculumSelectionV2,
   PlanningCurriculumTargetSnapshot,
 } from '@konkourx/curriculum-browser'
 
@@ -86,7 +86,7 @@ export type TaskListQuery = {
 
 export type CreateTaskInput = {
   contentType: 'STUDY' | 'GENERAL'
-  curriculumTargets: PlanningCurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2
   description: string | null
   estimatedMinutes: number | null
   scheduledFor: string
@@ -183,14 +183,14 @@ class PlanningClient {
     })
   }
 
-  replaceTaskCurriculumTargets(
+  replaceTaskCurriculumSelection(
     id: string,
-    curriculumTargets: PlanningCurriculumTargetInput[],
+    curriculumSelection: CurriculumSelectionV2,
   ): Promise<DailyTask> {
     return authClient.authorizedRequest<DailyTask>(
       `/student/daily-tasks/${encodeURIComponent(id)}/curriculum-targets`,
       {
-        body: JSON.stringify({ curriculumTargets }),
+        body: JSON.stringify({ curriculumSelection }),
         method: 'PATCH',
       },
     )

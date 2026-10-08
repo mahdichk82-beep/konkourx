@@ -2,11 +2,11 @@ import type {
   CreateCounselorBatchTaskInput,
   CreateCounselorTaskBatchResult,
 } from './student-tasks-client'
-import type { PlanningCurriculumTargetInput } from '@konkourx/curriculum-browser'
+import type { PlanningCurriculumValue } from '@konkourx/curriculum-browser'
 
 export type BatchTaskRow = {
   contentType: 'STUDY' | 'GENERAL' | ''
-  curriculumTargets: PlanningCurriculumTargetInput[]
+  curriculum: PlanningCurriculumValue
   id: string
   title: string
   description: string
@@ -33,7 +33,11 @@ const nonNegativeInteger = (value: string, maximum?: number) => {
 
 export const createBatchTaskRow = (id: string, scheduledFor: string): BatchTaskRow => ({
   contentType: '',
-  curriculumTargets: [],
+  curriculum: {
+    kind: 'V2',
+    selection: { version: 2, selectors: [] },
+    summaries: [],
+  },
   description: '',
   id,
   plannedMinutes: '0',
@@ -51,6 +55,12 @@ export const removeBatchTaskRow = (
   rows: BatchTaskRow[],
   id: string,
 ): BatchTaskRow[] => rows.length === 1 ? rows : rows.filter((row) => row.id !== id)
+
+export const updateBatchTaskRowCurriculum = (
+  rows: BatchTaskRow[],
+  id: string,
+  curriculum: PlanningCurriculumValue,
+): BatchTaskRow[] => rows.map((row) => row.id === id ? { ...row, curriculum } : row)
 
 export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
   if (rows.length === 0) return 'حداقل یک ردیف وظیفه لازم است.'
@@ -72,8 +82,8 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
     }
     if (!row.contentType) return `نوع کار ردیف ${rowNumber} الزامی است.`
     if (row.contentType === 'STUDY' && (
-      row.curriculumTargets.length === 0
-      || row.curriculumTargets.some((target) => target.referenceKind !== 'NODE' || target.selectionMode !== 'EXACT')
+      row.curriculum.kind !== 'V2'
+      || row.curriculum.selection.selectors.length === 0
     )) {
       return `برای کار درسی ردیف ${rowNumber} حداقل یک مبحث معتبر انتخاب کنید.`
     }
@@ -84,7 +94,9 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
 export const toBatchTaskInputs = (rows: BatchTaskRow[]): CreateCounselorBatchTaskInput[] =>
   rows.map((row) => ({
     contentType: row.contentType as 'STUDY' | 'GENERAL',
-    curriculumTargets: row.contentType === 'STUDY' ? row.curriculumTargets : [],
+    ...(row.contentType === 'STUDY' && row.curriculum.kind === 'V2'
+      ? { curriculumSelection: row.curriculum.selection }
+      : {}),
     description: row.description.trim() || null,
     plannedMinutes: Number(row.plannedMinutes),
     plannedTestCount: row.contentType === 'STUDY' ? Number(row.plannedTestCount) : 0,

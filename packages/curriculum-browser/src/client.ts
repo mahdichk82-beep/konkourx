@@ -27,8 +27,8 @@ export function createBoundCurriculumClient(
     getNode: (entryId, nodeId) => request<CurriculumCatalogNodeView>(
       `${catalogPath}/${segment(entryId)}/nodes/${segment(nodeId)}`,
     ),
-    listChildren: (entryId, nodeId, offset = 0) => request<CurriculumPage<CurriculumCatalogNodeView>>(
-      `${catalogPath}/${segment(entryId)}/nodes/${segment(nodeId)}/children?limit=100&offset=${offset}`,
+    listChildren: (entryId, nodeId, offset = 0, limit = 100) => request<CurriculumPage<CurriculumCatalogNodeView>>(
+      `${catalogPath}/${segment(entryId)}/nodes/${segment(nodeId)}/children?limit=${Math.min(100, Math.max(1, limit))}&offset=${offset}`,
     ),
     search: (query, offset = 0) => request<CurriculumPage<CurriculumCatalogSearchResult>>(
       `${basePath}/search?q=${encodeURIComponent(query)}&limit=50&offset=${offset}`,

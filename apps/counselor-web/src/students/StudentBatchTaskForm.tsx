@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   PlanningCurriculumField,
-  planningDraftToTargetInputs,
-  type PlanningTargetDraftItem,
+  createEmptyPlanningCurriculumValue,
 } from '@konkourx/curriculum-browser'
 import '@konkourx/curriculum-browser/styles.css'
 import { AuthApiError, authClient } from '../auth/auth-client'
@@ -14,6 +13,7 @@ import {
   createBatchTaskRow,
   removeBatchTaskRow,
   submitBatchTaskRows,
+  updateBatchTaskRowCurriculum,
   type BatchTaskRow,
 } from './batch-task-form'
 import { studentTasksClient } from './student-tasks-client'
@@ -62,7 +62,6 @@ export function StudentBatchTaskForm({
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [curriculumDrafts, setCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
 
   const updateRow = <K extends keyof BatchTaskRow>(
     id: string,
@@ -76,9 +75,8 @@ export function StudentBatchTaskForm({
 
   const selectType = (rowId: string, contentType: BatchTaskRow['contentType']) => {
     setRows((current) => current.map((row) => row.id === rowId
-      ? { ...row, contentType, curriculumTargets: [] }
+      ? { ...row, contentType, curriculum: createEmptyPlanningCurriculumValue() }
       : row))
-    setCurriculumDrafts((current) => ({ ...current, [rowId]: [] }))
     setFormError(null)
   }
 
@@ -92,11 +90,6 @@ export function StudentBatchTaskForm({
 
   const removeRow = (id: string) => {
     setRows((current) => removeBatchTaskRow(current, id))
-    setCurriculumDrafts((current) => {
-      const next = { ...current }
-      delete next[id]
-      return next
-    })
     setFormError(null)
     setSuccess(null)
   }
@@ -118,7 +111,6 @@ export function StudentBatchTaskForm({
     }
 
     setRows([createBatchTaskRow(`batch-task-${nextRowId.current}`, localDate())])
-    setCurriculumDrafts({})
     nextRowId.current += 1
     setSuccess(`${result.value.created.toLocaleString('fa-IR')} وظیفه با موفقیت ثبت شد.`)
     setSubmitting(false)
@@ -211,11 +203,10 @@ export function StudentBatchTaskForm({
                     audience="counselor"
                     client={curriculumClient}
                     contextLabel={studentLabel}
-                    onChange={(draft) => {
-                      setCurriculumDrafts((current) => ({ ...current, [row.id]: draft }))
-                      updateRow(row.id, 'curriculumTargets', planningDraftToTargetInputs(draft))
-                    }}
-                    value={curriculumDrafts[row.id] ?? []}
+                    onChange={(curriculum) => setRows((current) => (
+                      updateBatchTaskRowCurriculum(current, row.id, curriculum)
+                    ))}
+                    value={row.curriculum}
                   /> : null}
                 </section>
               )

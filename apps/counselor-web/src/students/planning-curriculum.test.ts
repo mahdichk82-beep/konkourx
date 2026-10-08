@@ -1,13 +1,41 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import {
+  canReplacePlanningCurriculum,
+  planningCurriculumValueFromSnapshots,
+  replaceChangedPlanningCurriculum,
+  type PlanningCurriculumEditContext,
+  type PlanningCurriculumTargetSnapshot,
+} from '../../../../packages/curriculum-browser/src/planning.ts'
 
-test('Counselor client persists targets through assigned-Student task routes', () => {
+const snapshot = (selectionMode: 'EXACT' | 'SUBTREE' | 'WHOLE' = 'EXACT'): PlanningCurriculumTargetSnapshot => ({
+  curriculumRefId: 'node-1',
+  labelSnapshot: 'Node 1',
+  pathSnapshot: ['Node 1'],
+  position: 0,
+  referenceKind: 'NODE',
+  representationIdSnapshot: 'representation-1',
+  selectionMode,
+})
+
+const editableContext: PlanningCurriculumEditContext = {
+  actor: 'counselor',
+  completedItemCount: 0,
+  contentType: 'STUDY',
+  hasActiveStudySession: false,
+  hasStudyHistory: false,
+  hasValidAssessmentAttempt: false,
+  source: 'COUNSELOR',
+  status: 'PENDING',
+}
+
+test('Counselor client persists v2 selection through assigned-Student task routes', () => {
   const source = readFileSync(new URL('./student-tasks-client.ts', import.meta.url), 'utf8')
-  assert.match(source, /curriculumTargets: PlanningCurriculumTargetInput\[\]/)
-  assert.match(source, /replaceCurriculumTargets/)
+  assert.match(source, /curriculumSelection\?: CurriculumSelectionV2/)
+  assert.match(source, /replaceCurriculumSelection/)
   assert.match(source, /tasks\/\$\{encodeURIComponent\(taskId\)\}\/curriculum-targets/)
-  assert.match(source, /JSON\.stringify\(\{ curriculumTargets \}\)/)
+  assert.match(source, /JSON\.stringify\(\{ curriculumSelection \}\)/)
 });
 
 test('single, batch, and edit flows use the selected Student-bound Picker', () => {
@@ -16,6 +44,7 @@ test('single, batch, and edit flows use the selected Student-bound Picker', () =
     assert.match(source, /PlanningCurriculumField/, filename)
     assert.match(source, /createCounselorCurriculumClient/, filename)
     assert.match(source, /contextLabel=\{studentLabel\}/, filename)
+    assert.match(source, /\[studentId\]/, filename)
     assert.doesNotMatch(source, /trackSelector|selectedTrack|<select[^>]*id="[^"]*track/, filename)
   }
 });
@@ -29,6 +58,8 @@ test('Counselor canonical writes send explicit content type without legacy links
   assert.match(batch, /contentType: row\.contentType/)
   assert.match(batch, /subjectId: null/)
   assert.match(batch, /topicId: null/)
+  assert.doesNotMatch(single, /curriculumTargets/)
+  assert.doesNotMatch(batch, /curriculumTargets/)
 });
 
 test('task editing remains lifecycle-bound and selected-Student-bound', () => {
@@ -39,8 +70,46 @@ test('task editing remains lifecycle-bound and selected-Student-bound', () => {
   assert.match(source, /task\.hasActiveStudySession/)
   assert.match(source, /task\.hasValidAssessmentAttempt/)
   assert.match(source, /task\.curriculum\.completedItemCount > 0/)
-  assert.match(source, /replaceCurriculumTargets\(studentId, task\.id/)
-  assert.match(source, /replaceChangedPlanningTargets/)
-  assert.match(source, /canEditPlanningCurriculum/)
-  assert.match(source, /loadPlanningTaskDrafts/)
+  assert.match(source, /replaceCurriculumSelection\(\s*studentId,\s*task\.id/)
+  assert.match(source, /replaceChangedPlanningCurriculum/)
+  assert.match(source, /canReplacePlanningCurriculum/)
+  assert.match(source, /planningCurriculumValueFromSnapshots/)
 });
+
+test('Counselor replacement is skipped when unchanged and writes v2 exactly once when changed', async () => {
+  const originals = [snapshot('SUBTREE')]
+  let calls = 0
+  const unchanged = await replaceChangedPlanningCurriculum(
+    originals,
+    planningCurriculumValueFromSnapshots(originals),
+    editableContext,
+    async () => { calls += 1; return 'unexpected' },
+  )
+  const changed = await replaceChangedPlanningCurriculum(
+    originals,
+    {
+      kind: 'V2',
+      selection: { version: 2, selectors: [{ rootKind: 'NODE', rootId: 'node-2', selector: 'EXACT' }] },
+      summaries: [],
+    },
+    editableContext,
+    async (selection) => { calls += 1; return selection },
+  )
+
+  assert.deepEqual(unchanged, { kind: 'UNCHANGED' })
+  assert.equal(changed.kind, 'REPLACED')
+  assert.equal(calls, 1)
+})
+
+test('Counselor replacement keeps historical and lifecycle-restricted selections read-only', () => {
+  const restricted = [
+    { ...editableContext, source: 'PERSONAL' as const },
+    { ...editableContext, status: 'COMPLETED' as const },
+    { ...editableContext, hasActiveStudySession: true },
+    { ...editableContext, hasStudyHistory: true },
+    { ...editableContext, hasValidAssessmentAttempt: true },
+    { ...editableContext, completedItemCount: 1 },
+  ]
+  for (const context of restricted) assert.equal(canReplacePlanningCurriculum(context), false)
+  assert.equal(planningCurriculumValueFromSnapshots([snapshot('WHOLE')]).kind, 'PRESERVED_HISTORICAL')
+})

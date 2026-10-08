@@ -31,5 +31,5 @@ test('Curriculum replacement preserves list-only study-session guards', () => {
 
 test('Curriculum replacement client is typed to the narrower API response', () => {
   const source = readFileSync(new URL('./student-tasks-client.ts', import.meta.url), 'utf8')
-  assert.match(source, /replaceCurriculumTargets\([\s\S]*?\): Promise<CounselorTask>/)
+  assert.match(source, /replaceCurriculumSelection\([\s\S]*?\): Promise<CounselorTask>/)
 })

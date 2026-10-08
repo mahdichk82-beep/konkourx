@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   PlanningCurriculumField,
-  canEditPlanningCurriculum,
-  loadPlanningTaskDrafts,
-  replaceChangedPlanningTargets,
-  type PlanningTargetDraftItem,
+  canReplacePlanningCurriculum,
+  planningCurriculumValueFromSnapshots,
+  replaceChangedPlanningCurriculum,
+  type PlanningCurriculumValue,
 } from '@konkourx/curriculum-browser'
 import '@konkourx/curriculum-browser/styles.css'
 import { AuthApiError, authClient } from '../auth/auth-client'
@@ -126,8 +126,6 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
   const [schedulingTaskId, setSchedulingTaskId] = useState<string | null>(null)
   const [scheduleActionError, setScheduleActionError] = useState<string | null>(null)
-  const [curriculumDrafts, setCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
-  const [curriculumReady, setCurriculumReady] = useState<Set<string>>(new Set())
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -149,20 +147,6 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
       active = false
     }
   }, [refreshKey, retryKey, studentId])
-
-  useEffect(() => {
-    let active = true
-    void loadPlanningTaskDrafts(tasks, curriculumClient, (drafts) => {
-      if (!active) return
-      setCurriculumDrafts(drafts)
-      setCurriculumReady(new Set(tasks.map(({ id }) => id)))
-    }).catch((loadError: unknown) => {
-      if (active) setScheduleActionError(listError(loadError))
-    })
-    return () => {
-      active = false
-    }
-  }, [curriculumClient, tasks])
 
   const retry = () => {
     setLoading(true)
@@ -214,16 +198,20 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
 
   const replaceCurriculum = async (
     task: CounselorVisibleTask,
-    draft: readonly PlanningTargetDraftItem[],
+    curriculum: PlanningCurriculumValue,
   ) => {
     setUpdatingCurriculumTaskIds((current) => new Set(current).add(task.id))
     setScheduleActionError(null)
     try {
-      const result = await replaceChangedPlanningTargets(
+      const result = await replaceChangedPlanningCurriculum(
         task.curriculum.targets,
-        draft,
+        curriculum,
         curriculumEditContext(task),
-        (targets) => studentTasksClient.replaceCurriculumTargets(studentId, task.id, targets),
+        (curriculumSelection) => studentTasksClient.replaceCurriculumSelection(
+          studentId,
+          task.id,
+          curriculumSelection,
+        ),
       )
       if (result.kind === 'REPLACED') {
         setTasks((current) => current.map((candidate) => candidate.id === result.value.id
@@ -312,22 +300,15 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                     <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
                   )}
                 </div>
-                {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) && curriculumReady.has(task.id) ? (
+                {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) ? (
                   <PlanningCurriculumField
                     audience="counselor"
                     client={curriculumClient}
                     contextLabel={studentLabel}
                     minimumOne={task.contentType === 'STUDY'}
-                    disabled={!canEditPlanningCurriculum(
-                      curriculumEditContext(task),
-                      task.curriculum.targets,
-                      curriculumDrafts[task.id] ?? [],
-                    ) || updatingCurriculumTaskIds.has(task.id)}
-                    disabledReason={task.curriculum.targets.some(({ referenceKind }) => referenceKind === 'PLACEMENT')
-                      ? 'این مبحث از ساختار قدیمی برنامه ذخیره شده و در حال حاضر فقط قابل مشاهده است.'
-                      : (curriculumDrafts[task.id] ?? []).some(({ kind }) => kind === 'UNRESOLVED_NODE')
-                        ? 'مبحث ذخیره‌شده از روی سابقه نمایش داده می‌شود و در حال حاضر قابل ویرایش نیست.'
-                        : task.contentType === null
+                    disabled={!canReplacePlanningCurriculum(curriculumEditContext(task))
+                      || updatingCurriculumTaskIds.has(task.id)}
+                    disabledReason={task.contentType === null
                           ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
                         : task.source !== 'COUNSELOR'
                       ? 'مباحث برنامه شخصی دانش‌آموز برای مشاور فقط خواندنی است.'
@@ -341,10 +322,8 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                           ? 'در حال ثبت مباحث…'
                           : undefined}
                     onChange={(draft) => void replaceCurriculum(task, draft)}
-                    value={curriculumDrafts[task.id] ?? []}
+                    value={planningCurriculumValueFromSnapshots(task.curriculum.targets)}
                   />
-                ) : task.curriculum.targets.length > 0 ? (
-                  <p role="status">در حال بازیابی مباحث رسمی این کار…</p>
                 ) : null}
                 {task.source === 'COUNSELOR' && (
                   <form

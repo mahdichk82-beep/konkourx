@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import {
   PlanningCurriculumField,
-  planningDraftToTargetInputs,
-  type PlanningTargetDraftItem,
+  createEmptyPlanningCurriculumValue,
+  type PlanningCurriculumValue,
 } from '@konkourx/curriculum-browser'
 import '@konkourx/curriculum-browser/styles.css'
 import { AuthApiError, authClient } from '../auth/auth-client'
@@ -50,7 +50,9 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [taskCurriculum, setTaskCurriculum] = useState<readonly PlanningTargetDraftItem[]>([])
+  const [taskCurriculum, setTaskCurriculum] = useState<PlanningCurriculumValue>(
+    createEmptyPlanningCurriculumValue,
+  )
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -63,10 +65,9 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
       setFormError('نوع کار را انتخاب کنید.')
       return
     }
-    const curriculumTargets = contentType === 'STUDY' ? planningDraftToTargetInputs(taskCurriculum) : []
     if (contentType === 'STUDY' && (
-      curriculumTargets.length === 0
-      || curriculumTargets.some(({ referenceKind, selectionMode }) => referenceKind !== 'NODE' || selectionMode !== 'EXACT')
+      taskCurriculum.kind !== 'V2'
+      || taskCurriculum.selection.selectors.length === 0
     )) {
       setFormError('برای کار درسی حداقل یک مبحث معتبر انتخاب کنید.')
       return
@@ -78,7 +79,9 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
     try {
       const task = await studentTasksClient.create(studentId, {
         contentType,
-        curriculumTargets,
+        ...(contentType === 'STUDY' && taskCurriculum.kind === 'V2'
+          ? { curriculumSelection: taskCurriculum.selection }
+          : {}),
         title: normalizedTitle,
         description: description.trim() || null,
         scheduledFor,
@@ -90,7 +93,7 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
       setDescription('')
       setEstimatedMinutes('')
       setContentType('')
-      setTaskCurriculum([])
+      setTaskCurriculum(createEmptyPlanningCurriculumValue())
       setSuccess(`وظیفه «${task.title}» برای دانش‌آموز ثبت شد.`)
       onTaskCreated?.()
     } catch (error) {
@@ -109,8 +112,8 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
       <form className="student-task-form" onSubmit={(event) => void submit(event)}>
           <fieldset className="task-content-type">
             <legend>نوع کار</legend>
-            <label><input checked={contentType === 'STUDY'} name="counselor-task-content-type" onChange={() => { setContentType('STUDY'); setTaskCurriculum([]) }} type="radio" />درسی</label>
-            <label><input checked={contentType === 'GENERAL'} name="counselor-task-content-type" onChange={() => { setContentType('GENERAL'); setTaskCurriculum([]) }} type="radio" />عمومی</label>
+            <label><input checked={contentType === 'STUDY'} name="counselor-task-content-type" onChange={() => { setContentType('STUDY'); setTaskCurriculum(createEmptyPlanningCurriculumValue()) }} type="radio" />درسی</label>
+            <label><input checked={contentType === 'GENERAL'} name="counselor-task-content-type" onChange={() => { setContentType('GENERAL'); setTaskCurriculum(createEmptyPlanningCurriculumValue()) }} type="radio" />عمومی</label>
           </fieldset>
           <div className="student-task-form__grid">
             <label htmlFor="counselor-task-title">

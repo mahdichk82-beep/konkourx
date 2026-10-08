@@ -1,6 +1,6 @@
 import { authClient } from '../auth/auth-client'
 import type {
-  PlanningCurriculumTargetInput,
+  CurriculumSelectionV2,
   PlanningCurriculumTargetSnapshot,
 } from '@konkourx/curriculum-browser'
 
@@ -64,7 +64,7 @@ export type Page<T> = {
 
 export type CreateCounselorTaskInput = {
   contentType: 'STUDY' | 'GENERAL'
-  curriculumTargets: PlanningCurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2
   description: string | null
   estimatedMinutes: number | null
   scheduledFor: string
@@ -75,7 +75,7 @@ export type CreateCounselorTaskInput = {
 
 export type CreateCounselorBatchTaskInput = {
   contentType: 'STUDY' | 'GENERAL'
-  curriculumTargets: PlanningCurriculumTargetInput[]
+  curriculumSelection?: CurriculumSelectionV2
   description: string | null
   plannedMinutes: number
   plannedTestCount: number
@@ -191,10 +191,10 @@ export const studentTasksClient = {
     )
   },
 
-  replaceCurriculumTargets(
+  replaceCurriculumSelection(
     studentProfileId: string,
     taskId: string,
-    curriculumTargets: PlanningCurriculumTargetInput[],
+    curriculumSelection: CurriculumSelectionV2,
   ): Promise<CounselorTask> {
     return authClient.authorizedRequest<CounselorTask>(
       resourcePath(
@@ -202,7 +202,7 @@ export const studentTasksClient = {
         `/tasks/${encodeURIComponent(taskId)}/curriculum-targets`,
       ),
       {
-        body: JSON.stringify({ curriculumTargets }),
+        body: JSON.stringify({ curriculumSelection }),
         method: 'PATCH',
       },
     )

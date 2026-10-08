@@ -5,13 +5,23 @@ import {
   createBatchTaskRow,
   removeBatchTaskRow,
   submitBatchTaskRows,
+  updateBatchTaskRowCurriculum,
   validateBatchTaskRows,
 } from './batch-task-form.ts'
+
+const selectedCurriculum = (rootId = 'node-1') => ({
+  kind: 'V2' as const,
+  selection: {
+    version: 2 as const,
+    selectors: [{ rootKind: 'NODE' as const, rootId, selector: 'SUBTREE' as const }],
+  },
+  summaries: [{ rootKind: 'NODE' as const, rootId, label: rootId, path: [rootId] }],
+})
 
 const validRow = () => ({
   ...createBatchTaskRow('row-1', '2026-09-15'),
   contentType: 'STUDY' as const,
-  curriculumTargets: [{ referenceKind: 'NODE' as const, curriculumRefId: 'node-1', selectionMode: 'EXACT' as const }],
+  curriculum: selectedCurriculum(),
   description: '  مرور فصل  ',
   plannedMinutes: '90',
   plannedTestCount: '12',
@@ -24,7 +34,10 @@ test('batch form validates required and non-negative row fields', () => {
   assert.match(validateBatchTaskRows([{ ...validRow(), plannedMinutes: '-1' }]) ?? '', /زمان/)
   assert.match(validateBatchTaskRows([{ ...validRow(), plannedTestCount: '-1' }]) ?? '', /تعداد تست/)
   assert.match(validateBatchTaskRows([{ ...validRow(), contentType: '' }]) ?? '', /نوع کار/)
-  assert.match(validateBatchTaskRows([{ ...validRow(), curriculumTargets: [] }]) ?? '', /مبحث/)
+  assert.ok(validateBatchTaskRows([{
+    ...validRow(),
+    curriculum: { ...selectedCurriculum(), selection: { version: 2, selectors: [] } },
+  }]))
 })
 
 test('batch form adds and removes rows without allowing an empty form', () => {
@@ -37,6 +50,16 @@ test('batch form adds and removes rows without allowing an empty form', () => {
   assert.deepEqual(removeBatchTaskRow([first], first.id), [first])
 })
 
+test('batch rows own independent Picker values', () => {
+  const first = validRow()
+  const second = { ...validRow(), id: 'row-2', curriculum: selectedCurriculum('node-2') }
+  const changed = updateBatchTaskRowCurriculum([first, second], first.id, selectedCurriculum('node-3'))
+
+  assert.deepEqual(changed[0]?.curriculum, selectedCurriculum('node-3'))
+  assert.deepEqual(changed[1]?.curriculum, selectedCurriculum('node-2'))
+  assert.deepEqual(removeBatchTaskRow(changed, first.id)[0]?.curriculum, selectedCurriculum('node-2'))
+})
+
 test('batch form submits normalized rows and returns successful responses', async () => {
   let submitted: unknown
   const result = await submitBatchTaskRows([validRow()], async (tasks) => {
@@ -46,7 +69,10 @@ test('batch form submits normalized rows and returns successful responses', asyn
 
   assert.deepEqual(submitted, [{
     contentType: 'STUDY',
-    curriculumTargets: [{ referenceKind: 'NODE', curriculumRefId: 'node-1', selectionMode: 'EXACT' }],
+    curriculumSelection: {
+      version: 2,
+      selectors: [{ rootKind: 'NODE', rootId: 'node-1', selector: 'SUBTREE' }],
+    },
     description: 'مرور فصل',
     plannedMinutes: 90,
     plannedTestCount: 12,
@@ -58,13 +84,11 @@ test('batch form submits normalized rows and returns successful responses', asyn
   assert.deepEqual(result, { ok: true, value: { created: 1, tasks: [] } })
 })
 
-test('batch GENERAL writes no targets or legacy links, while STUDY writes only exact nodes', async () => {
+test('batch GENERAL omits both Curriculum contracts and legacy links', async () => {
   const row = {
     ...validRow(),
     contentType: 'GENERAL' as const,
-    curriculumTargets: [
-      { referenceKind: 'NODE' as const, curriculumRefId: 'node-1', selectionMode: 'EXACT' as const },
-    ],
+    curriculum: selectedCurriculum(),
   }
   let submitted: unknown
   await submitBatchTaskRows([row], async (tasks) => {
@@ -74,7 +98,6 @@ test('batch GENERAL writes no targets or legacy links, while STUDY writes only e
 
   assert.deepEqual(submitted, [{
     contentType: 'GENERAL',
-    curriculumTargets: [],
     description: 'مرور فصل',
     plannedMinutes: 90,
     plannedTestCount: 0,
@@ -83,9 +106,9 @@ test('batch GENERAL writes no targets or legacy links, while STUDY writes only e
     title: 'مطالعه زیست فصل ۳',
     topicId: null,
   }])
-  assert.match(validateBatchTaskRows([{ ...validRow(), curriculumTargets: [
-    { referenceKind: 'NODE', curriculumRefId: 'node-1', selectionMode: 'WHOLE' },
-  ] }]) ?? '', /مبحث/)
+  const task = (submitted as Record<string, unknown>[])[0] ?? {}
+  assert.equal('curriculumSelection' in task, false)
+  assert.equal('curriculumTargets' in task, false)
 })
 
 test('batch form reports request errors without presenting success', async () => {

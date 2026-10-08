@@ -17,22 +17,25 @@ test('browser picker mode is controlled without changing tree or search ownershi
   assert.match(browser, /!picker \? <fieldset/);
 });
 
-test('planning field reuses the shared browser in a compact modal draft flow', () => {
-  assert.match(field, /<CurriculumBrowser/);
-  assert.match(field, /mode="PICKER"/);
+test('planning field owns an isolated tri-state modal draft flow', () => {
+  assert.match(field, /<TriStateCurriculumPicker/);
+  assert.doesNotMatch(field, /<CurriculumBrowser|mode="PICKER"/);
   assert.match(field, /role="dialog"/);
-  assert.match(field, /mergePlanningSelections/);
   assert.match(field, /contextLabel=\{contextLabel\}/);
-  assert.match(field, /انصراف/);
-  assert.match(field, /تأیید انتخاب/);
-  assert.match(field, /مبحث انتخاب شده/);
-  assert.match(field, /triggerRef\.current\?\.focus/);
+  assert.match(field, /onCancel=\{\(\) => setOpen\(false\)\}/);
+  assert.match(field, /onConfirm=\{\(next\) =>/);
+  assert.match(field, /Escape/);
+  assert.match(field, /\(replacingHistorical \? replacementTriggerRef : triggerRef\)\.current\?\.focus/);
+  assert.match(field, /planning-curriculum-modal__backdrop/);
+  assert.doesNotMatch(field, /backdrop[^>]*onClick/s);
   assert.doesNotMatch(field, /trackSelector|select.*track|رشته.*<select/s);
 });
 
-test('legacy and unresolved snapshots stay visible but cannot become picker selections', () => {
-  assert.match(field, /item\.kind === 'PLACEMENT'/);
-  assert.match(field, /item\.kind === 'UNRESOLVED_NODE'/);
-  assert.match(field, /هدف قدیمی/);
-  assert.match(field, /resolvedSelections/);
+test('historical snapshots stay visible and require explicit full replacement', () => {
+  assert.match(field, /PRESERVED_HISTORICAL/);
+  assert.match(field, /labelSnapshot/);
+  assert.match(field, /pathSnapshot/);
+  assert.match(field, /انتخاب مباحث جدید/);
+  assert.match(field, /جایگزین/);
+  assert.doesNotMatch(field, /selectionMode\}/);
 });

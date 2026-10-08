@@ -3,10 +3,15 @@ import test from 'node:test';
 
 import {
   beginHistoricalCurriculumReplacement,
+  canReplacePlanningCurriculum,
+  createEmptyPlanningCurriculumValue,
+  confirmedPlanningCurriculumValue,
   mergePlanningSelections,
   loadPlanningTaskDrafts,
+  planningCurriculumValueFromSnapshots,
   planningDraftToTargetInputs,
   preserveHistoricalCurriculumSelection,
+  replaceChangedPlanningCurriculum,
   replaceChangedPlanningTargets,
   restorePlanningDraft,
   snapshotPlanningDraft,
@@ -426,5 +431,154 @@ test('unresolved snapshots and finalized or executed tasks cannot replace target
     editableContext,
     async () => { calls += 1; return null; },
   ), { kind: 'READ_ONLY' });
+  assert.equal(calls, 0);
+});
+
+test('snapshot-safe Planning values restore ordered EXACT and SUBTREE selectors with summaries', () => {
+  const targets = [
+    snapshot('NODE', 'subtree', 'SUBTREE', 2),
+    snapshot('NODE', 'exact', 'EXACT', 1),
+  ];
+
+  assert.deepEqual(planningCurriculumValueFromSnapshots(targets), {
+    kind: 'V2',
+    selection: {
+      version: 2,
+      selectors: [
+        { rootKind: 'NODE', rootId: 'exact', selector: 'EXACT' },
+        { rootKind: 'NODE', rootId: 'subtree', selector: 'SUBTREE' },
+      ],
+    },
+    summaries: [
+      {
+        rootKind: 'NODE',
+        rootId: 'exact',
+        label: 'historical-exact',
+        path: targets[1]!.pathSnapshot,
+        representationIdSnapshot: 'rep-biology',
+      },
+      {
+        rootKind: 'NODE',
+        rootId: 'subtree',
+        label: 'historical-subtree',
+        path: targets[0]!.pathSnapshot,
+        representationIdSnapshot: 'rep-biology',
+      },
+    ],
+  });
+});
+
+test('WHOLE or PLACEMENT preserves the complete historical target set', () => {
+  const targets = [
+    snapshot('NODE', 'exact', 'EXACT', 0),
+    snapshot('NODE', 'whole', 'WHOLE', 1),
+    snapshot('PLACEMENT', 'placement', 'EXACT', 2),
+  ];
+  const value = planningCurriculumValueFromSnapshots(targets);
+
+  assert.equal(value.kind, 'PRESERVED_HISTORICAL');
+  if (value.kind !== 'PRESERVED_HISTORICAL') assert.fail('expected historical value');
+  assert.deepEqual(value.snapshots, targets);
+  assert.notEqual(value.snapshots, targets);
+  assert.equal(Object.isFrozen(value.snapshots), true);
+  assert.equal('selection' in value, false);
+});
+
+test('empty create value is an immutable empty v2 selection', () => {
+  const value = createEmptyPlanningCurriculumValue();
+  assert.deepEqual(value, {
+    kind: 'V2',
+    selection: { version: 2, selectors: [] },
+    summaries: [],
+  });
+  assert.equal(Object.isFrozen(value.selection.selectors), true);
+  assert.equal(Object.isFrozen(value.summaries), true);
+});
+
+test('unchanged snapshot-compatible v2 value avoids replacement', async () => {
+  const originals = [
+    snapshot('NODE', 'subtree', 'SUBTREE', 1),
+    snapshot('NODE', 'exact', 'EXACT', 0),
+  ];
+  const value = planningCurriculumValueFromSnapshots(originals);
+  let calls = 0;
+  const result = await replaceChangedPlanningCurriculum(
+    originals,
+    value,
+    editableContext,
+    async () => { calls += 1; return { id: 'unexpected' }; },
+  );
+  assert.deepEqual(result, { kind: 'UNCHANGED' });
+  assert.equal(calls, 0);
+});
+
+test('confirming after fact-only enrichment preserves the untouched selector expression', () => {
+  const initial = planningCurriculumValueFromSnapshots([
+    snapshot('NODE', 'child-a', 'EXACT', 0),
+    snapshot('NODE', 'child-b', 'EXACT', 1),
+  ]);
+  assert.equal(initial.kind, 'V2');
+  if (initial.kind !== 'V2') assert.fail('expected v2 value');
+
+  const confirmed = confirmedPlanningCurriculumValue(
+    initial,
+    { version: 2, selectors: [{ rootKind: 'NODE', rootId: 'parent', selector: 'SUBTREE' }] },
+    [{ rootKind: 'NODE', rootId: 'parent', label: 'parent', path: ['parent'] }],
+    false,
+  );
+
+  assert.equal(confirmed, initial);
+  assert.deepEqual(confirmed.selection.selectors, initial.selection.selectors);
+});
+
+test('explicit non-empty v2 selection can replace historical targets exactly once', async () => {
+  const originals = [snapshot('NODE', 'whole', 'WHOLE', 0)];
+  const replacement = planningCurriculumValueFromSnapshots([
+    snapshot('NODE', 'exact', 'EXACT', 0),
+  ]);
+  let calls = 0;
+  const result = await replaceChangedPlanningCurriculum(
+    originals,
+    replacement,
+    editableContext,
+    async (selection) => { calls += 1; return selection; },
+  );
+  assert.equal(result.kind, 'REPLACED');
+  assert.equal(calls, 1);
+
+  const unchangedHistorical = planningCurriculumValueFromSnapshots(originals);
+  assert.deepEqual(await replaceChangedPlanningCurriculum(
+    originals,
+    unchangedHistorical,
+    editableContext,
+    async () => { calls += 1; return null; },
+  ), { kind: 'UNCHANGED' });
+  assert.equal(calls, 1);
+});
+
+test('v2 replacement lifecycle rejects locked, wrong-source, non-STUDY, and executed tasks', async () => {
+  const contexts = [
+    { ...editableContext, status: 'COMPLETED' as const },
+    { ...editableContext, completedItemCount: 1 },
+    { ...editableContext, hasActiveStudySession: true },
+    { ...editableContext, hasStudyHistory: true },
+    { ...editableContext, hasValidAssessmentAttempt: true },
+    { ...editableContext, source: 'COUNSELOR' as const },
+    { ...editableContext, contentType: 'GENERAL' as const },
+    { ...editableContext, contentType: null },
+  ];
+  const value = planningCurriculumValueFromSnapshots([
+    snapshot('NODE', 'exact', 'EXACT', 0),
+  ]);
+  let calls = 0;
+  for (const context of contexts) {
+    assert.equal(canReplacePlanningCurriculum(context), false);
+    assert.deepEqual(await replaceChangedPlanningCurriculum(
+      [],
+      value,
+      context,
+      async () => { calls += 1; return null; },
+    ), { kind: 'READ_ONLY' });
+  }
   assert.equal(calls, 0);
 });

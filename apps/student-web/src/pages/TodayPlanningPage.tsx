@@ -2,10 +2,11 @@ import type { FormEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   PlanningCurriculumField,
-  canEditPlanningCurriculum,
-  loadPlanningTaskDrafts,
-  replaceChangedPlanningTargets,
-  type PlanningTargetDraftItem,
+  canReplacePlanningCurriculum,
+  createEmptyPlanningCurriculumValue,
+  planningCurriculumValueFromSnapshots,
+  replaceChangedPlanningCurriculum,
+  type PlanningCurriculumValue,
 } from '@konkourx/curriculum-browser'
 import '@konkourx/curriculum-browser/styles.css'
 import { AuthApiError, authClient } from '../auth/auth-client'
@@ -82,6 +83,8 @@ const planningErrorMessage = (error: unknown): string => {
     STUDENT_TRACK_NOT_SET: 'برای انتخاب مباحث، ابتدا رشته تحصیلی خود را در پروفایل مشخص کنید.',
     CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK: 'مبحث انتخاب‌شده برای رشته تحصیلی شما مجاز نیست.',
     CURRICULUM_TARGET_NOT_SELECTABLE: 'مورد انتخاب‌شده مبحث قابل انتخاب نیست.',
+    CURRICULUM_SELECTOR_LIMIT_EXCEEDED: 'تعداد انتخاب‌ها بیشتر از حد مجاز است. چند انتخاب را حذف کنید.',
+    CURRICULUM_SELECTION_EMPTY: 'برای کار درسی حداقل یک مبحث معتبر انتخاب کنید.',
     TASK_STUDY_TARGET_REQUIRED: 'برای کار درسی حداقل یک مبحث لازم است.',
     TASK_GENERAL_TARGET_FORBIDDEN: 'کار عمومی نباید مبحث درسی داشته باشد.',
     TASK_LEGACY_LINK_FORBIDDEN: 'پیوند درس یا مبحث قدیمی برای این نوع کار مجاز نیست.',
@@ -211,9 +214,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [isSubmittingTask, setIsSubmittingTask] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
-  const [taskCurriculum, setTaskCurriculum] = useState<readonly PlanningTargetDraftItem[]>([])
-  const [taskCurriculumDrafts, setTaskCurriculumDrafts] = useState<Record<string, readonly PlanningTargetDraftItem[]>>({})
-  const [taskCurriculumReady, setTaskCurriculumReady] = useState<Set<string>>(new Set())
+  const [taskCurriculum, setTaskCurriculum] = useState<PlanningCurriculumValue>(() => createEmptyPlanningCurriculumValue())
+  const [taskStudyHistory, setTaskStudyHistory] = useState<Record<string, 'LOADING' | 'NONE' | 'PRESENT' | 'ERROR'>>({})
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
 
   const [activeSession, setActiveSession] = useState<StudySession | null>(null)
@@ -319,17 +321,26 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   useEffect(() => {
     let active = true
-    void loadPlanningTaskDrafts(tasks, curriculumClient, (drafts) => {
-      if (!active) return
-      setTaskCurriculumDrafts(drafts)
-      setTaskCurriculumReady(new Set(tasks.map(({ id }) => id)))
-    }).catch((error: unknown) => {
-      if (active) setActionError(planningErrorMessage(error))
-    })
-    return () => {
-      active = false
+    const editableTaskIds = tasks.filter((task) => (
+      task.contentType === 'STUDY'
+      && task.source === 'PERSONAL'
+      && task.status === 'PENDING'
+      && task.curriculum.completedItemCount === 0
+    )).map(({ id }) => id)
+    setTaskStudyHistory(Object.fromEntries(editableTaskIds.map((id) => [id, 'LOADING'])))
+    for (const taskId of editableTaskIds) {
+      void planningClient.hasTaskSessions(taskId).then((hasHistory) => {
+        if (!active) return
+        setTaskStudyHistory((current) => ({
+          ...current,
+          [taskId]: hasHistory ? 'PRESENT' : 'NONE',
+        }))
+      }).catch(() => {
+        if (active) setTaskStudyHistory((current) => ({ ...current, [taskId]: 'ERROR' }))
+      })
     }
-  }, [curriculumClient, tasks])
+    return () => { active = false }
+  }, [tasks, executionRevision])
 
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
   const summary = tasks.reduce(
@@ -575,7 +586,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     try {
       const created = await planningClient.createTask({
         contentType: taskContent.contentType,
-        curriculumTargets: taskContent.curriculumTargets,
+        ...(taskContent.contentType === 'STUDY'
+          ? { curriculumSelection: taskContent.curriculumSelection }
+          : {}),
         description: trimmedDescription || null,
         estimatedMinutes: minutes,
         scheduledFor: taskScheduledFor,
@@ -594,7 +607,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setEstimatedMinutes('')
       setTaskScheduledFor(todayKey)
       setContentType('')
-      setTaskCurriculum([])
+      setTaskCurriculum(createEmptyPlanningCurriculumValue())
     } catch (error) {
       setFormError(planningErrorMessage(error))
     } finally {
@@ -602,18 +615,18 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
-  const handleCurriculumTargetsChange = async (
+  const handleCurriculumSelectionChange = async (
     task: DailyTask,
-    draft: readonly PlanningTargetDraftItem[],
+    draft: PlanningCurriculumValue,
   ) => {
     setActionError(null)
     setUpdatingCurriculumTaskIds((current) => new Set(current).add(task.id))
     try {
-      const result = await replaceChangedPlanningTargets(
+      const result = await replaceChangedPlanningCurriculum(
         task.curriculum.targets,
         draft,
         curriculumEditContext(task),
-        (targets) => planningClient.replaceTaskCurriculumTargets(task.id, targets),
+        (curriculumSelection) => planningClient.replaceTaskCurriculumSelection(task.id, curriculumSelection),
       )
       if (result.kind === 'REPLACED') {
         setTasks((current) => current.map((item) => item.id === result.value.id ? result.value : item))
@@ -638,6 +651,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     status: task.status,
     completedItemCount: task.curriculum.completedItemCount,
     hasActiveStudySession: activeSession?.dailyTaskId === task.id,
+    hasStudyHistory: taskStudyHistory[task.id] !== 'NONE',
   })
 
   return (
@@ -762,8 +776,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
           <form className="planning-form" onSubmit={handleTaskSubmit}>
             <fieldset className="task-content-type">
               <legend>نوع کار</legend>
-              <label><input checked={contentType === 'STUDY'} name="student-task-content-type" onChange={() => { setContentType('STUDY'); setTaskCurriculum([]) }} type="radio" />درسی</label>
-              <label><input checked={contentType === 'GENERAL'} name="student-task-content-type" onChange={() => { setContentType('GENERAL'); setTaskCurriculum([]) }} type="radio" />عمومی</label>
+              <label><input checked={contentType === 'STUDY'} name="student-task-content-type" onChange={() => { setContentType('STUDY'); setTaskCurriculum(createEmptyPlanningCurriculumValue()) }} type="radio" />درسی</label>
+              <label><input checked={contentType === 'GENERAL'} name="student-task-content-type" onChange={() => { setContentType('GENERAL'); setTaskCurriculum(createEmptyPlanningCurriculumValue()) }} type="radio" />عمومی</label>
             </fieldset>
             <label htmlFor="task-title">
               عنوان کار
@@ -918,6 +932,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             {tasks.map((task) => {
               const subject = task.subjectId ? subjectById.get(task.subjectId) : undefined
               const isUpdating = updatingTaskIds.has(task.id)
+              const taskCurriculumValue = planningCurriculumValueFromSnapshots(task.curriculum.targets)
 
               return (
                 <article className={`task-item task-item--${task.status.toLowerCase()}`} key={task.id}>
@@ -947,34 +962,29 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
-                    {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) && taskCurriculumReady.has(task.id) ? (
+                    {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) ? (
                       <PlanningCurriculumField
                         audience="student"
                         client={curriculumClient}
                         minimumOne={task.contentType === 'STUDY'}
-                        disabled={!canEditPlanningCurriculum(
-                          curriculumEditContext(task),
-                          task.curriculum.targets,
-                          taskCurriculumDrafts[task.id] ?? [],
-                        ) || updatingCurriculumTaskIds.has(task.id)}
-                        disabledReason={task.curriculum.targets.some(({ referenceKind }) => referenceKind === 'PLACEMENT')
-                          ? 'این مبحث از ساختار قدیمی برنامه ذخیره شده و در حال حاضر فقط قابل مشاهده است.'
-                          : (taskCurriculumDrafts[task.id] ?? []).some(({ kind }) => kind === 'UNRESOLVED_NODE')
-                            ? 'مبحث ذخیره‌شده از روی سابقه نمایش داده می‌شود و در حال حاضر قابل ویرایش نیست.'
-                            : task.contentType === null
+                        disabled={!canReplacePlanningCurriculum(curriculumEditContext(task))
+                          || updatingCurriculumTaskIds.has(task.id)}
+                        disabledReason={task.contentType === null
                               ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
                             : task.source !== 'PERSONAL'
                           ? 'مباحث کار تعیین‌شده توسط مشاور فقط خواندنی است.'
-                          : task.status !== 'PENDING' || task.curriculum.completedItemCount > 0 || activeSession?.dailyTaskId === task.id
+                          : task.status !== 'PENDING' || task.curriculum.completedItemCount > 0 || activeSession?.dailyTaskId === task.id || taskStudyHistory[task.id] === 'PRESENT'
                             ? 'به‌دلیل شروع یا نهایی‌شدن کار، مباحث فقط خواندنی هستند.'
+                            : taskStudyHistory[task.id] === 'LOADING'
+                              ? 'در حال بررسی سابقه مطالعه…'
+                            : taskStudyHistory[task.id] === 'ERROR'
+                              ? 'سابقه مطالعه قابل بررسی نیست؛ ویرایش مباحث موقتاً غیرفعال است.'
                             : updatingCurriculumTaskIds.has(task.id)
                               ? 'در حال ثبت مباحث…'
                               : undefined}
-                        onChange={(draft) => void handleCurriculumTargetsChange(task, draft)}
-                        value={taskCurriculumDrafts[task.id] ?? []}
+                        onChange={(draft) => void handleCurriculumSelectionChange(task, draft)}
+                        value={taskCurriculumValue}
                       />
-                    ) : task.curriculum.targets.length > 0 ? (
-                      <p className="planning-curriculum-loading" role="status">در حال بازیابی مباحث رسمی این کار…</p>
                     ) : null}
                     {task.source === 'PERSONAL' && (
                       <form

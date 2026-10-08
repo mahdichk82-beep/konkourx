@@ -2,6 +2,8 @@ import { selectionKey } from './state.ts';
 import { createTriStateSelectionState } from './selection-engine.ts';
 import type {
   CurriculumSelectionAuthority,
+  CurriculumSelectionV2,
+  CurriculumSelectorV2,
   TriStateSelectionState,
 } from './selection-engine.ts';
 import type {
@@ -25,6 +27,96 @@ export type PlanningCurriculumTargetSnapshot = Omit<PlanningCurriculumTargetInpu
   representationIdSnapshot: string | null;
   selectionMode: PlanningStoredCurriculumSelectionMode;
 };
+
+export type PlanningCurriculumSelectorSummary = {
+  rootKind: CurriculumSelectorV2['rootKind'];
+  rootId: string;
+  label: string;
+  path: readonly string[];
+  representationIdSnapshot?: string;
+};
+
+export type PlanningCurriculumValue =
+  | {
+      kind: 'V2';
+      selection: CurriculumSelectionV2;
+      summaries: readonly PlanningCurriculumSelectorSummary[];
+    }
+  | {
+      kind: 'PRESERVED_HISTORICAL';
+      snapshots: readonly PlanningCurriculumTargetSnapshot[];
+    };
+
+const copySnapshot = (
+  snapshot: PlanningCurriculumTargetSnapshot,
+): PlanningCurriculumTargetSnapshot => Object.freeze({
+  ...snapshot,
+  pathSnapshot: Object.freeze([...snapshot.pathSnapshot]),
+});
+
+const freezeV2Value = (
+  selectors: readonly CurriculumSelectorV2[],
+  summaries: readonly PlanningCurriculumSelectorSummary[],
+): Extract<PlanningCurriculumValue, { kind: 'V2' }> => Object.freeze({
+  kind: 'V2',
+  selection: Object.freeze({
+    version: 2,
+    selectors: Object.freeze(selectors.map((selector) => Object.freeze({ ...selector }))),
+  }),
+  summaries: Object.freeze(summaries.map((summary) => Object.freeze({
+    ...summary,
+    path: Object.freeze([...summary.path]),
+  }))),
+});
+
+export function createEmptyPlanningCurriculumValue(): Extract<PlanningCurriculumValue, { kind: 'V2' }> {
+  return freezeV2Value([], []);
+}
+
+export function confirmedPlanningCurriculumValue(
+  initial: Extract<PlanningCurriculumValue, { kind: 'V2' }>,
+  selection: CurriculumSelectionV2,
+  summaries: readonly PlanningCurriculumSelectorSummary[],
+  selectionChanged: boolean,
+): Extract<PlanningCurriculumValue, { kind: 'V2' }> {
+  return selectionChanged ? freezeV2Value(selection.selectors, summaries) : initial;
+}
+
+export function planningCurriculumValueFromSnapshots(
+  snapshots: readonly PlanningCurriculumTargetSnapshot[],
+): PlanningCurriculumValue {
+  const ordered = [...snapshots].sort((left, right) => left.position - right.position);
+  if (ordered.some(({ referenceKind, selectionMode }) => (
+    referenceKind !== 'NODE' || selectionMode === 'WHOLE'
+  ))) {
+    return Object.freeze({
+      kind: 'PRESERVED_HISTORICAL',
+      snapshots: Object.freeze(ordered.map(copySnapshot)),
+    });
+  }
+
+  return freezeV2Value(
+    ordered.map(({ curriculumRefId, selectionMode }) => {
+      if (selectionMode === 'WHOLE') {
+        throw new Error('Historical WHOLE snapshots cannot become v2 selectors');
+      }
+      return {
+        rootKind: 'NODE',
+        rootId: curriculumRefId,
+        selector: selectionMode,
+      };
+    }),
+    ordered.map((snapshot) => ({
+      rootKind: 'NODE',
+      rootId: snapshot.curriculumRefId,
+      label: snapshot.labelSnapshot,
+      path: snapshot.pathSnapshot,
+      ...(snapshot.representationIdSnapshot
+        ? { representationIdSnapshot: snapshot.representationIdSnapshot }
+        : {}),
+    })),
+  );
+}
 
 export type PlanningCurriculumSelectionSession =
   | { kind: 'EDITABLE_V2'; state: TriStateSelectionState }
@@ -81,6 +173,48 @@ export type PlanningCurriculumEditContext = {
   hasStudyHistory?: boolean;
   hasValidAssessmentAttempt?: boolean;
 };
+
+export function canReplacePlanningCurriculum(context: PlanningCurriculumEditContext): boolean {
+  return context.status === 'PENDING'
+    && context.contentType === 'STUDY'
+    && context.source === (context.actor === 'student' ? 'PERSONAL' : 'COUNSELOR')
+    && context.completedItemCount === 0
+    && !context.hasActiveStudySession
+    && !context.hasStudyHistory
+    && !context.hasValidAssessmentAttempt;
+}
+
+const selectorsMatchSnapshots = (
+  snapshots: readonly PlanningCurriculumTargetSnapshot[],
+  selection: CurriculumSelectionV2,
+): boolean => {
+  const ordered = [...snapshots].sort((left, right) => left.position - right.position);
+  if (ordered.length !== selection.selectors.length) return false;
+  return ordered.every((snapshot, index) => {
+    const selector = selection.selectors[index];
+    return snapshot.referenceKind === 'NODE'
+      && (snapshot.selectionMode === 'EXACT' || snapshot.selectionMode === 'SUBTREE')
+      && selector?.rootKind === 'NODE'
+      && selector.rootId === snapshot.curriculumRefId
+      && selector.selector === snapshot.selectionMode;
+  });
+};
+
+export async function replaceChangedPlanningCurriculum<T>(
+  originals: readonly PlanningCurriculumTargetSnapshot[],
+  next: PlanningCurriculumValue,
+  context: PlanningCurriculumEditContext,
+  replace: (selection: CurriculumSelectionV2) => Promise<T>,
+): Promise<{ kind: 'UNCHANGED' | 'READ_ONLY' } | { kind: 'REPLACED'; value: T }> {
+  if (next.kind === 'PRESERVED_HISTORICAL') return { kind: 'UNCHANGED' };
+  if (selectorsMatchSnapshots(originals, next.selection)) return { kind: 'UNCHANGED' };
+  const hasHistoricalTargets = originals.some(({ referenceKind, selectionMode }) => (
+    referenceKind === 'PLACEMENT' || selectionMode === 'WHOLE'
+  ));
+  if (hasHistoricalTargets && next.selection.selectors.length === 0) return { kind: 'READ_ONLY' };
+  if (!canReplacePlanningCurriculum(context)) return { kind: 'READ_ONLY' };
+  return { kind: 'REPLACED', value: await replace(next.selection) };
+}
 
 export function selectionsToNodeTargets(
   selections: readonly CurriculumSelection[],
