@@ -1,5 +1,11 @@
 import type { DragEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import {
+  classifyTaskPresentation,
+  formatCurriculumProgress,
+  summarizeTaskPresentations,
+} from '@konkourx/task-presentation'
+import '@konkourx/task-presentation/styles.css'
 import { AuthApiError } from '../auth/auth-client'
 import { assessmentClient } from '../assessments/assessment-client'
 import { Button } from '../components/ui/Button'
@@ -9,7 +15,6 @@ import {
   planningClient,
   type DailyTask,
   type DailyTaskSkipReason,
-  type DailyTaskStatus,
   type StudySubject,
   type StudyTopic,
 } from '../planning/planning-client'
@@ -21,6 +26,7 @@ import {
   type ExecutionCheck,
   type MovementLockReason,
 } from '../planning/weekly-movement'
+import { useTehranTodayKey } from '../planning/useTehranTodayKey'
 
 type WeeklyPlanningPageProps = {
   navigate(path: string): void
@@ -29,13 +35,6 @@ type WeeklyPlanningPageProps = {
 type Feedback = {
   kind: 'error' | 'success'
   message: string
-}
-
-const statusLabels: Record<DailyTaskStatus, string> = {
-  COMPLETED: 'انجام‌شده',
-  PARTIAL: 'بخشی انجام‌شده',
-  PENDING: 'در انتظار',
-  SKIPPED: 'ردشده',
 }
 
 const skipReasonLabels: Record<DailyTaskSkipReason, string> = {
@@ -149,6 +148,7 @@ const loadExecutionChecks = async (
 }
 
 export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
+  const todayKey = useTehranTodayKey()
   const [weekStart, setWeekStart] = useState(() => saturdayWeekStart(new Date()))
   const [tasks, setTasks] = useState<DailyTask[]>([])
   const [subjects, setSubjects] = useState<StudySubject[]>([])
@@ -165,7 +165,6 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
   const days = useMemo(() => buildWeek(weekStart), [weekStart])
   const from = days[0]?.key ?? localDateKey(weekStart)
   const to = days[6]?.key ?? from
-  const todayKey = localDateKey(new Date())
   const queryKey = `${from}:${to}:${retryKey}`
   const loading = loadedKey !== queryKey
 
@@ -233,6 +232,7 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
     (total, task) => total + (task.estimatedMinutes ?? 0),
     0,
   )
+  const presentationSummary = summarizeTaskPresentations(tasks, todayKey)
 
   const lockReason = (task: DailyTask): MovementLockReason | null =>
     movementLockReason(task, executionChecks[task.id] ?? 'CHECKING')
@@ -318,6 +318,12 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
         <div className="weekly-workload" aria-label="خلاصه بار هفتگی">
           <span><strong>{tasks.length.toLocaleString('fa-IR')}</strong> وظیفه</span>
           <span><strong>{plannedMinutes.toLocaleString('fa-IR')}</strong> دقیقه برنامه‌ریزی‌شده</span>
+          {presentationSummary.MISSED > 0 && (
+            <span><strong>{presentationSummary.MISSED.toLocaleString('fa-IR')}</strong> انجام‌نشده</span>
+          )}
+          {presentationSummary.COMPLETED_LATE > 0 && (
+            <span><strong>{presentationSummary.COMPLETED_LATE.toLocaleString('fa-IR')}</strong> انجام‌شده با تأخیر</span>
+          )}
         </div>
       )}
 
@@ -386,6 +392,8 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                 ) : (
                   <div className="weekly-day__tasks">
                     {dayTasks.map((task) => {
+                      const presentation = classifyTaskPresentation(task, todayKey)
+                      const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
                       const taskLockReason = lockReason(task)
                       const isEligible = taskLockReason === null
                       const isMovable = isEligible && savingTaskId === null
@@ -395,7 +403,7 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                       return (
                         <article
                           aria-busy={isSaving}
-                          className={`weekly-task weekly-task--${task.status.toLowerCase()}${isEligible ? ' weekly-task--movable' : ' weekly-task--locked'}${isSelected ? ' weekly-task--selected' : ''}${isDragging ? ' weekly-task--dragging' : ''}${isSaving ? ' weekly-task--saving' : ''}`}
+                          className={`weekly-task weekly-task--${task.status.toLowerCase()} task-presentation--${presentationClass}${isEligible ? ' weekly-task--movable' : ' weekly-task--locked'}${isSelected ? ' weekly-task--selected' : ''}${isDragging ? ' weekly-task--dragging' : ''}${isSaving ? ' weekly-task--saving' : ''}`}
                           draggable={isMovable}
                           key={task.id}
                           onDragEnd={() => {
@@ -406,8 +414,21 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                         >
                           <div className="weekly-task__heading">
                             <h3>{task.title}</h3>
-                            <span>{statusLabels[task.status]}</span>
+                            <span className={`task-presentation-badge--${presentationClass}`}>
+                              {presentation.label}
+                            </span>
                           </div>
+                          {presentation.indicatorLabel && (
+                            <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
+                          )}
+                          {task.curriculum.totalItemCount > 0 && (
+                            <p className="task-curriculum-progress">
+                              {formatCurriculumProgress(
+                                task.curriculum.completedItemCount,
+                                task.curriculum.totalItemCount,
+                              )}
+                            </p>
+                          )}
                           {(task.subjectId || task.topicId) && (
                             <p>
                               {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}

@@ -66,6 +66,9 @@ importers:
       '@konkourx/curriculum-browser':
         specifier: workspace:*
         version: link:../../packages/curriculum-browser
+      '@konkourx/task-presentation':
+        specifier: workspace:*
+        version: link:../../packages/task-presentation
       '@konkourx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -106,6 +109,9 @@ importers:
       '@konkourx/curriculum-browser':
         specifier: workspace:*
         version: link:../../packages/curriculum-browser
+      '@konkourx/task-presentation':
+        specifier: workspace:*
+        version: link:../../packages/task-presentation
       '@konkourx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -158,6 +164,15 @@ importers:
       react:
         specifier: ^19.2.0
         version: 19.2.8
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
+
+  packages/task-presentation:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
       typescript:
         specifier: ~6.0.2
         version: 6.0.3

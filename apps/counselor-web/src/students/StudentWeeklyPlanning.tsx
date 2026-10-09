@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  classifyTaskPresentation,
+  formatCurriculumProgress,
+  summarizeTaskPresentations,
+} from '@konkourx/task-presentation'
+import '@konkourx/task-presentation/styles.css'
 import { AuthApiError } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -11,17 +17,11 @@ import {
   type CounselorVisibleTask,
 } from './student-tasks-client'
 import { addLocalDays, buildWeek, localDateKey, saturdayWeekStart } from './week'
+import { useTehranTodayKey } from './useTehranTodayKey'
 
 type StudentWeeklyPlanningProps = {
   refreshKey: number
   studentId: string
-}
-
-const statusLabels: Record<CounselorVisibleTask['status'], string> = {
-  COMPLETED: 'انجام‌شده',
-  PARTIAL: 'بخشی انجام‌شده',
-  PENDING: 'در انتظار',
-  SKIPPED: 'ردشده',
 }
 
 const skipReasonLabels: Record<CounselorTaskSkipReason, string> = {
@@ -71,6 +71,7 @@ const loadWeeklyTasks = async (
 }
 
 export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPlanningProps) {
+  const todayKey = useTehranTodayKey()
   const [weekStart, setWeekStart] = useState(() => saturdayWeekStart(new Date()))
   const [tasks, setTasks] = useState<CounselorVisibleTask[]>([])
   const [subjects, setSubjects] = useState<CounselorTaskSubject[]>([])
@@ -81,7 +82,6 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
   const days = useMemo(() => buildWeek(weekStart), [weekStart])
   const from = days[0]?.key ?? localDateKey(weekStart)
   const to = days[6]?.key ?? from
-  const todayKey = localDateKey(new Date())
   const queryKey = `${studentId}:${from}:${to}:${refreshKey}:${retryKey}`
   const loading = loadedKey !== queryKey
 
@@ -139,6 +139,7 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
     0,
   )
   const plannedTests = tasks.reduce((total, task) => total + task.plannedTestCount, 0)
+  const presentationSummary = summarizeTaskPresentations(tasks, todayKey)
 
   return (
     <Card className="student-weekly-card" title="توزیع هفتگی وظایف">
@@ -171,6 +172,12 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
             <span>{tasks.length.toLocaleString('fa-IR')} وظیفه</span>
             <span>{plannedMinutes.toLocaleString('fa-IR')} دقیقه برنامه‌ریزی‌شده</span>
             <span>{plannedTests.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
+            {presentationSummary.MISSED > 0 && (
+              <span>{presentationSummary.MISSED.toLocaleString('fa-IR')} انجام‌نشده</span>
+            )}
+            {presentationSummary.COMPLETED_LATE > 0 && (
+              <span>{presentationSummary.COMPLETED_LATE.toLocaleString('fa-IR')} انجام‌شده با تأخیر</span>
+            )}
           </div>
           <div className="student-weekly-days">
             {days.map((day) => {
@@ -183,10 +190,26 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
                   </header>
                   {dayTasks.length === 0 ? (
                     <p className="student-weekly-day__empty">بدون وظیفه</p>
-                  ) : dayTasks.map((task) => (
-                    <article className={`student-weekly-task student-weekly-task--${task.status.toLowerCase()}`} key={task.id}>
+                  ) : dayTasks.map((task) => {
+                    const presentation = classifyTaskPresentation(task, todayKey)
+                    const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
+                    return (
+                    <article className={`student-weekly-task student-weekly-task--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
                       <h3>{task.title}</h3>
-                      <span>{statusLabels[task.status]}</span>
+                      <span className={`task-presentation-badge--${presentationClass}`}>
+                        {presentation.label}
+                      </span>
+                      {presentation.indicatorLabel && (
+                        <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
+                      )}
+                      {task.curriculum.totalItemCount > 0 && (
+                        <p className="task-curriculum-progress">
+                          {formatCurriculumProgress(
+                            task.curriculum.completedItemCount,
+                            task.curriculum.totalItemCount,
+                          )}
+                        </p>
+                      )}
                       {task.status === 'SKIPPED' && (
                         <small>
                           {task.skipReason
@@ -202,7 +225,8 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
                       )}
                       <small>{task.source === 'COUNSELOR' ? 'تعیین‌شده توسط مشاور' : 'برنامه شخصی دانش‌آموز'}</small>
                     </article>
-                  ))}
+                    )
+                  })}
                 </section>
               )
             })}

@@ -1,6 +1,12 @@
 import type { FormEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  classifyTaskPresentation,
+  formatCurriculumProgress,
+  summarizeTaskPresentations,
+} from '@konkourx/task-presentation'
+import '@konkourx/task-presentation/styles.css'
+import {
   PlanningCurriculumField,
   canReplacePlanningCurriculum,
   createEmptyPlanningCurriculumValue,
@@ -26,6 +32,7 @@ import {
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
 import { useStudyTimer, useStudyTimerElapsed } from '../planning/useStudyTimer'
 import { finalStudySessionElapsedMs } from '../planning/study-timer'
+import { useTehranTodayKey } from '../planning/useTehranTodayKey'
 import { TaskScheduleFields } from '../planning/TaskScheduleFields'
 import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
 import {
@@ -58,7 +65,7 @@ type StatusFilter = DailyTaskStatus | 'ALL'
 const statusLabels: Record<DailyTaskStatus, string> = {
   COMPLETED: 'انجام‌شده',
   PARTIAL: 'بخشی انجام‌شده',
-  PENDING: 'در انتظار',
+  PENDING: 'در انتظار انجام',
   SKIPPED: 'ردشده',
 }
 
@@ -67,13 +74,6 @@ const skipReasonLabels: Record<DailyTaskSkipReason, string> = {
   NO_TIME: 'زمان کافی نداشتم',
   OTHER: 'دلیل دیگر',
   TOO_DIFFICULT: 'بیش از حد دشوار بود',
-}
-
-const localDateKey = (date: Date): string => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 const planningErrorMessage = (error: unknown): string => {
@@ -231,11 +231,12 @@ function FinishedStudyExecutionCard({
 
 export function TodayPlanningPage({ navigate }: { navigate(path: string): void }) {
   const studyTimer = useStudyTimer()
+  const todayKey = useTehranTodayKey()
   const today = new Date()
-  const todayKey = localDateKey(today)
   const todayLabel = new Intl.DateTimeFormat('fa-IR', {
     day: 'numeric',
     month: 'long',
+    timeZone: 'Asia/Tehran',
     weekday: 'long',
     year: 'numeric',
   }).format(today)
@@ -384,10 +385,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   }, [tasks, executionRevision])
 
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
-  const summary = tasks.reduce(
-    (counts, task) => ({ ...counts, [task.status]: counts[task.status] + 1 }),
-    { COMPLETED: 0, PARTIAL: 0, PENDING: 0, SKIPPED: 0 },
-  )
+  const summary = summarizeTaskPresentations(tasks, todayKey)
 
   const taskMatchesFilters = (task: DailyTask): boolean =>
     taskOccursOnDate(task.scheduledFor, todayKey) &&
@@ -982,7 +980,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         <div className="planning-toolbar">
           <div>
             <h2>کارهای امروز</h2>
-            <p>فهرست بر اساس روز محلی دستگاه شما دریافت می‌شود.</p>
+            <p>فهرست بر اساس روز تقویمی تهران دریافت می‌شود.</p>
           </div>
           <div className="planning-filters" aria-label="فیلتر کارهای امروز">
             <label htmlFor="status-filter">
@@ -993,7 +991,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                 value={statusFilter}
               >
                 <option value="ALL">همه وضعیت‌ها</option>
-                <option value="PENDING">در انتظار</option>
+                <option value="PENDING">در انتظار انجام</option>
                 <option value="COMPLETED">انجام‌شده</option>
                 <option value="SKIPPED">ردشده</option>
               </select>
@@ -1065,16 +1063,21 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                 status: task.status,
                 totalItemCount: task.curriculum.totalItemCount,
               })
+              const presentation = classifyTaskPresentation(task, todayKey)
+              const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
 
               return (
-                <article className={`task-item task-item--${task.status.toLowerCase()}`} key={task.id}>
+                <article className={`task-item task-item--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
                   <div className="task-item__main">
                     <div className="task-item__heading">
                       <h3>{task.title}</h3>
-                      <span className={`task-status task-status--${task.status.toLowerCase()}`}>
-                        {statusLabels[task.status]}
+                      <span className={`task-status task-status--${task.status.toLowerCase()} task-presentation-badge--${presentationClass}`}>
+                        {presentation.label}
                       </span>
                     </div>
+                    {presentation.indicatorLabel && (
+                      <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
+                    )}
                     <div className="task-meta">
                       <span>{task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</span>
                       {task.subjectId ? <span>{subject?.name ?? 'درس نامشخص'}</span> : null}
@@ -1096,6 +1099,14 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
+                    {task.curriculum.totalItemCount > 0 && (
+                      <p className="task-curriculum-progress">
+                        {formatCurriculumProgress(
+                          task.curriculum.completedItemCount,
+                          task.curriculum.totalItemCount,
+                        )}
+                      </p>
+                    )}
                     {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) ? (
                       <PlanningCurriculumField
                         audience="student"
@@ -1129,8 +1140,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                         <legend>مباحث انجام‌شده</legend>
                         <p>
                           این فهرست میزان انجام محتوای کار را ثبت می‌کند و از زمان مطالعه مستقل است.
-                          {' '}{numberFormatter.format(task.curriculum.completedItemCount)} از{' '}
-                          {numberFormatter.format(task.curriculum.totalItemCount)} مورد تکمیل شده است.
                         </p>
                         <ul>
                           {executionItems.map((item) => (

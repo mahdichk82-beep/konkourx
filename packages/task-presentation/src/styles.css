@@ -1,0 +1,61 @@
+.task-item.task-presentation--missed,
+.weekly-task.task-presentation--missed,
+.counselor-task.task-presentation--missed,
+.student-weekly-task.task-presentation--missed {
+  border-inline-start-color: var(--status-danger);
+}
+
+.task-item.task-presentation--completed-late,
+.weekly-task.task-presentation--completed-late,
+.counselor-task.task-presentation--completed-late,
+.student-weekly-task.task-presentation--completed-late {
+  border-inline-start-color: var(--status-warning);
+}
+
+.task-status.task-presentation-badge--missed,
+.counselor-task__status.task-presentation-badge--missed,
+.weekly-task__heading span.task-presentation-badge--missed,
+.student-weekly-task > span.task-presentation-badge--missed {
+  color: var(--status-danger);
+  background: var(--status-danger-bg);
+  border-color: color-mix(in srgb, var(--status-danger) 30%, var(--border-default));
+}
+
+.task-status.task-presentation-badge--completed-late,
+.counselor-task__status.task-presentation-badge--completed-late,
+.weekly-task__heading span.task-presentation-badge--completed-late,
+.student-weekly-task > span.task-presentation-badge--completed-late {
+  color: var(--status-warning-text);
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}
+
+.task-presentation-indicator {
+  color: var(--status-warning-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.task-curriculum-progress {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+:root[data-theme='dark'] .task-status.task-presentation-badge--missed,
+:root[data-theme='dark'] .counselor-task__status.task-presentation-badge--missed,
+:root[data-theme='dark'] .weekly-task__heading span.task-presentation-badge--missed,
+:root[data-theme='dark'] .student-weekly-task > span.task-presentation-badge--missed {
+  color: var(--status-danger);
+  background: var(--status-danger-bg);
+}
+
+:root[data-theme='dark'] .task-status.task-presentation-badge--completed-late,
+:root[data-theme='dark'] .counselor-task__status.task-presentation-badge--completed-late,
+:root[data-theme='dark'] .weekly-task__heading span.task-presentation-badge--completed-late,
+:root[data-theme='dark'] .student-weekly-task > span.task-presentation-badge--completed-late {
+  color: var(--status-warning-text);
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}

@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  classifyTaskPresentation,
+  formatCurriculumProgress,
+  type TaskPresentation,
+} from '@konkourx/task-presentation'
+import '@konkourx/task-presentation/styles.css'
+import {
   PlanningCurriculumField,
   canReplacePlanningCurriculum,
   planningCurriculumValueFromSnapshots,
@@ -28,18 +34,12 @@ import {
   type TaskScheduleDraft,
 } from './task-scheduling'
 import { mergeVisibleTask } from './task-view'
+import { useTehranTodayKey } from './useTehranTodayKey'
 
 type StudentTaskListProps = {
   refreshKey: number
   studentId: string
   studentLabel: string
-}
-
-const statusLabels: Record<CounselorVisibleTask['status'], string> = {
-  COMPLETED: 'انجام‌شده',
-  PARTIAL: 'بخشی انجام‌شده',
-  PENDING: 'در انتظار',
-  SKIPPED: 'ردشده',
 }
 
 const sourceLabels: Record<CounselorVisibleTask['source'], string> = {
@@ -70,11 +70,14 @@ const formatScheduledFor = (value: string) => {
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date)
 }
 
-const completionLabel = (task: CounselorVisibleTask) => {
+const completionLabel = (task: CounselorVisibleTask, presentation: TaskPresentation) => {
   if (task.completedAt) {
     const completedAt = new Date(task.completedAt)
     if (!Number.isNaN(completedAt.getTime())) {
-      return `تکمیل در ${completionFormatter.format(completedAt)}`
+      const prefix = presentation.status === 'COMPLETED_LATE'
+        ? 'انجام‌شده با تأخیر · '
+        : ''
+      return `${prefix}تکمیل در ${completionFormatter.format(completedAt)}`
     }
   }
   if (task.status === 'COMPLETED') return 'انجام‌شده'
@@ -87,7 +90,7 @@ const completionLabel = (task: CounselorVisibleTask) => {
       ? `${status} · دلیل: ${skipReasonLabels[task.skipReason]}`
       : `${status} · بدون ثبت دلیل`
   }
-  return 'در انتظار انجام'
+  return presentation.label
 }
 
 const listError = (error: unknown) => {
@@ -124,6 +127,7 @@ const curriculumError = (error: unknown) => {
 }
 
 export function StudentTaskList({ refreshKey, studentId, studentLabel }: StudentTaskListProps) {
+  const todayKey = useTehranTodayKey()
   const curriculumClient = useMemo(() => createCounselorCurriculumClient(
     studentId,
     authClient.authorizedRequest.bind(authClient),
@@ -302,6 +306,8 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
         <>
           <div className="counselor-task-list">
             {tasks.map((task) => {
+              const presentation = classifyTaskPresentation(task, todayKey)
+              const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
               const scheduleDraft = scheduleDrafts[task.id] ?? {
                 ...scheduleDraftFromTask(task.startMinuteOfDay, task.endMinuteOfDay),
                 scheduledFor: task.scheduledFor.slice(0, 10),
@@ -310,20 +316,23 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                 || task.hasActiveStudySession
                 || task.hasValidAssessmentAttempt
               return (
-              <article className={`counselor-task counselor-task--${task.status.toLowerCase()}`} key={task.id}>
+              <article className={`counselor-task counselor-task--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
                 <div className="counselor-task__heading">
                   <h3>{task.title}</h3>
-                  <span className={`counselor-task__status counselor-task__status--${task.status.toLowerCase()}`}>
-                    {statusLabels[task.status]}
+                  <span className={`counselor-task__status counselor-task__status--${task.status.toLowerCase()} task-presentation-badge--${presentationClass}`}>
+                    {presentation.label}
                   </span>
                 </div>
+                {presentation.indicatorLabel && (
+                  <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
+                )}
                 {task.description && <p className="counselor-task__description">{task.description}</p>}
                 <p className="counselor-task__content-type">نوع کار: {task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</p>
                 <div className="counselor-task__meta">
                   <span>{formatScheduledFor(task.scheduledFor)}</span>
                   <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
                   <span>{sourceLabels[task.source]}</span>
-                  <span>{completionLabel(task)}</span>
+                  <span>{completionLabel(task, presentation)}</span>
                   <span>
                     {task.completedStudySessionCount > 0
                       ? `${task.recordedMinutes.toLocaleString('fa-IR')} دقیقه مطالعه ثبت‌شده در ${task.completedStudySessionCount.toLocaleString('fa-IR')} جلسه پایان‌یافته`
@@ -338,6 +347,14 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                     <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
                   )}
                 </div>
+                {task.curriculum.totalItemCount > 0 && (
+                  <p className="task-curriculum-progress">
+                    {formatCurriculumProgress(
+                      task.curriculum.completedItemCount,
+                      task.curriculum.totalItemCount,
+                    )}
+                  </p>
+                )}
                 {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) ? (
                   <PlanningCurriculumField
                     audience="counselor"
