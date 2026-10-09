@@ -152,6 +152,15 @@
 .task-meta .task-source--counselor { color: var(--action-primary-emphasis); background: var(--selection-bg); font-weight: 750; }
 .task-meta .task-skip-reason-display { color: var(--status-danger); background: var(--status-danger-bg); font-weight: 700; }
 .task-description { margin: 0.75rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; white-space: pre-wrap; }
+.task-curriculum-execution { margin: 0.85rem 0 0; padding: 0.8rem; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); }
+.task-curriculum-execution legend { padding-inline: 0.35rem; font-size: 0.86rem; font-weight: 800; }
+.task-curriculum-execution > p { margin: 0 0 0.65rem; color: var(--text-muted); font-size: 0.78rem; line-height: 1.7; }
+.task-curriculum-execution ul { margin: 0; padding: 0; display: grid; gap: 0.4rem; list-style: none; }
+.task-curriculum-execution label { padding: 0.5rem 0.55rem; display: flex; align-items: flex-start; gap: 0.55rem; border-radius: 9px; background: var(--bg-subtle); cursor: pointer; }
+.task-curriculum-execution input { margin-top: 0.2rem; accent-color: var(--action-primary); }
+.task-curriculum-execution label > span { min-width: 0; display: grid; gap: 0.15rem; }
+.task-curriculum-execution strong { overflow-wrap: anywhere; font-size: 0.82rem; }
+.task-curriculum-execution small { color: var(--text-muted); font-size: 0.72rem; line-height: 1.6; }
 .task-schedule { margin-top: 0.8rem; display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem; }
 .task-schedule label { display: grid; gap: 0.4rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; }
 .task-schedule input { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }
@@ -181,6 +190,8 @@
 .task-execution__rating small { color: var(--text-muted); font-size: 0.72rem; font-weight: 400; }
 .task-execution__actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .task-actions { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; }
+.task-completion-action { display: grid; gap: 0.35rem; }
+.task-completion-action small { max-width: 200px; color: var(--status-warning-text); font-size: 0.72rem; line-height: 1.55; }
 .task-skip-reason { min-width: 180px; display: grid; gap: 0.35rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; }
 .task-skip-reason select { min-height: 44px; padding: 0.55rem 0.65rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); outline: none; }
 .task-skip-reason select:focus { border-color: var(--action-primary); }

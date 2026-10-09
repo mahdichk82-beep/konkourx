@@ -40,6 +40,13 @@ import {
   formatElapsedStudyTime,
   switchExecutionChoices,
 } from '../planning/task-execution'
+import {
+  canToggleCurriculumExecutionItems,
+  curriculumExecutionItems,
+  taskCompletionState,
+  taskOutcomeErrorCodeMessage,
+  type CurriculumExecutionItem,
+} from '../planning/task-completion'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
 
@@ -65,12 +72,17 @@ const localDateKey = (date: Date): string => {
 }
 
 const planningErrorMessage = (error: unknown): string => {
+  if (error instanceof TypeError) {
+    return 'ارتباط با سرور برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.'
+  }
   if (!(error instanceof AuthApiError)) {
     return 'خطای پیش‌بینی‌نشده‌ای رخ داد. دوباره تلاش کنید.'
   }
 
   const executionMessage = executionErrorCodeMessage(error.code)
   if (executionMessage) return executionMessage
+  const taskOutcomeMessage = taskOutcomeErrorCodeMessage(error.code)
+  if (taskOutcomeMessage) return taskOutcomeMessage
 
   const messages: Record<string, string> = {
     SUBJECT_ARCHIVED: 'این درس بایگانی شده و برای کار جدید قابل استفاده نیست.',
@@ -91,6 +103,8 @@ const planningErrorMessage = (error: unknown): string => {
     TASK_NOT_PENDING: 'مباحث کار نهایی‌شده قابل ویرایش نیستند.',
     TASK_SOURCE_FORBIDDEN: 'فقط مباحث کار شخصی را می‌توانید ویرایش کنید.',
     TASK_RESCHEDULE_FORBIDDEN: 'تغییر تاریخ کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
+    TASK_UPDATE_FORBIDDEN: 'تغییر محتوای کار تعیین‌شده توسط مشاور مجاز نیست.',
+    CURRICULUM_UNAVAILABLE: 'فهرست مباحث در حال حاضر در دسترس نیست. کمی بعد دوباره تلاش کنید.',
     TOPIC_ARCHIVED: 'این مبحث بایگانی شده و برای کار جدید قابل استفاده نیست.',
     TOPIC_NOT_FOUND: 'مبحث انتخاب‌شده دیگر در دسترس نیست.',
     TOPIC_SUBJECT_MISMATCH: 'مبحث انتخاب‌شده به این درس تعلق ندارد.',
@@ -98,7 +112,10 @@ const planningErrorMessage = (error: unknown): string => {
     VALIDATION_ERROR: 'اطلاعات واردشده معتبر نیست. فیلدها را بررسی کنید.',
   }
 
-  return messages[error.code] ?? 'ارتباط با سرور انجام نشد. لطفاً دوباره تلاش کنید.'
+  if (messages[error.code]) return messages[error.code]
+  return error.status >= 500
+    ? 'سرور نتوانست درخواست را انجام دهد. کمی بعد دوباره تلاش کنید.'
+    : 'درخواست توسط سرور پذیرفته نشد. اطلاعات صفحه را تازه کنید و دوباره تلاش کنید.'
 }
 
 const mergeTasks = (items: DailyTask[]): DailyTask[] => {
@@ -217,6 +234,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [taskCurriculum, setTaskCurriculum] = useState<PlanningCurriculumValue>(() => createEmptyPlanningCurriculumValue())
   const [taskStudyHistory, setTaskStudyHistory] = useState<Record<string, 'LOADING' | 'NONE' | 'PRESENT' | 'ERROR'>>({})
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
+  const [updatingExecutionTaskIds, setUpdatingExecutionTaskIds] = useState<Set<string>>(new Set())
 
   const [activeSession, setActiveSession] = useState<StudySession | null>(null)
   const [activeTaskTitle, setActiveTaskTitle] = useState<string | null>(null)
@@ -353,6 +371,25 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     (statusFilter === 'ALL' || task.status === statusFilter) &&
     (subjectFilter === 'ALL' || task.subjectId === subjectFilter)
 
+  const replaceTaskFromServer = (updated: DailyTask) => {
+    setTasks((current) => {
+      if (!taskMatchesFilters(updated)) {
+        return current.filter((item) => item.id !== updated.id)
+      }
+      return current.map((item) => item.id === updated.id ? updated : item)
+    })
+  }
+
+  const reconcileTaskFromServer = async (taskId: string) => {
+    try {
+      replaceTaskFromServer(await planningClient.getTask(taskId))
+    } catch (error) {
+      if (error instanceof AuthApiError && error.code === 'TASK_NOT_FOUND') {
+        setTasks((current) => current.filter((item) => item.id !== taskId))
+      }
+    }
+  }
+
   const handleLoadMore = async () => {
     if (!nextCursor || isLoadingMore) return
     const queryKey = currentQueryKey
@@ -389,12 +426,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
     try {
       const updated = await planningClient.updateTaskStatus(task.id, status, skipReason)
-      setTasks((current) => {
-        if (!taskMatchesFilters(updated)) {
-          return current.filter((item) => item.id !== updated.id)
-        }
-        return current.map((item) => item.id === updated.id ? updated : item)
-      })
+      replaceTaskFromServer(updated)
       setSkipReasonDrafts((current) => {
         const next = { ...current }
         delete next[task.id]
@@ -402,8 +434,45 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       })
     } catch (error) {
       setActionError(planningErrorMessage(error))
+      await reconcileTaskFromServer(task.id)
     } finally {
       setUpdatingTaskIds((current) => {
+        const next = new Set(current)
+        next.delete(task.id)
+        return next
+      })
+    }
+  }
+
+  const handleCurriculumItemToggle = async (
+    task: DailyTask,
+    item: CurriculumExecutionItem,
+    completed: boolean,
+  ) => {
+    if (!canToggleCurriculumExecutionItems({
+      contentType: task.contentType,
+      source: task.source,
+      status: task.status,
+      totalItemCount: task.curriculum.totalItemCount,
+    })
+      || updatingCurriculumTaskIds.has(task.id)
+      || updatingExecutionTaskIds.has(task.id)
+    ) return
+
+    setActionError(null)
+    setUpdatingExecutionTaskIds((current) => new Set(current).add(task.id))
+    try {
+      const updated = await planningClient.toggleTaskCurriculumItem(
+        task.id,
+        item.id,
+        completed,
+      )
+      replaceTaskFromServer(updated)
+    } catch (error) {
+      setActionError(planningErrorMessage(error))
+      await reconcileTaskFromServer(task.id)
+    } finally {
+      setUpdatingExecutionTaskIds((current) => {
         const next = new Set(current)
         next.delete(task.id)
         return next
@@ -932,7 +1001,17 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             {tasks.map((task) => {
               const subject = task.subjectId ? subjectById.get(task.subjectId) : undefined
               const isUpdating = updatingTaskIds.has(task.id)
+              const isUpdatingCurriculum = updatingCurriculumTaskIds.has(task.id)
+              const isUpdatingExecution = updatingExecutionTaskIds.has(task.id)
               const taskCurriculumValue = planningCurriculumValueFromSnapshots(task.curriculum.targets)
+              const executionItems = curriculumExecutionItems(task.curriculum.targets)
+              const completionState = taskCompletionState(task.curriculum)
+              const canToggleExecutionItems = canToggleCurriculumExecutionItems({
+                contentType: task.contentType,
+                source: task.source,
+                status: task.status,
+                totalItemCount: task.curriculum.totalItemCount,
+              })
 
               return (
                 <article className={`task-item task-item--${task.status.toLowerCase()}`} key={task.id}>
@@ -986,6 +1065,45 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                         value={taskCurriculumValue}
                       />
                     ) : null}
+                    {canToggleExecutionItems && executionItems.length > 0 && (
+                      <fieldset
+                        aria-busy={isUpdatingExecution}
+                        className="task-curriculum-execution"
+                        disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
+                      >
+                        <legend>مباحث انجام‌شده</legend>
+                        <p>
+                          این فهرست میزان انجام محتوای کار را ثبت می‌کند و از زمان مطالعه مستقل است.
+                          {' '}{numberFormatter.format(task.curriculum.completedItemCount)} از{' '}
+                          {numberFormatter.format(task.curriculum.totalItemCount)} مورد تکمیل شده است.
+                        </p>
+                        <ul>
+                          {executionItems.map((item) => (
+                            <li key={item.id}>
+                              <label htmlFor={`task-curriculum-item-${item.id}`}>
+                                <input
+                                  checked={item.completedAt !== null}
+                                  id={`task-curriculum-item-${item.id}`}
+                                  onChange={(event) => void handleCurriculumItemToggle(
+                                    task,
+                                    item,
+                                    event.currentTarget.checked,
+                                  )}
+                                  type="checkbox"
+                                />
+                                <span>
+                                  <strong>{item.labelSnapshot}</strong>
+                                  {item.pathSnapshot.length > 1 && (
+                                    <small>{item.pathSnapshot.slice(0, -1).join(' ← ')}</small>
+                                  )}
+                                </span>
+                              </label>
+                            </li>
+                          ))}
+                        </ul>
+                        {isUpdatingExecution && <small role="status">در حال ثبت تغییر مبحث…</small>}
+                      </fieldset>
+                    )}
                     {task.source === 'PERSONAL' && (
                       <form
                         className="task-schedule"
@@ -1031,16 +1149,29 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                   </div>
                   {task.status === 'PENDING' && (
                     <div className="task-actions" aria-label={`اقدام‌های ${task.title}`}>
-                      <Button
-                        disabled={isUpdating}
-                        onClick={() => void handleStatusUpdate(task, 'COMPLETED')}
-                      >
-                        {isUpdating ? 'در حال ثبت…' : 'انجام شد'}
-                      </Button>
+                      <div className="task-completion-action">
+                        <Button
+                          aria-describedby={!completionState.canComplete
+                            ? `task-completion-help-${task.id}`
+                            : undefined}
+                          disabled={isUpdating
+                            || isUpdatingCurriculum
+                            || isUpdatingExecution
+                            || !completionState.canComplete}
+                          onClick={() => void handleStatusUpdate(task, 'COMPLETED')}
+                        >
+                          {isUpdating ? 'در حال ثبت…' : 'انجام شد'}
+                        </Button>
+                        {!completionState.canComplete && (
+                          <small id={`task-completion-help-${task.id}`}>
+                            {completionState.explanation}
+                          </small>
+                        )}
+                      </div>
                       <label className="task-skip-reason" htmlFor={`task-skip-reason-${task.id}`}>
                         دلیل رد کردن (اختیاری)
                         <select
-                          disabled={isUpdating}
+                          disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
                           id={`task-skip-reason-${task.id}`}
                           onChange={(event) => setSkipReasonDrafts((current) => ({
                             ...current,
@@ -1055,7 +1186,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                         </select>
                       </label>
                       <Button
-                        disabled={isUpdating}
+                        disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
                         onClick={() => void handleStatusUpdate(
                           task,
                           'SKIPPED',

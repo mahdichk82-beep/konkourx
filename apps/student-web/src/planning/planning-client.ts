@@ -3,6 +3,10 @@ import type {
   CurriculumSelectionV2,
   PlanningCurriculumTargetSnapshot,
 } from '@konkourx/curriculum-browser'
+import {
+  requestTaskCurriculumItemToggle,
+  type CurriculumExecutionItem,
+} from './task-completion'
 
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
@@ -21,6 +25,12 @@ export type StudyTopic = {
   title: string
 }
 
+export type DailyTaskCurriculumTarget = PlanningCurriculumTargetSnapshot & {
+  createdAt: string
+  id: string
+  items: CurriculumExecutionItem[]
+}
+
 export type DailyTask = {
   contentType: 'STUDY' | 'GENERAL' | null
   completedAt: string | null
@@ -28,7 +38,7 @@ export type DailyTask = {
   curriculum: {
     completedItemCount: number
     remainingItemCount: number
-    targets: PlanningCurriculumTargetSnapshot[]
+    targets: DailyTaskCurriculumTarget[]
     totalItemCount: number
   }
   description: string | null
@@ -193,6 +203,19 @@ class PlanningClient {
         body: JSON.stringify({ curriculumSelection }),
         method: 'PATCH',
       },
+    )
+  }
+
+  toggleTaskCurriculumItem(
+    taskId: string,
+    itemId: string,
+    completed: boolean,
+  ): Promise<DailyTask> {
+    return requestTaskCurriculumItemToggle<DailyTask>(
+      authClient.authorizedRequest.bind(authClient),
+      taskId,
+      itemId,
+      completed,
     )
   }
 

@@ -7,6 +7,27 @@ import {
   replaceChangedPlanningCurriculum,
   type PlanningCurriculumTargetSnapshot,
 } from '../../../../packages/curriculum-browser/src/planning.ts'
+import { requestTaskCurriculumItemToggle } from './task-completion.ts'
+
+test('Curriculum execution item toggle uses the existing authorized endpoint and boolean contract', async () => {
+  const calls: Array<[string, RequestInit | undefined]> = []
+  const response = { id: 'task-1' }
+  const result = await requestTaskCurriculumItemToggle(
+    async (path, init) => {
+      calls.push([path, init])
+      return response
+    },
+    'task/one',
+    'item/two',
+    true,
+  )
+
+  assert.equal(result, response)
+  assert.deepEqual(calls, [[
+    '/student/daily-tasks/task%2Fone/curriculum-items/item%2Ftwo',
+    { body: JSON.stringify({ completed: true }), method: 'PATCH' },
+  ]])
+})
 
 test('personal task client exposes canonical create and replacement contracts', () => {
   const source = readFileSync(new URL('./planning-client.ts', import.meta.url), 'utf8')

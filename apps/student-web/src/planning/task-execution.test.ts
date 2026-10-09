@@ -25,6 +25,105 @@ import {
   upsertStudySession,
 } from './task-execution.ts'
 import type { StudySession } from './planning-client.ts'
+import {
+  canToggleCurriculumExecutionItems,
+  curriculumExecutionItems,
+  taskCompletionState,
+  taskOutcomeErrorCodeMessage,
+} from './task-completion.ts'
+
+const executionItem = (
+  id: string,
+  labelSnapshot: string,
+  completedAt: string | null = null,
+) => ({
+  completedAt,
+  createdAt: '2026-10-09T00:00:00.000Z',
+  curriculumRefId: `node-${id}`,
+  id,
+  labelSnapshot,
+  pathSnapshot: ['زیست', labelSnapshot],
+  position: Number(id.slice(-1)),
+  referenceKind: 'NODE' as const,
+  targetId: 'target-1',
+})
+
+test('Curriculum completion stays explicit and requires server-confirmed full coverage', () => {
+  assert.deepEqual(taskCompletionState({
+    completedItemCount: 0,
+    remainingItemCount: 0,
+    totalItemCount: 0,
+  }), { canComplete: true, explanation: null })
+
+  assert.deepEqual(taskCompletionState({
+    completedItemCount: 1,
+    remainingItemCount: 1,
+    totalItemCount: 2,
+  }), {
+    canComplete: false,
+    explanation: 'ابتدا مباحث تعیین‌شده را تکمیل کنید (۱ مورد باقی مانده).',
+  })
+
+  assert.deepEqual(taskCompletionState({
+    completedItemCount: 2,
+    remainingItemCount: 0,
+    totalItemCount: 2,
+  }), { canComplete: true, explanation: null })
+
+  assert.equal(taskCompletionState({
+    completedItemCount: 2,
+    remainingItemCount: 1,
+    totalItemCount: 2,
+  }).canComplete, false)
+})
+
+test('execution items stay editable for pending counselor and historical tasks only', () => {
+  const context = {
+    contentType: 'STUDY' as const,
+    source: 'PERSONAL' as const,
+    status: 'PENDING' as const,
+    totalItemCount: 2,
+  }
+  assert.equal(canToggleCurriculumExecutionItems(context), true)
+  assert.equal(canToggleCurriculumExecutionItems({ ...context, source: 'COUNSELOR' }), true)
+  assert.equal(canToggleCurriculumExecutionItems({ ...context, contentType: null }), true)
+  assert.equal(canToggleCurriculumExecutionItems({ ...context, contentType: 'GENERAL' }), false)
+  assert.equal(canToggleCurriculumExecutionItems({ ...context, status: 'COMPLETED' }), false)
+  assert.equal(canToggleCurriculumExecutionItems({ ...context, totalItemCount: 0 }), false)
+})
+
+test('execution checklist preserves every stored historical snapshot label in server order', () => {
+  const first = executionItem('item-1', 'فصل تاریخی')
+  const second = executionItem('item-2', 'زیرمبحث مشاور', '2026-10-09T08:00:00.000Z')
+  assert.deepEqual(curriculumExecutionItems([
+    {
+      curriculumRefId: 'root-1',
+      items: [second, first],
+      labelSnapshot: 'ریشه ذخیره‌شده',
+      pathSnapshot: ['زیست', 'ریشه ذخیره‌شده'],
+      position: 0,
+      referenceKind: 'NODE',
+      representationIdSnapshot: 'rep-biology',
+      selectionMode: 'SUBTREE',
+    },
+  ]), [first, second])
+})
+
+test('task outcome errors explain lifecycle rejection instead of claiming a network outage', () => {
+  assert.equal(
+    taskOutcomeErrorCodeMessage('TASK_OUTCOME_INVALID'),
+    'وضعیت انتخاب‌شده با میزان تکمیل مباحث سازگار نیست. فهرست مباحث را تازه کنید و دوباره تلاش کنید.',
+  )
+  assert.equal(
+    taskOutcomeErrorCodeMessage('CURRICULUM_ITEM_NOT_FOUND'),
+    'این مبحث دیگر در فهرست اجرای کار وجود ندارد. اطلاعات کار را تازه کنید.',
+  )
+  assert.equal(
+    taskOutcomeErrorCodeMessage('TASK_NOT_PENDING'),
+    'این کار دیگر در انتظار نیست و مباحث آن قابل تغییر نیستند.',
+  )
+  assert.equal(taskOutcomeErrorCodeMessage('UNKNOWN'), null)
+})
 
 const session = (
   id: string,
