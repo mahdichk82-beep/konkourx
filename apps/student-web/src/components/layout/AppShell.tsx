@@ -17,6 +17,7 @@ export type NavigationItem = {
 }
 
 type AppShellProps = {
+  headerAccessory?: ReactNode
   children: ReactNode
   currentPath: string
   navigation: NavigationItem[]
@@ -39,6 +40,7 @@ function Avatar({ initials }: { initials: string | null }) {
 export function AppShell({
   children,
   currentPath,
+  headerAccessory,
   navigation,
   navigate,
   onLogout,
@@ -183,6 +185,7 @@ export function AppShell({
             <p>{pageDescription}</p>
           </div>
           <div className="header-actions">
+            {headerAccessory}
             <Button
               aria-label={theme === 'light' ? 'فعال‌کردن حالت تاریک' : 'فعال‌کردن حالت روشن'}
               className="theme-toggle account-theme-toggle"

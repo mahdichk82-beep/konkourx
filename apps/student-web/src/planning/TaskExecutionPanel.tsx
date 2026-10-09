@@ -12,6 +12,7 @@ import {
   executeFeedbackUpdate,
   executeFinish,
   executionErrorCodeMessage,
+  formatElapsedStudyTime,
   normalizeStudySessionRating,
   replaceStudySession,
   studySessionFeedbackLabels,
@@ -19,6 +20,8 @@ import {
   taskExecutionAction,
   upsertStudySession,
 } from './task-execution'
+import { useStudyTimerElapsed } from './useStudyTimer'
+import { additionalSessionLabel } from './study-timer'
 
 type TaskExecutionPanelProps = {
   taskId: string
@@ -28,6 +31,8 @@ type TaskExecutionPanelProps = {
   executionReady: boolean
   executionRevision: number
   onFinish(sessionId: string, input: FinishStudySessionInput): Promise<StudySession>
+  onPause(): Promise<StudySession>
+  onResume(): Promise<StudySession>
   onStart(taskId: string, taskTitle: string): Promise<'STARTED' | 'CONTINUED' | 'SWITCH_PENDING'>
 }
 
@@ -55,6 +60,16 @@ const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
+
+function ActiveSessionTiming({ session }: { session: StudySession }) {
+  const elapsedMs = useStudyTimerElapsed(session)
+  return (
+    <div className="task-execution__timer-summary">
+      <strong dir="ltr">{formatElapsedStudyTime(elapsedMs)}</strong>
+      <span>{session.timerState === 'PAUSED' ? 'زمان فعال · در مکث' : 'زمان فعال · در حال اجرا'}</span>
+    </div>
+  )
+}
 
 const executionErrorMessage = (error: unknown) => {
   if (error instanceof AuthApiError) {
@@ -85,6 +100,8 @@ export function TaskExecutionPanel({
   executionReady,
   executionRevision,
   onFinish,
+  onPause,
+  onResume,
   onStart,
   taskId,
   taskStatus,
@@ -188,6 +205,24 @@ export function TaskExecutionPanel({
     }
   }
 
+  const pauseOrResume = async () => {
+    if (!taskActiveSession || submitting || !executionReady) return
+    setSubmitting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const session = taskActiveSession.timerState === 'PAUSED'
+        ? await onResume()
+        : await onPause()
+      setSessions((current) => upsertStudySession(current, session))
+      setLoaded(true)
+    } catch (transitionError) {
+      setError(executionErrorMessage(transitionError))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const beginFeedbackEdit = (session: StudySession) => {
     setEditingFeedbackId(session.id)
     setFeedbackFocusRating(session.focusRating?.toString() ?? '')
@@ -257,11 +292,14 @@ export function TaskExecutionPanel({
                           {lifecycle === 'CANCELLED' ? (
                             <strong className="task-execution__cancelled">لغوشده</strong>
                           ) : lifecycle === 'ACTIVE' ? (
-                            <strong>در حال اجرا</strong>
+                            <strong>{session.timerState === 'PAUSED' ? 'در مکث' : 'در حال اجرا'}</strong>
                           ) : (
-                            <strong>{session.durationMinutes?.toLocaleString('fa-IR')} دقیقه</strong>
+                            <strong dir="ltr">{formatElapsedStudyTime(session.activeElapsedMs)}</strong>
                           )}
                         </div>
+                        {session.endedAt && (
+                          <small>پایان: {dateTimeFormatter.format(new Date(session.endedAt))}</small>
+                        )}
                         {feedbackLabels.length > 0 && (
                           <div className="task-execution__feedback-summary">
                             {feedbackLabels.map((label) => <span key={label}>{label}</span>)}
@@ -304,7 +342,8 @@ export function TaskExecutionPanel({
 
               {action === 'FINISH' && taskActiveSession ? (
                 <div className="task-execution__active">
-                  <p>جلسه فعال · شروع: {dateTimeFormatter.format(new Date(taskActiveSession.startedAt))}</p>
+                  <p>شروع ثبت‌شده: {dateTimeFormatter.format(new Date(taskActiveSession.startedAt))}</p>
+                  <ActiveSessionTiming session={taskActiveSession} />
                   <label htmlFor={`session-notes-${taskId}`}>
                     یادداشت (اختیاری)
                     <textarea
@@ -331,7 +370,14 @@ export function TaskExecutionPanel({
                     />
                   </div>
                   <div className="task-execution__actions">
-                    <Button disabled={submitting} onClick={() => void finish()}>
+                    <Button
+                      disabled={submitting || !executionReady}
+                      onClick={() => void pauseOrResume()}
+                      variant="secondary"
+                    >
+                      {taskActiveSession.timerState === 'PAUSED' ? 'ادامه مطالعه' : 'مکث'}
+                    </Button>
+                    <Button disabled={submitting || !executionReady} onClick={() => void finish()}>
                       {submitting ? 'در حال ثبت…' : 'پایان و ثبت مطالعه'}
                     </Button>
                   </div>
@@ -344,7 +390,11 @@ export function TaskExecutionPanel({
                       : 'شروع و پایان مطالعه یک جلسه واقعی می‌سازند و وضعیت کار را تغییر نمی‌دهند.'}
                   </p>
                   <Button disabled={submitting || !executionReady} onClick={() => void start()}>
-                    {submitting ? 'در حال شروع…' : activeSession ? 'تغییر مطالعه به این کار' : 'شروع مطالعه'}
+                    {submitting
+                      ? 'در حال شروع…'
+                      : activeSession
+                        ? 'تغییر مطالعه به این کار'
+                        : additionalSessionLabel(sessions)}
                   </Button>
                 </div>
               ) : (

@@ -171,6 +171,12 @@ export const executionErrorCodeMessage = (code: string): string | null => {
   if (code === 'LIVE_SESSION_CONFLICT') {
     return 'وضعیت مطالعه هم‌زمان تغییر کرد. وضعیت تازه را بررسی و دوباره تلاش کنید.'
   }
+  if (code === 'SESSION_STATE_STALE') {
+    return 'وضعیت تایمر در جای دیگری تغییر کرده است. وضعیت تازه بازیابی شد؛ دوباره تلاش کنید.'
+  }
+  if (code === 'SESSION_NOT_PAUSED') {
+    return 'این جلسه دیگر در حالت مکث نیست. وضعیت تازه بازیابی شد.'
+  }
   if (code === 'SESSION_ACTIVE_UPDATE_FORBIDDEN') {
     return 'جلسه فعال فقط از مسیر پایان مطالعه قابل تغییر است.'
   }

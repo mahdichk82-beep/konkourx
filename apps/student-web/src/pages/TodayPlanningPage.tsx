@@ -24,6 +24,8 @@ import {
   type StudySubject,
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
+import { useStudyTimer, useStudyTimerElapsed } from '../planning/useStudyTimer'
+import { finalStudySessionElapsedMs } from '../planning/study-timer'
 import { TaskScheduleFields } from '../planning/TaskScheduleFields'
 import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
 import {
@@ -37,14 +39,7 @@ import {
 } from '../planning/task-scheduling'
 import { createStudentCurriculumClient } from '../curriculum/curriculum-client'
 import {
-  activeSessionAfterCancel,
-  activeSessionAfterFinish,
-  activeSessionAfterSwitch,
   cancelStudyConsequenceMessage,
-  elapsedStudyMilliseconds,
-  executeActiveRestore,
-  executeCancel,
-  executeSwitch,
   executionErrorCodeMessage,
   executionStartDecision,
   formatElapsedStudyTime,
@@ -163,33 +158,35 @@ function ActiveStudyExecutionCard({
   busy,
   onCancel,
   onFinish,
+  onPause,
+  onResume,
 }: {
   activeSession: StudySession
   activeTaskTitle: string | null
   busy: boolean
   onCancel(): void
   onFinish(): Promise<void>
+  onPause(): Promise<void>
+  onResume(): Promise<void>
 }) {
-  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now())
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTimeMs(Date.now()), 1000)
-    return () => window.clearInterval(timer)
-  }, [activeSession.id])
-
-  const elapsed = formatElapsedStudyTime(
-    elapsedStudyMilliseconds(activeSession.startedAt, currentTimeMs),
-  )
+  const elapsed = formatElapsedStudyTime(useStudyTimerElapsed(activeSession))
+  const isPaused = activeSession.timerState === 'PAUSED'
 
   return (
     <Card className="active-study-card">
       <div>
-        <p className="eyebrow">مطالعه فعال</p>
-        <h2>{activeTaskTitle ?? 'مطالعه فعلی'} در حال اجراست</h2>
-        <p>زمان سپری‌شده از شروع ثبت‌شده در سرور</p>
+        <p className="eyebrow">{isPaused ? 'مطالعه در مکث' : 'مطالعه فعال'}</p>
+        <h2>{activeTaskTitle ?? 'مطالعه فعلی'} {isPaused ? 'متوقف شده است' : 'در حال اجراست'}</h2>
+        <p>{isPaused ? 'زمان فعال در حالت مکث افزایش نمی‌یابد.' : 'زمان فعال بر پایه وضعیت ثبت‌شده در سرور نمایش داده می‌شود.'}</p>
       </div>
-      <strong className="active-study-card__timer" dir="ltr">{elapsed}</strong>
+      <strong aria-live="off" className="active-study-card__timer" dir="ltr">{elapsed}</strong>
       <div className="active-study-card__actions">
+        <Button
+          disabled={busy}
+          onClick={() => void (isPaused ? onResume() : onPause())}
+        >
+          {busy ? 'در حال همگام‌سازی…' : isPaused ? 'ادامه مطالعه' : 'مکث'}
+        </Button>
         <Button disabled={busy} onClick={() => void onFinish()} variant="secondary">
           {busy ? 'در حال ثبت…' : 'پایان مطالعه فعال'}
         </Button>
@@ -201,7 +198,39 @@ function ActiveStudyExecutionCard({
   )
 }
 
+const studySessionDateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+})
+
+function FinishedStudyExecutionCard({
+  session,
+  taskTitle,
+}: {
+  session: StudySession
+  taskTitle: string | null
+}) {
+  const elapsedMs = finalStudySessionElapsedMs(session) ?? 0
+  return (
+    <Card className="finished-study-card">
+      <div>
+        <p className="eyebrow">جلسه مطالعه پایان یافت</p>
+        <h2>{taskTitle ?? 'جلسه مطالعه'} ثبت شد</h2>
+        <p>پایان جلسه، وضعیت کار و مباحث آن را به‌صورت خودکار تغییر نداده است.</p>
+      </div>
+      <div className="finished-study-card__summary">
+        <strong dir="ltr">{formatElapsedStudyTime(elapsedMs)}</strong>
+        <span>زمان فعال ثبت‌شده</span>
+        {session.endedAt && (
+          <small>پایان: {studySessionDateTimeFormatter.format(new Date(session.endedAt))}</small>
+        )}
+      </div>
+    </Card>
+  )
+}
+
 export function TodayPlanningPage({ navigate }: { navigate(path: string): void }) {
+  const studyTimer = useStudyTimer()
   const today = new Date()
   const todayKey = localDateKey(today)
   const todayLabel = new Intl.DateTimeFormat('fa-IR', {
@@ -250,14 +279,17 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
   const [updatingExecutionTaskIds, setUpdatingExecutionTaskIds] = useState<Set<string>>(new Set())
 
-  const [activeSession, setActiveSession] = useState<StudySession | null>(null)
-  const [activeTaskTitle, setActiveTaskTitle] = useState<string | null>(null)
-  const [executionReady, setExecutionReady] = useState(false)
-  const [executionBusy, setExecutionBusy] = useState(false)
+  const activeSession = studyTimer.activeSession
+  const activeTaskTitle = studyTimer.activeTaskTitle
+  const executionReady = studyTimer.ready
+  const executionBusy = studyTimer.busy
+  const executionRevision = studyTimer.revision
+  const reconcileStudyTimer = studyTimer.reconcile
   const [executionError, setExecutionError] = useState<string | null>(null)
-  const [executionRevision, setExecutionRevision] = useState(0)
   const [switchTarget, setSwitchTarget] = useState<{ id: string; title: string } | null>(null)
   const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false)
+  const visibleExecutionError = executionError
+    ?? (studyTimer.error ? planningErrorMessage(studyTimer.error) : null)
 
   const currentQueryKey = `${todayKey}:${statusFilter}:${subjectFilter}`
   const currentQueryKeyRef = useRef(currentQueryKey)
@@ -277,31 +309,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   const restoreActiveExecution = useCallback(async () => {
     setExecutionError(null)
-    try {
-      const session = await executeActiveRestore(
-        planningClient.getActiveStudySession.bind(planningClient),
-      )
-      setActiveSession(session)
-      setCancelConfirmationOpen(false)
-      setActiveTaskTitle(null)
-      if (session?.dailyTaskId) {
-        try {
-          const activeTask = await planningClient.getTask(session.dailyTaskId)
-          setActiveTaskTitle(activeTask.title)
-        } catch {
-          // The session remains authoritative even if its optional task label is unavailable.
-        }
-      }
-    } catch (error) {
-      setExecutionError(planningErrorMessage(error))
-    } finally {
-      setExecutionReady(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    void Promise.resolve().then(restoreActiveExecution)
-  }, [restoreActiveExecution])
+    await reconcileStudyTimer()
+  }, [reconcileStudyTimer])
 
   useEffect(() => {
     let active = true
@@ -507,22 +516,16 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       return 'SWITCH_PENDING'
     }
 
-    setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const session = await planningClient.startTask(taskId)
-      setActiveSession(session)
-      setActiveTaskTitle(taskTitle)
+      await studyTimer.start(taskId, taskTitle)
       setCancelConfirmationOpen(false)
-      setExecutionRevision((current) => current + 1)
       return 'STARTED'
     } catch (error) {
       if (error instanceof AuthApiError && error.code === 'ACTIVE_STUDY_SESSION_EXISTS') {
         await restoreActiveExecution()
       }
       throw error
-    } finally {
-      setExecutionBusy(false)
     }
   }
 
@@ -530,14 +533,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     sessionId: string,
     input: FinishStudySessionInput,
   ): Promise<StudySession> => {
-    setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const session = await planningClient.finishStudySession(sessionId, input)
-      setActiveSession((current) => activeSessionAfterFinish(current, session))
-      setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
+      const session = await studyTimer.finish(sessionId, input)
       setCancelConfirmationOpen(false)
-      setExecutionRevision((current) => current + 1)
       return session
     } catch (error) {
       if (
@@ -547,26 +546,16 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         await restoreActiveExecution()
       }
       throw error
-    } finally {
-      setExecutionBusy(false)
     }
   }
 
   const confirmExecutionCancel = async () => {
     if (!activeSession || executionBusy) return
-    const sessionId = activeSession.id
-    setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const session = await executeCancel(
-        sessionId,
-        planningClient.cancelStudySession.bind(planningClient),
-      )
-      setActiveSession((current) => activeSessionAfterCancel(current, session))
-      setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
+      await studyTimer.cancel()
       setCancelConfirmationOpen(false)
       setSwitchTarget(null)
-      setExecutionRevision((current) => current + 1)
     } catch (error) {
       setExecutionError(planningErrorMessage(error))
       if (
@@ -579,31 +568,23 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       ) {
         await restoreActiveExecution()
       }
-    } finally {
-      setExecutionBusy(false)
     }
   }
 
   const confirmExecutionSwitch = async (currentSessionAction: CurrentSessionAction) => {
     if (!switchTarget || executionBusy) return
     const target = switchTarget
-    setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const result = await executeSwitch(
+      await studyTimer.switchTask(
         target.id,
+        target.title,
         currentSessionAction,
-        planningClient.switchTask.bind(planningClient),
       )
-      setActiveSession(activeSessionAfterSwitch(result))
-      setActiveTaskTitle(target.title)
       setCancelConfirmationOpen(false)
       setSwitchTarget(null)
-      setExecutionRevision((current) => current + 1)
     } catch (error) {
       setExecutionError(planningErrorMessage(error))
-    } finally {
-      setExecutionBusy(false)
     }
   }
 
@@ -787,9 +768,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         <p className="planning-alert" role="status">در حال بازیابی مطالعه فعال…</p>
       )}
 
-      {executionError && (
+      {visibleExecutionError && (
         <div className="planning-alert" role="alert">
-          <span>{executionError}</span>
+          <span>{visibleExecutionError}</span>
           <Button onClick={() => void restoreActiveExecution()} variant="ghost">تلاش دوباره</Button>
         </div>
       )}
@@ -812,6 +793,29 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
               setExecutionError(planningErrorMessage(error))
             }
           }}
+          onPause={async () => {
+            setExecutionError(null)
+            try {
+              await studyTimer.pause()
+            } catch (error) {
+              setExecutionError(planningErrorMessage(error))
+            }
+          }}
+          onResume={async () => {
+            setExecutionError(null)
+            try {
+              await studyTimer.resume()
+            } catch (error) {
+              setExecutionError(planningErrorMessage(error))
+            }
+          }}
+        />
+      )}
+
+      {!activeSession && studyTimer.lastFinishedSession && (
+        <FinishedStudyExecutionCard
+          session={studyTimer.lastFinishedSession}
+          taskTitle={studyTimer.lastFinishedTaskTitle}
         />
       )}
 
@@ -1209,6 +1213,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       executionReady={executionReady && !executionBusy}
                       executionRevision={executionRevision}
                       onFinish={handleExecutionFinish}
+                      onPause={studyTimer.pause}
+                      onResume={studyTimer.resume}
                       onStart={handleExecutionStart}
                       taskId={task.id}
                       taskStatus={task.status}

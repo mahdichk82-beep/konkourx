@@ -414,6 +414,14 @@ test('CANCEL switch sends the controlled action and returns cancelled history pl
 test('execution API conflicts have safe user-facing messages', () => {
   assert.notEqual(executionErrorCodeMessage('ACTIVE_STUDY_SESSION_EXISTS'), null)
   assert.notEqual(executionErrorCodeMessage('LIVE_SESSION_CONFLICT'), null)
+  assert.equal(
+    executionErrorCodeMessage('SESSION_STATE_STALE'),
+    'وضعیت تایمر در جای دیگری تغییر کرده است. وضعیت تازه بازیابی شد؛ دوباره تلاش کنید.',
+  )
+  assert.equal(
+    executionErrorCodeMessage('SESSION_NOT_PAUSED'),
+    'این جلسه دیگر در حالت مکث نیست. وضعیت تازه بازیابی شد.',
+  )
   assert.notEqual(executionErrorCodeMessage('SESSION_ALREADY_CANCELLED'), null)
   assert.equal(executionErrorCodeMessage('UNKNOWN'), null)
 })

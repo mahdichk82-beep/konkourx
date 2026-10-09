@@ -102,6 +102,12 @@
 .active-study-card p:last-child, .study-switch-card p:last-child { margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.7; }
 .active-study-card__timer { flex: 0 0 auto; color: var(--action-primary-emphasis); font-size: clamp(1.5rem, 4vw, 2.2rem); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
 .active-study-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.finished-study-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-color: color-mix(in srgb, var(--action-primary) 30%, var(--border-default)); box-shadow: none; }
+.finished-study-card h2 { margin: 0.2rem 0 0.4rem; font-size: 1.1rem; }
+.finished-study-card p:last-child { margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.7; }
+.finished-study-card__summary { flex: 0 0 auto; display: grid; justify-items: end; gap: 0.2rem; }
+.finished-study-card__summary strong { color: var(--action-primary-emphasis); font-size: 1.55rem; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.finished-study-card__summary span, .finished-study-card__summary small { color: var(--text-muted); font-size: 0.74rem; }
 .study-switch-card { align-items: flex-start; flex-direction: column; background: color-mix(in srgb, var(--selection-bg) 55%, var(--bg-surface)); }
 .study-switch-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .planning-create-card { border-color: color-mix(in srgb, var(--action-primary) 40%, var(--border-default)); box-shadow: none; }
@@ -189,6 +195,9 @@
 .task-execution__feedback-editor { display: grid; gap: 0.65rem; }
 .task-execution__active, .task-execution__start { display: grid; gap: 0.75rem; }
 .task-execution__active p, .task-execution__start p { margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.7; }
+.task-execution__timer-summary { padding: 0.7rem 0.8rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid color-mix(in srgb, var(--action-primary) 28%, var(--border-default)); border-radius: 11px; background: color-mix(in srgb, var(--selection-bg) 52%, var(--bg-surface)); }
+.task-execution__timer-summary strong { color: var(--action-primary-emphasis); font-size: 1.25rem; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.task-execution__timer-summary span { color: var(--text-muted); font-size: 0.76rem; }
 .task-execution__active label { display: grid; gap: 0.45rem; font-size: 0.82rem; font-weight: 700; }
 .task-execution__active textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-subtle); outline: none; resize: vertical; }
 .task-execution__active textarea:focus { border-color: var(--action-primary); }
@@ -278,7 +287,8 @@
   .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
   .account-summary { grid-template-columns: 1fr; }
   .theme-label { display: none; }
-  .planning-hero, .active-study-card, .task-item { align-items: stretch; flex-direction: column; }
+  .planning-hero, .active-study-card, .finished-study-card, .task-item { align-items: stretch; flex-direction: column; }
+  .finished-study-card__summary { justify-items: start; }
   .planning-hero__actions, .weekly-planning-toolbar__actions { display: grid; grid-template-columns: 1fr; }
   .planning-hero .button, .task-actions .button, .weekly-planning-toolbar__actions .button { width: 100%; }
   .planning-form__row, .planning-filters, .inline-subject__form, .task-schedule-fields__times { grid-template-columns: 1fr; }
@@ -343,6 +353,13 @@
 .app-header p:not(.page-kicker) { font-size: 0.82rem; }
 .page-kicker { color: var(--action-primary) !important; font-size: 0.68rem; letter-spacing: 0; }
 .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+.active-study-indicator { min-height: 42px; padding: 0.45rem 0.7rem; display: flex; align-items: center; gap: 0.45rem; border: 1px solid color-mix(in srgb, var(--action-primary) 35%, var(--border-default)); border-radius: 12px; color: var(--text-primary); background: color-mix(in srgb, var(--selection-bg) 62%, var(--bg-surface)); cursor: pointer; }
+.active-study-indicator:hover { border-color: var(--action-primary); background: color-mix(in srgb, var(--selection-bg) 82%, var(--bg-surface)); }
+.active-study-indicator:focus-visible { outline: 3px solid color-mix(in srgb, var(--action-primary) 28%, transparent); outline-offset: 2px; }
+.active-study-indicator__dot { width: 0.55rem; height: 0.55rem; flex: 0 0 auto; border-radius: 50%; background: var(--action-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--action-primary) 15%, transparent); }
+.active-study-indicator--paused .active-study-indicator__dot { background: var(--status-warning-text); box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-warning-text) 15%, transparent); }
+.active-study-indicator span:not(.active-study-indicator__dot) { color: var(--text-muted); font-size: 0.72rem; white-space: nowrap; }
+.active-study-indicator strong { color: var(--action-primary-emphasis); font-size: 0.82rem; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
 .header-user { min-width: 0; display: flex; align-items: center; gap: 0.65rem; padding-inline-start: 0.75rem; border-inline-start: 1px solid var(--border-default); }
 .header-user > div { max-width: 180px; display: grid; }
 .header-user small { overflow: hidden; color: var(--text-muted); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -427,6 +444,9 @@
   .app-header h1 { font-size: 1.18rem; }
   .theme-label { display: none; }
   .theme-toggle { padding: 0; }
+  .header-actions { gap: 0.4rem; }
+  .active-study-indicator { min-height: 40px; padding-inline: 0.55rem; }
+  .active-study-indicator span:not(.active-study-indicator__dot) { display: none; }
   .app-content { padding: 1rem; }
   .summary-grid, .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
   .greeting-card { min-height: 230px; align-items: flex-start; flex-direction: column; }

@@ -59,6 +59,7 @@ export type DailyTask = {
 }
 
 export type StudySession = {
+  activeElapsedMs: number
   cancelledAt: string | null
   createdAt: string
   dailyTaskId: string | null
@@ -66,10 +67,14 @@ export type StudySession = {
   endedAt: string | null
   focusRating: number | null
   id: string
+  isTimerManaged: boolean
   notes: string | null
+  pausedAt: string | null
+  serverNow: string
   startedAt: string
   studyQualityRating: number | null
   subjectId: string | null
+  timerState: 'RUNNING' | 'PAUSED' | 'FINISHED' | 'CANCELLED'
   updatedAt: string
 }
 
@@ -137,6 +142,10 @@ export type StudySessionFeedbackInput = {
 
 export type FinishStudySessionInput = StudySessionFeedbackInput & {
   notes?: string | null
+}
+
+export type TimerTransitionInput = {
+  expectedUpdatedAt: string
 }
 
 const withQuery = (
@@ -277,6 +286,20 @@ class PlanningClient {
   getActiveStudySession(): Promise<StudySession | null> {
     return authClient.authorizedRequest<StudySession | null>(
       '/student/study-sessions/active',
+    )
+  }
+
+  pauseStudySession(sessionId: string, input: TimerTransitionInput): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/study-sessions/${encodeURIComponent(sessionId)}/pause`,
+      { body: JSON.stringify(input), method: 'PATCH' },
+    )
+  }
+
+  resumeStudySession(sessionId: string, input: TimerTransitionInput): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/study-sessions/${encodeURIComponent(sessionId)}/resume`,
+      { body: JSON.stringify(input), method: 'PATCH' },
     )
   }
 

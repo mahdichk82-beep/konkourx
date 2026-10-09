@@ -17,6 +17,11 @@ import { StudentCurriculumPage } from './curriculum/StudentCurriculumPage'
 import { StudentProfilePage } from './profile/StudentProfilePage'
 import { profileSectionForPath } from './profile/profile-state'
 import { usePersonProfile } from './profile/usePersonProfile'
+import {
+  StudyTimerProvider,
+} from './planning/StudyTimerContext'
+import { useStudyTimer, useStudyTimerElapsed } from './planning/useStudyTimer'
+import { formatElapsedStudyTime } from './planning/task-execution'
 import './App.css'
 import './phase2c.css'
 
@@ -43,7 +48,36 @@ const routeMeta: Record<string, { description: string; title: string }> = {
   '/profile/security': { title: 'امنیت و حساب', description: 'رمز عبور و نشست‌های ورود' },
 }
 
-function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
+function ActiveStudyTimerIndicator({ navigate }: { navigate(path: string): void }) {
+  const { activeSession } = useStudyTimer()
+  if (!activeSession) return null
+  return <ActiveStudyTimerIndicatorContent navigate={navigate} session={activeSession} />
+}
+
+function ActiveStudyTimerIndicatorContent({
+  navigate,
+  session,
+}: {
+  navigate(path: string): void
+  session: NonNullable<ReturnType<typeof useStudyTimer>['activeSession']>
+}) {
+  const elapsedMs = useStudyTimerElapsed(session)
+  const stateLabel = session.timerState === 'PAUSED' ? 'مکث مطالعه' : 'مطالعه فعال'
+  return (
+    <button
+      aria-label={`${stateLabel}، ${formatElapsedStudyTime(elapsedMs)}؛ رفتن به برنامه امروز`}
+      className={`active-study-indicator active-study-indicator--${session.timerState.toLowerCase()}`}
+      onClick={() => navigate('/planning')}
+      type="button"
+    >
+      <span aria-hidden="true" className="active-study-indicator__dot" />
+      <span>{stateLabel}</span>
+      <strong dir="ltr">{formatElapsedStudyTime(elapsedMs)}</strong>
+    </button>
+  )
+}
+
+function AuthenticatedStudentWorkspace({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
   const { logout, user } = useAuth()
   const { setTheme, theme } = useTheme()
   const personProfile = usePersonProfile()
@@ -78,6 +112,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
   return (
     <AppShell
       currentPath={path.startsWith('/planning') ? '/planning' : path}
+      headerAccessory={<ActiveStudyTimerIndicator navigate={navigate} />}
       navigation={navigation}
       navigate={navigate}
       onLogout={signOut}
@@ -90,6 +125,16 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
     >
       {content}
     </AppShell>
+  )
+}
+
+function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
+  const { user } = useAuth()
+  if (!user) return null
+  return (
+    <StudyTimerProvider>
+      <AuthenticatedStudentWorkspace navigate={navigate} path={path} />
+    </StudyTimerProvider>
   )
 }
 
