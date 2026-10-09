@@ -47,6 +47,7 @@ export type StudySessionMinAggregateOutputType = {
   focusRating: number | null
   studyQualityRating: number | null
   notes: string | null
+  isTimerManaged: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -62,6 +63,7 @@ export type StudySessionMaxAggregateOutputType = {
   focusRating: number | null
   studyQualityRating: number | null
   notes: string | null
+  isTimerManaged: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -77,6 +79,7 @@ export type StudySessionCountAggregateOutputType = {
   focusRating: number
   studyQualityRating: number
   notes: number
+  isTimerManaged: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -104,6 +107,7 @@ export type StudySessionMinAggregateInputType = {
   focusRating?: true
   studyQualityRating?: true
   notes?: true
+  isTimerManaged?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -119,6 +123,7 @@ export type StudySessionMaxAggregateInputType = {
   focusRating?: true
   studyQualityRating?: true
   notes?: true
+  isTimerManaged?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -134,6 +139,7 @@ export type StudySessionCountAggregateInputType = {
   focusRating?: true
   studyQualityRating?: true
   notes?: true
+  isTimerManaged?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -236,6 +242,7 @@ export type StudySessionGroupByOutputType = {
   focusRating: number | null
   studyQualityRating: number | null
   notes: string | null
+  isTimerManaged: boolean
   createdAt: Date
   updatedAt: Date
   _count: StudySessionCountAggregateOutputType | null
@@ -274,11 +281,13 @@ export type StudySessionWhereInput = {
   focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
+  isTimerManaged?: Prisma.BoolFilter<"StudySession"> | boolean
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   studentProfile?: Prisma.XOR<Prisma.StudentProfileScalarRelationFilter, Prisma.StudentProfileWhereInput>
   subject?: Prisma.XOR<Prisma.StudySubjectNullableScalarRelationFilter, Prisma.StudySubjectWhereInput> | null
   dailyTask?: Prisma.XOR<Prisma.DailyTaskNullableScalarRelationFilter, Prisma.DailyTaskWhereInput> | null
+  pauses?: Prisma.StudySessionPauseListRelationFilter
 }
 
 export type StudySessionOrderByWithRelationInput = {
@@ -292,11 +301,13 @@ export type StudySessionOrderByWithRelationInput = {
   focusRating?: Prisma.SortOrderInput | Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isTimerManaged?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   studentProfile?: Prisma.StudentProfileOrderByWithRelationInput
   subject?: Prisma.StudySubjectOrderByWithRelationInput
   dailyTask?: Prisma.DailyTaskOrderByWithRelationInput
+  pauses?: Prisma.StudySessionPauseOrderByRelationAggregateInput
 }
 
 export type StudySessionWhereUniqueInput = Prisma.AtLeast<{
@@ -313,11 +324,13 @@ export type StudySessionWhereUniqueInput = Prisma.AtLeast<{
   focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
+  isTimerManaged?: Prisma.BoolFilter<"StudySession"> | boolean
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   studentProfile?: Prisma.XOR<Prisma.StudentProfileScalarRelationFilter, Prisma.StudentProfileWhereInput>
   subject?: Prisma.XOR<Prisma.StudySubjectNullableScalarRelationFilter, Prisma.StudySubjectWhereInput> | null
   dailyTask?: Prisma.XOR<Prisma.DailyTaskNullableScalarRelationFilter, Prisma.DailyTaskWhereInput> | null
+  pauses?: Prisma.StudySessionPauseListRelationFilter
 }, "id">
 
 export type StudySessionOrderByWithAggregationInput = {
@@ -331,6 +344,7 @@ export type StudySessionOrderByWithAggregationInput = {
   focusRating?: Prisma.SortOrderInput | Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isTimerManaged?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StudySessionCountOrderByAggregateInput
@@ -354,6 +368,7 @@ export type StudySessionScalarWhereWithAggregatesInput = {
   focusRating?: Prisma.IntNullableWithAggregatesFilter<"StudySession"> | number | null
   studyQualityRating?: Prisma.IntNullableWithAggregatesFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"StudySession"> | string | null
+  isTimerManaged?: Prisma.BoolWithAggregatesFilter<"StudySession"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
 }
@@ -366,11 +381,13 @@ export type StudySessionCreateInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutStudySessionsInput
   subject?: Prisma.StudySubjectCreateNestedOneWithoutStudySessionsInput
   dailyTask?: Prisma.DailyTaskCreateNestedOneWithoutStudySessionsInput
+  pauses?: Prisma.StudySessionPauseCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionUncheckedCreateInput = {
@@ -384,8 +401,10 @@ export type StudySessionUncheckedCreateInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionUpdateInput = {
@@ -396,11 +415,13 @@ export type StudySessionUpdateInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutStudySessionsNestedInput
   subject?: Prisma.StudySubjectUpdateOneWithoutStudySessionsNestedInput
   dailyTask?: Prisma.DailyTaskUpdateOneWithoutStudySessionsNestedInput
+  pauses?: Prisma.StudySessionPauseUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateInput = {
@@ -414,8 +435,10 @@ export type StudySessionUncheckedUpdateInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionCreateManyInput = {
@@ -429,6 +452,7 @@ export type StudySessionCreateManyInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -441,6 +465,7 @@ export type StudySessionUpdateManyMutationInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -456,6 +481,7 @@ export type StudySessionUncheckedUpdateManyInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -481,6 +507,7 @@ export type StudySessionCountOrderByAggregateInput = {
   focusRating?: Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isTimerManaged?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -501,6 +528,7 @@ export type StudySessionMaxOrderByAggregateInput = {
   focusRating?: Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isTimerManaged?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -516,6 +544,7 @@ export type StudySessionMinOrderByAggregateInput = {
   focusRating?: Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isTimerManaged?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -523,6 +552,11 @@ export type StudySessionMinOrderByAggregateInput = {
 export type StudySessionSumOrderByAggregateInput = {
   focusRating?: Prisma.SortOrder
   studyQualityRating?: Prisma.SortOrder
+}
+
+export type StudySessionScalarRelationFilter = {
+  is?: Prisma.StudySessionWhereInput
+  isNot?: Prisma.StudySessionWhereInput
 }
 
 export type StudySessionCreateNestedManyWithoutStudentProfileInput = {
@@ -651,6 +685,24 @@ export type StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput = {
   deleteMany?: Prisma.StudySessionScalarWhereInput | Prisma.StudySessionScalarWhereInput[]
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type StudySessionCreateNestedOneWithoutPausesInput = {
+  create?: Prisma.XOR<Prisma.StudySessionCreateWithoutPausesInput, Prisma.StudySessionUncheckedCreateWithoutPausesInput>
+  connectOrCreate?: Prisma.StudySessionCreateOrConnectWithoutPausesInput
+  connect?: Prisma.StudySessionWhereUniqueInput
+}
+
+export type StudySessionUpdateOneRequiredWithoutPausesNestedInput = {
+  create?: Prisma.XOR<Prisma.StudySessionCreateWithoutPausesInput, Prisma.StudySessionUncheckedCreateWithoutPausesInput>
+  connectOrCreate?: Prisma.StudySessionCreateOrConnectWithoutPausesInput
+  upsert?: Prisma.StudySessionUpsertWithoutPausesInput
+  connect?: Prisma.StudySessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudySessionUpdateToOneWithWhereWithoutPausesInput, Prisma.StudySessionUpdateWithoutPausesInput>, Prisma.StudySessionUncheckedUpdateWithoutPausesInput>
+}
+
 export type StudySessionCreateWithoutStudentProfileInput = {
   id?: string
   startedAt: Date | string
@@ -659,10 +711,12 @@ export type StudySessionCreateWithoutStudentProfileInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   subject?: Prisma.StudySubjectCreateNestedOneWithoutStudySessionsInput
   dailyTask?: Prisma.DailyTaskCreateNestedOneWithoutStudySessionsInput
+  pauses?: Prisma.StudySessionPauseCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionUncheckedCreateWithoutStudentProfileInput = {
@@ -675,8 +729,10 @@ export type StudySessionUncheckedCreateWithoutStudentProfileInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionCreateOrConnectWithoutStudentProfileInput = {
@@ -719,6 +775,7 @@ export type StudySessionScalarWhereInput = {
   focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
+  isTimerManaged?: Prisma.BoolFilter<"StudySession"> | boolean
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
 }
@@ -731,10 +788,12 @@ export type StudySessionCreateWithoutSubjectInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutStudySessionsInput
   dailyTask?: Prisma.DailyTaskCreateNestedOneWithoutStudySessionsInput
+  pauses?: Prisma.StudySessionPauseCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionUncheckedCreateWithoutSubjectInput = {
@@ -747,8 +806,10 @@ export type StudySessionUncheckedCreateWithoutSubjectInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionCreateOrConnectWithoutSubjectInput = {
@@ -785,10 +846,12 @@ export type StudySessionCreateWithoutDailyTaskInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutStudySessionsInput
   subject?: Prisma.StudySubjectCreateNestedOneWithoutStudySessionsInput
+  pauses?: Prisma.StudySessionPauseCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionUncheckedCreateWithoutDailyTaskInput = {
@@ -801,8 +864,10 @@ export type StudySessionUncheckedCreateWithoutDailyTaskInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedCreateNestedManyWithoutStudySessionInput
 }
 
 export type StudySessionCreateOrConnectWithoutDailyTaskInput = {
@@ -831,6 +896,86 @@ export type StudySessionUpdateManyWithWhereWithoutDailyTaskInput = {
   data: Prisma.XOR<Prisma.StudySessionUpdateManyMutationInput, Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskInput>
 }
 
+export type StudySessionCreateWithoutPausesInput = {
+  id?: string
+  startedAt: Date | string
+  endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
+  notes?: string | null
+  isTimerManaged?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentProfile: Prisma.StudentProfileCreateNestedOneWithoutStudySessionsInput
+  subject?: Prisma.StudySubjectCreateNestedOneWithoutStudySessionsInput
+  dailyTask?: Prisma.DailyTaskCreateNestedOneWithoutStudySessionsInput
+}
+
+export type StudySessionUncheckedCreateWithoutPausesInput = {
+  id?: string
+  studentProfileId: string
+  subjectId?: string | null
+  dailyTaskId?: string | null
+  startedAt: Date | string
+  endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
+  notes?: string | null
+  isTimerManaged?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type StudySessionCreateOrConnectWithoutPausesInput = {
+  where: Prisma.StudySessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudySessionCreateWithoutPausesInput, Prisma.StudySessionUncheckedCreateWithoutPausesInput>
+}
+
+export type StudySessionUpsertWithoutPausesInput = {
+  update: Prisma.XOR<Prisma.StudySessionUpdateWithoutPausesInput, Prisma.StudySessionUncheckedUpdateWithoutPausesInput>
+  create: Prisma.XOR<Prisma.StudySessionCreateWithoutPausesInput, Prisma.StudySessionUncheckedCreateWithoutPausesInput>
+  where?: Prisma.StudySessionWhereInput
+}
+
+export type StudySessionUpdateToOneWithWhereWithoutPausesInput = {
+  where?: Prisma.StudySessionWhereInput
+  data: Prisma.XOR<Prisma.StudySessionUpdateWithoutPausesInput, Prisma.StudySessionUncheckedUpdateWithoutPausesInput>
+}
+
+export type StudySessionUpdateWithoutPausesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutStudySessionsNestedInput
+  subject?: Prisma.StudySubjectUpdateOneWithoutStudySessionsNestedInput
+  dailyTask?: Prisma.DailyTaskUpdateOneWithoutStudySessionsNestedInput
+}
+
+export type StudySessionUncheckedUpdateWithoutPausesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  studentProfileId?: Prisma.StringFieldUpdateOperationsInput | string
+  subjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type StudySessionCreateManyStudentProfileInput = {
   id?: string
   subjectId?: string | null
@@ -841,6 +986,7 @@ export type StudySessionCreateManyStudentProfileInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -853,10 +999,12 @@ export type StudySessionUpdateWithoutStudentProfileInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   subject?: Prisma.StudySubjectUpdateOneWithoutStudySessionsNestedInput
   dailyTask?: Prisma.DailyTaskUpdateOneWithoutStudySessionsNestedInput
+  pauses?: Prisma.StudySessionPauseUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateWithoutStudentProfileInput = {
@@ -869,8 +1017,10 @@ export type StudySessionUncheckedUpdateWithoutStudentProfileInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateManyWithoutStudentProfileInput = {
@@ -883,6 +1033,7 @@ export type StudySessionUncheckedUpdateManyWithoutStudentProfileInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -897,6 +1048,7 @@ export type StudySessionCreateManySubjectInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -909,10 +1061,12 @@ export type StudySessionUpdateWithoutSubjectInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutStudySessionsNestedInput
   dailyTask?: Prisma.DailyTaskUpdateOneWithoutStudySessionsNestedInput
+  pauses?: Prisma.StudySessionPauseUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateWithoutSubjectInput = {
@@ -925,8 +1079,10 @@ export type StudySessionUncheckedUpdateWithoutSubjectInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateManyWithoutSubjectInput = {
@@ -939,6 +1095,7 @@ export type StudySessionUncheckedUpdateManyWithoutSubjectInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -953,6 +1110,7 @@ export type StudySessionCreateManyDailyTaskInput = {
   focusRating?: number | null
   studyQualityRating?: number | null
   notes?: string | null
+  isTimerManaged?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -965,10 +1123,12 @@ export type StudySessionUpdateWithoutDailyTaskInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutStudySessionsNestedInput
   subject?: Prisma.StudySubjectUpdateOneWithoutStudySessionsNestedInput
+  pauses?: Prisma.StudySessionPauseUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateWithoutDailyTaskInput = {
@@ -981,8 +1141,10 @@ export type StudySessionUncheckedUpdateWithoutDailyTaskInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pauses?: Prisma.StudySessionPauseUncheckedUpdateManyWithoutStudySessionNestedInput
 }
 
 export type StudySessionUncheckedUpdateManyWithoutDailyTaskInput = {
@@ -995,10 +1157,40 @@ export type StudySessionUncheckedUpdateManyWithoutDailyTaskInput = {
   focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTimerManaged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+
+/**
+ * Count Type StudySessionCountOutputType
+ */
+
+export type StudySessionCountOutputType = {
+  pauses: number
+}
+
+export type StudySessionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  pauses?: boolean | StudySessionCountOutputTypeCountPausesArgs
+}
+
+/**
+ * StudySessionCountOutputType without action
+ */
+export type StudySessionCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StudySessionCountOutputType
+   */
+  select?: Prisma.StudySessionCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * StudySessionCountOutputType without action
+ */
+export type StudySessionCountOutputTypeCountPausesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StudySessionPauseWhereInput
+}
 
 
 export type StudySessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1012,11 +1204,14 @@ export type StudySessionSelect<ExtArgs extends runtime.Types.Extensions.Internal
   focusRating?: boolean
   studyQualityRating?: boolean
   notes?: boolean
+  isTimerManaged?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   subject?: boolean | Prisma.StudySession$subjectArgs<ExtArgs>
   dailyTask?: boolean | Prisma.StudySession$dailyTaskArgs<ExtArgs>
+  pauses?: boolean | Prisma.StudySession$pausesArgs<ExtArgs>
+  _count?: boolean | Prisma.StudySessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["studySession"]>
 
 export type StudySessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1030,6 +1225,7 @@ export type StudySessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   focusRating?: boolean
   studyQualityRating?: boolean
   notes?: boolean
+  isTimerManaged?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1048,6 +1244,7 @@ export type StudySessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   focusRating?: boolean
   studyQualityRating?: boolean
   notes?: boolean
+  isTimerManaged?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1066,15 +1263,18 @@ export type StudySessionSelectScalar = {
   focusRating?: boolean
   studyQualityRating?: boolean
   notes?: boolean
+  isTimerManaged?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "cancelledAt" | "focusRating" | "studyQualityRating" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
+export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "cancelledAt" | "focusRating" | "studyQualityRating" | "notes" | "isTimerManaged" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
 export type StudySessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   subject?: boolean | Prisma.StudySession$subjectArgs<ExtArgs>
   dailyTask?: boolean | Prisma.StudySession$dailyTaskArgs<ExtArgs>
+  pauses?: boolean | Prisma.StudySession$pausesArgs<ExtArgs>
+  _count?: boolean | Prisma.StudySessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StudySessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1093,6 +1293,7 @@ export type $StudySessionPayload<ExtArgs extends runtime.Types.Extensions.Intern
     studentProfile: Prisma.$StudentProfilePayload<ExtArgs>
     subject: Prisma.$StudySubjectPayload<ExtArgs> | null
     dailyTask: Prisma.$DailyTaskPayload<ExtArgs> | null
+    pauses: Prisma.$StudySessionPausePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1105,6 +1306,7 @@ export type $StudySessionPayload<ExtArgs extends runtime.Types.Extensions.Intern
     focusRating: number | null
     studyQualityRating: number | null
     notes: string | null
+    isTimerManaged: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["studySession"]>
@@ -1504,6 +1706,7 @@ export interface Prisma__StudySessionClient<T, Null = never, ExtArgs extends run
   studentProfile<T extends Prisma.StudentProfileDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfileDefaultArgs<ExtArgs>>): Prisma.Prisma__StudentProfileClient<runtime.Types.Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   subject<T extends Prisma.StudySession$subjectArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudySession$subjectArgs<ExtArgs>>): Prisma.Prisma__StudySubjectClient<runtime.Types.Result.GetResult<Prisma.$StudySubjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   dailyTask<T extends Prisma.StudySession$dailyTaskArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudySession$dailyTaskArgs<ExtArgs>>): Prisma.Prisma__DailyTaskClient<runtime.Types.Result.GetResult<Prisma.$DailyTaskPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  pauses<T extends Prisma.StudySession$pausesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudySession$pausesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudySessionPausePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1543,6 +1746,7 @@ export interface StudySessionFieldRefs {
   readonly focusRating: Prisma.FieldRef<"StudySession", 'Int'>
   readonly studyQualityRating: Prisma.FieldRef<"StudySession", 'Int'>
   readonly notes: Prisma.FieldRef<"StudySession", 'String'>
+  readonly isTimerManaged: Prisma.FieldRef<"StudySession", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StudySession", 'DateTime'>
 }
@@ -1981,6 +2185,30 @@ export type StudySession$dailyTaskArgs<ExtArgs extends runtime.Types.Extensions.
    */
   include?: Prisma.DailyTaskInclude<ExtArgs> | null
   where?: Prisma.DailyTaskWhereInput
+}
+
+/**
+ * StudySession.pauses
+ */
+export type StudySession$pausesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StudySessionPause
+   */
+  select?: Prisma.StudySessionPauseSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StudySessionPause
+   */
+  omit?: Prisma.StudySessionPauseOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StudySessionPauseInclude<ExtArgs> | null
+  where?: Prisma.StudySessionPauseWhereInput
+  orderBy?: Prisma.StudySessionPauseOrderByWithRelationInput | Prisma.StudySessionPauseOrderByWithRelationInput[]
+  cursor?: Prisma.StudySessionPauseWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StudySessionPauseScalarFieldEnum | Prisma.StudySessionPauseScalarFieldEnum[]
 }
 
 /**

@@ -282,7 +282,8 @@ test('planning migrations only touch approved DailyTask planning structures', as
   const names = (await readdir(migrationsUrl, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-  assert.equal(names.length, 25)
+  assert.equal(names.length, 26)
+  assert.ok(names.includes('20261009090000_add_study_timer_lifecycle'))
   const migrationName = '20260930020000_add_planning_curriculum_references'
   assert.ok(names.includes(migrationName))
   const sql = await readFile(new URL(`${migrationName}/migration.sql`, migrationsUrl), 'utf8')

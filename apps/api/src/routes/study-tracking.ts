@@ -14,6 +14,7 @@ import {
   listStudySessionsSchema,
   startStudyTaskSchema,
   switchStudyTaskSchema,
+  timerTransitionSchema,
   trackingIdParamSchema,
   taskSessionParamSchema,
   updateStudentGoalSchema,
@@ -141,6 +142,28 @@ export const registerStudyTrackingRoutes = (
         request.user!,
         parseId(request.params),
         parseInput(finishStudySessionSchema.safeParse(request.body ?? {})),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/study-sessions/:id/pause', studentOnly, async (request) =>
+    successResponse(
+      await options.studyTracking.sessions.pause(
+        request.user!,
+        parseId(request.params),
+        parseInput(timerTransitionSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/study-sessions/:id/resume', studentOnly, async (request) =>
+    successResponse(
+      await options.studyTracking.sessions.resume(
+        request.user!,
+        parseId(request.params),
+        parseInput(timerTransitionSchema.safeParse(request.body)),
       ),
       request.context.requestId,
     ),

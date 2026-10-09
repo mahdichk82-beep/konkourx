@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { ApiError } from '../src/errors/api-error.js'
 import { createStudyTrackingServices, type StudyTrackingStore } from '../src/study-tracking/services.js'
-import type { DomainStudent, StudentGoalRecord, StudySessionRecord } from '../src/study-tracking/types.js'
+import type { DomainStudent, StudentGoalRecord, StudySessionPauseRecord, StudySessionRecord } from '../src/study-tracking/types.js'
 
 const student: DomainStudent = { id: 'student-user-1', role: 'STUDENT', status: 'ACTIVE' }
 const profile = { id: 'student-profile-1', userId: student.id }
@@ -13,6 +13,7 @@ const timestamp = new Date('2026-09-03T09:00:00.000Z')
 
 const createStore = (): StudyTrackingStore & {
   sessions: StudySessionRecord[]
+  pauses: StudySessionPauseRecord[]
   goals: StudentGoalRecord[]
 } => {
   let liveQueue = Promise.resolve()
@@ -21,8 +22,14 @@ const createStore = (): StudyTrackingStore & {
     liveQueue = result.then(() => undefined, () => undefined)
     return result
   }
+  const pauses: StudySessionPauseRecord[] = []
+  const withPauses = (record: StudySessionRecord): StudySessionRecord => ({
+    ...record,
+    pauses: pauses.filter((pause) => pause.studySessionId === record.id),
+  })
   const store = {
     sessions: [] as StudySessionRecord[],
+    pauses,
     goals: [] as StudentGoalRecord[],
     async findStudentProfileByUserId(userId: string) { return userId === profile.userId ? profile : null },
     async findSubjectById(_profileId: string, id: string) { return id === subject.id ? subject : null },
@@ -31,20 +38,22 @@ const createStore = (): StudyTrackingStore & {
     },
     async listSessions(_profileId: string, query?: { dailyTaskId?: string }) {
       return query?.dailyTaskId
-        ? store.sessions.filter((session) => session.dailyTaskId === query.dailyTaskId)
-        : store.sessions
+        ? store.sessions.filter((session) => session.dailyTaskId === query.dailyTaskId).map(withPauses)
+        : store.sessions.map(withPauses)
     },
     async findActiveSession(profileId: string) {
-      return store.sessions.find((item) =>
+      const record = store.sessions.find((item) =>
         item.studentProfileId === profileId
         && item.endedAt === null
         && item.cancelledAt === null,
-      ) ?? null
+      )
+      return record ? withPauses(record) : null
     },
     async findSessionById(profileId: string, id: string) {
-      return store.sessions.find((item) => item.id === id && item.studentProfileId === profileId) ?? null
+      const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+      return record ? withPauses(record) : null
     },
-    async createSession(input: Omit<StudySessionRecord, 'id' | 'createdAt' | 'updatedAt'>) {
+    async createSession(input: Omit<StudySessionRecord, 'id' | 'createdAt' | 'pauses' | 'updatedAt'>) {
       const record = { id: `session-${store.sessions.length + 1}`, ...input, createdAt: timestamp, updatedAt: timestamp }
       store.sessions.push(record)
       return record
@@ -62,7 +71,9 @@ const createStore = (): StudyTrackingStore & {
         if (target.status !== 'PENDING') {
           return { ok: false as const, reason: 'TASK_NOT_EXECUTABLE' as const }
         }
-        const active = await store.findActiveSession(profileId)
+        const active = store.sessions.find((item) =>
+          item.studentProfileId === profileId && item.endedAt === null && item.cancelledAt === null,
+        )
         if (active) {
           return active.dailyTaskId === taskId
             ? { ok: true as const, value: active, reused: true }
@@ -75,6 +86,7 @@ const createStore = (): StudyTrackingStore & {
           focusRating: null,
           notes: null,
           startedAt,
+          isTimerManaged: true,
           studyQualityRating: null,
           studentProfileId: profileId,
           subjectId: target.subjectId,
@@ -94,7 +106,9 @@ const createStore = (): StudyTrackingStore & {
         if (target.status !== 'PENDING') {
           return { ok: false as const, reason: 'TASK_NOT_EXECUTABLE' as const }
         }
-        const active = await store.findActiveSession(profileId)
+        const active = store.sessions.find((item) =>
+          item.studentProfileId === profileId && item.endedAt === null && item.cancelledAt === null,
+        )
         if (active?.dailyTaskId === taskId) {
           return {
             ok: true as const,
@@ -109,10 +123,10 @@ const createStore = (): StudyTrackingStore & {
           }
           if (currentSessionAction === 'CANCEL') {
             active.cancelledAt = transitionAt
-            cancelledSession = active
+            cancelledSession = withPauses(active)
           } else {
             active.endedAt = transitionAt
-            finishedSession = active
+            finishedSession = withPauses(active)
           }
         }
         const activeSession = await store.createSession({
@@ -122,6 +136,7 @@ const createStore = (): StudyTrackingStore & {
           focusRating: null,
           notes: null,
           startedAt: transitionAt,
+          isTimerManaged: true,
           studyQualityRating: null,
           studentProfileId: profileId,
           subjectId: target.subjectId,
@@ -148,7 +163,45 @@ const createStore = (): StudyTrackingStore & {
         if (input.focusRating !== undefined) record.focusRating = input.focusRating
         if (input.notes !== undefined) record.notes = input.notes
         if (input.studyQualityRating !== undefined) record.studyQualityRating = input.studyQualityRating
-        return { ok: true as const, value: record }
+        return { ok: true as const, value: withPauses(record) }
+      })
+    },
+    async pauseSession(profileId: string, id: string, pausedAt: Date, expectedUpdatedAt: Date) {
+      return serializeLive(async () => {
+        const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+        if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
+        if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
+        if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
+        const openPause = pauses.find((pause) => pause.studySessionId === id && pause.resumedAt === null)
+        if (openPause) return { ok: true as const, value: withPauses(record) }
+        if (record.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+          return { ok: false as const, reason: 'SESSION_STATE_STALE' as const }
+        }
+        pauses.push({ id: `pause-${pauses.length + 1}`, pausedAt, resumedAt: null, studySessionId: id })
+        record.isTimerManaged = true
+        record.updatedAt = pausedAt
+        return { ok: true as const, value: withPauses(record) }
+      })
+    },
+    async resumeSession(profileId: string, id: string, resumedAt: Date, expectedUpdatedAt: Date) {
+      return serializeLive(async () => {
+        const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+        if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
+        if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
+        if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
+        const openPause = pauses.find((pause) => pause.studySessionId === id && pause.resumedAt === null)
+        if (!openPause) {
+          return record.updatedAt.getTime() === expectedUpdatedAt.getTime()
+            ? { ok: false as const, reason: 'SESSION_NOT_PAUSED' as const }
+            : { ok: true as const, value: withPauses(record) }
+        }
+        if (record.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+          return { ok: false as const, reason: 'SESSION_STATE_STALE' as const }
+        }
+        openPause.resumedAt = resumedAt
+        record.isTimerManaged = true
+        record.updatedAt = resumedAt
+        return { ok: true as const, value: withPauses(record) }
       })
     },
     async cancelSession(profileId: string, id: string, cancelledAt: Date) {
@@ -158,7 +211,7 @@ const createStore = (): StudyTrackingStore & {
         if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
         if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
         record.cancelledAt = cancelledAt
-        return { ok: true as const, value: record }
+        return { ok: true as const, value: withPauses(record) }
       })
     },
     async updateSessionFeedback(
@@ -171,7 +224,7 @@ const createStore = (): StudyTrackingStore & {
       if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
       if (!record.endedAt) return { ok: false as const, reason: 'SESSION_NOT_FINISHED' as const }
       Object.assign(record, input, { updatedAt: timestamp })
-      return { ok: true as const, value: record }
+      return { ok: true as const, value: withPauses(record) }
     },
     async listGoals() { return store.goals },
     async findGoalById(_profileId: string, id: string) { return store.goals.find((item) => item.id === id) ?? null },
@@ -510,7 +563,9 @@ test('active-session query is owner scoped and generic update cannot reopen or e
   const store = createStore()
   const times = [
     new Date('2026-09-03T08:00:00.000Z'),
+    new Date('2026-09-03T08:30:00.000Z'),
     timestamp,
+    new Date('2026-09-03T09:10:00.000Z'),
   ]
   const services = createStudyTrackingServices(store, () => times.shift()!)
   const active = await services.sessions.startTask(student, task.id)
@@ -522,8 +577,13 @@ test('active-session query is owner scoped and generic update cannot reopen or e
     (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ACTIVE_UPDATE_FORBIDDEN',
   )
 
-  const finished = await services.sessions.finish(student, active.id, {})
-  const edited = await services.sessions.update(student, finished.id, {
+  await services.sessions.finish(student, active.id, {})
+  store.sessions.push({
+    ...store.sessions[0]!,
+    id: 'legacy-finished-history',
+    isTimerManaged: false,
+  })
+  const edited = await services.sessions.update(student, 'legacy-finished-history', {
     endedAt: '2026-09-03T09:10:00.000Z',
     startedAt: '2026-09-03T08:30:00.000Z',
   })
@@ -691,6 +751,7 @@ test('concurrent cancel with start or switch cannot leave duplicate live session
     new Date('2026-09-04T09:00:00.000Z'),
     new Date('2026-09-04T09:01:00.000Z'),
     new Date('2026-09-04T09:01:00.000Z'),
+    new Date('2026-09-04T09:02:00.000Z'),
   ]
   const services = createStudyTrackingServices(store, () => times.shift()!)
   const first = await services.sessions.startTask(student, task.id)
@@ -793,4 +854,182 @@ test('feedback can be added, changed, and cleared only on an owned finished sess
     services.sessions.updateFeedback(student, 'foreign-session', { focusRating: 3 }),
     (error: unknown) => error instanceof ApiError && error.code === 'SESSION_NOT_FOUND',
   )
+})
+
+test('timer transitions preserve multiple pauses and finish while paused with server-owned time', async () => {
+  const store = createStore()
+  let clock = new Date('2026-09-03T09:00:00.000Z')
+  const services = createStudyTrackingServices(store, () => clock)
+
+  const started = await services.sessions.startTask(student, task.id)
+  assert.equal(started.isTimerManaged, true)
+  assert.equal(started.timerState, 'RUNNING')
+  assert.equal(started.activeElapsedMs, 0)
+  assert.deepEqual(started.serverNow, clock)
+
+  clock = new Date('2026-09-03T09:20:00.000Z')
+  const [paused, duplicatePause] = await Promise.all([
+    services.sessions.pause(student, started.id, {
+      expectedUpdatedAt: started.updatedAt.toISOString(),
+    }),
+    services.sessions.pause(student, started.id, {
+      expectedUpdatedAt: started.updatedAt.toISOString(),
+    }),
+  ])
+  assert.equal(paused.timerState, 'PAUSED')
+  assert.deepEqual(paused.pausedAt, clock)
+  assert.equal(paused.activeElapsedMs, 1_200_000)
+  assert.equal(duplicatePause.timerState, 'PAUSED')
+  assert.equal(store.pauses.length, 1)
+
+  clock = new Date('2026-09-03T09:30:00.000Z')
+  const resumed = await services.sessions.resume(student, started.id, {
+    expectedUpdatedAt: paused.updatedAt.toISOString(),
+  })
+  assert.equal(resumed.timerState, 'RUNNING')
+  assert.equal(resumed.pausedAt, null)
+  assert.equal(resumed.activeElapsedMs, 1_200_000)
+
+  clock = new Date('2026-09-03T09:50:00.000Z')
+  const pausedAgain = await services.sessions.pause(student, started.id, {
+    expectedUpdatedAt: resumed.updatedAt.toISOString(),
+  })
+  assert.equal(store.pauses.length, 2)
+
+  clock = new Date('2026-09-03T10:00:00.000Z')
+  const finished = await services.sessions.finish(student, started.id, {})
+  assert.equal(finished.timerState, 'FINISHED')
+  assert.equal(finished.activeElapsedMs, 2_400_000)
+  assert.equal(finished.durationMinutes, 40)
+  assert.equal(store.pauses[1]?.resumedAt, null)
+  assert.equal(task.status, 'PENDING')
+
+  await assert.rejects(
+    services.sessions.resume(student, started.id, {
+      expectedUpdatedAt: pausedAgain.updatedAt.toISOString(),
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ALREADY_FINISHED',
+  )
+})
+
+test('stale timer transitions cannot change a newer state and duplicate resume is safe', async () => {
+  const store = createStore()
+  let clock = new Date('2026-09-03T09:00:00.000Z')
+  const services = createStudyTrackingServices(store, () => clock)
+  const started = await services.sessions.startTask(student, task.id)
+
+  clock = new Date('2026-09-03T09:10:00.000Z')
+  const paused = await services.sessions.pause(student, started.id, {
+    expectedUpdatedAt: started.updatedAt.toISOString(),
+  })
+  clock = new Date('2026-09-03T09:15:00.000Z')
+  const resumed = await services.sessions.resume(student, started.id, {
+    expectedUpdatedAt: paused.updatedAt.toISOString(),
+  })
+  const duplicateResume = await services.sessions.resume(student, started.id, {
+    expectedUpdatedAt: paused.updatedAt.toISOString(),
+  })
+  assert.equal(duplicateResume.timerState, 'RUNNING')
+
+  clock = new Date('2026-09-03T09:20:00.000Z')
+  await assert.rejects(
+    services.sessions.pause(student, started.id, {
+      expectedUpdatedAt: started.updatedAt.toISOString(),
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_STATE_STALE',
+  )
+  assert.equal((await services.sessions.active(student))?.timerState, 'RUNNING')
+  assert.deepEqual((await services.sessions.active(student))?.updatedAt, resumed.updatedAt)
+})
+
+test('switching away from a paused task preserves paused accounting and starts one managed session', async () => {
+  const store = createStore()
+  store.findTaskById = async (profileId, id) => {
+    if (profileId !== profile.id) return null
+    return id === task.id ? task : id === secondTask.id ? secondTask : null
+  }
+  const times = [
+    new Date('2026-09-03T09:00:00.000Z'),
+    new Date('2026-09-03T09:20:00.000Z'),
+    new Date('2026-09-03T09:45:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const started = await services.sessions.startTask(student, task.id)
+  await services.sessions.pause(student, started.id, {
+    expectedUpdatedAt: started.updatedAt.toISOString(),
+  })
+
+  const switched = await services.sessions.switchTask(student, secondTask.id)
+
+  assert.equal(switched.finishedSession?.timerState, 'FINISHED')
+  assert.equal(switched.finishedSession?.activeElapsedMs, 1_200_000)
+  assert.equal(switched.finishedSession?.durationMinutes, 20)
+  assert.equal(switched.activeSession.timerState, 'RUNNING')
+  assert.equal(switched.activeSession.isTimerManaged, true)
+  assert.equal(store.sessions.filter((session) =>
+    session.endedAt === null && session.cancelledAt === null).length, 1)
+  assert.equal(task.status, 'PENDING')
+  assert.equal(secondTask.status, 'PENDING')
+})
+
+test('pausing a legacy active session adopts timer management while ordinary finish does not', async () => {
+  const legacy: StudySessionRecord = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    dailyTaskId: task.id,
+    endedAt: null,
+    focusRating: null,
+    id: 'legacy-active',
+    isTimerManaged: false,
+    notes: null,
+    startedAt: new Date('2026-09-03T08:00:00.000Z'),
+    studentProfileId: profile.id,
+    studyQualityRating: null,
+    subjectId: subject.id,
+    updatedAt: new Date('2026-09-03T08:00:00.000Z'),
+  }
+  const pausedStore = createStore()
+  pausedStore.sessions.push({ ...legacy })
+  const pausedServices = createStudyTrackingServices(pausedStore, () => timestamp)
+  const paused = await pausedServices.sessions.pause(student, legacy.id, {
+    expectedUpdatedAt: legacy.updatedAt.toISOString(),
+  })
+  assert.equal(paused.isTimerManaged, true)
+
+  const finishedStore = createStore()
+  finishedStore.sessions.push({ ...legacy, id: 'legacy-finished-directly' })
+  const finishedServices = createStudyTrackingServices(finishedStore, () => timestamp)
+  const finished = await finishedServices.sessions.finish(student, 'legacy-finished-directly', {})
+  assert.equal(finished.isTimerManaged, false)
+})
+
+test('finished timer-managed lifecycle timestamps cannot be edited while legacy history remains editable', async () => {
+  const store = createStore()
+  const times = [
+    new Date('2026-09-03T08:00:00.000Z'),
+    new Date('2026-09-03T09:00:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift() ?? timestamp)
+  const active = await services.sessions.startTask(student, task.id)
+  const finished = await services.sessions.finish(student, active.id, {})
+
+  await assert.rejects(
+    services.sessions.update(student, finished.id, {
+      endedAt: '2026-09-03T09:30:00.000Z',
+    }),
+    (error: unknown) => error instanceof ApiError
+      && error.code === 'SESSION_TIMER_MANAGED_UPDATE_FORBIDDEN',
+  )
+
+  const legacyStore = createStore()
+  legacyStore.sessions.push({
+    ...store.sessions[0]!,
+    id: 'legacy-finished-editable',
+    isTimerManaged: false,
+  })
+  const legacyServices = createStudyTrackingServices(legacyStore, () => timestamp)
+  const edited = await legacyServices.sessions.update(student, 'legacy-finished-editable', {
+    endedAt: '2026-09-03T09:30:00.000Z',
+  })
+  assert.deepEqual(edited.endedAt, new Date('2026-09-03T09:30:00.000Z'))
 })

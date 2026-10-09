@@ -27,11 +27,26 @@ export type StudySessionRecord = {
   notes: string | null
   createdAt: Date
   updatedAt: Date
+  isTimerManaged?: boolean
+  pauses?: StudySessionPauseRecord[]
 }
 
-export type StudySessionView = Omit<StudySessionRecord, 'studentProfileId'> & {
+export type StudySessionView = Omit<StudySessionRecord, 'pauses' | 'studentProfileId'> & {
+  activeElapsedMs: number
   durationMinutes: number | null
+  pausedAt: Date | null
+  serverNow: Date
+  timerState: StudySessionTimerState
 }
+
+export type StudySessionPauseRecord = {
+  id: string
+  studySessionId: string
+  pausedAt: Date
+  resumedAt: Date | null
+}
+
+export type StudySessionTimerState = 'RUNNING' | 'PAUSED' | 'FINISHED' | 'CANCELLED'
 
 export type StartStudySessionResult =
   | { ok: true; value: StudySessionRecord; reused: boolean }
@@ -75,7 +90,19 @@ export type SwitchStudySessionView = {
 
 export type FinishStudySessionResult =
   | { ok: true; value: StudySessionRecord }
-  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_ALREADY_CANCELLED' | 'SESSION_TIME_INVALID' }
+  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_ALREADY_CANCELLED' | 'SESSION_TIME_INVALID' | 'SESSION_STATE_STALE' }
+
+export type TimerTransitionResult =
+  | { ok: true; value: StudySessionRecord }
+  | {
+      ok: false
+      reason:
+        | 'SESSION_NOT_FOUND'
+        | 'SESSION_ALREADY_FINISHED'
+        | 'SESSION_ALREADY_CANCELLED'
+        | 'SESSION_NOT_PAUSED'
+        | 'SESSION_STATE_STALE'
+    }
 
 export type CancelStudySessionResult =
   | { ok: true; value: StudySessionRecord }

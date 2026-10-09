@@ -1,5 +1,5 @@
 import type { PrismaClient } from '../generated/prisma/client.js'
-import { calculateStudySessionDurationMinutes } from '../study-tracking/duration.js'
+import { calculateStudySessionActiveElapsedMs } from '../study-tracking/duration.js'
 import type { CounselorTaskStore } from './store.js'
 import { assertStudentTrackAtWrite } from '../task-domain/validation.js'
 
@@ -58,7 +58,12 @@ export const createPrismaCounselorTaskStore = (
           startMinuteOfDay: true,
           status: true,
           studySessions: {
-            select: { cancelledAt: true, endedAt: true, startedAt: true },
+            select: {
+              cancelledAt: true,
+              endedAt: true,
+              pauses: { select: { pausedAt: true, resumedAt: true } },
+              startedAt: true,
+            },
           },
           studentProfileId: true,
           studyPlanId: true,
@@ -94,9 +99,8 @@ export const createPrismaCounselorTaskStore = (
             ),
             hasValidAssessmentAttempt: assessmentAttempts.length > 0,
             recordedMinutes: completedSessions.reduce(
-              (total, session) => total + calculateStudySessionDurationMinutes(
-                session.startedAt,
-                session.endedAt!,
+              (total, session) => total + Math.round(
+                calculateStudySessionActiveElapsedMs(session, session.endedAt!) / 60_000,
               ),
               0,
             ),

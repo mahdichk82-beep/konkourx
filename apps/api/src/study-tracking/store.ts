@@ -12,6 +12,7 @@ import type {
   StartStudySessionResult,
   SwitchStudySessionResult,
   StudySessionFeedbackInput,
+  TimerTransitionResult,
   UpdateStudySessionFeedbackResult,
 } from './types.js'
 
@@ -22,7 +23,7 @@ export interface StudyTrackingStore {
   listSessions(profileId: string, query?: SessionListQuery): Promise<StudySessionRecord[]>
   findActiveSession(profileId: string): Promise<StudySessionRecord | null>
   findSessionById(profileId: string, id: string): Promise<StudySessionRecord | null>
-  createSession(input: Omit<StudySessionRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<StudySessionRecord>
+  createSession(input: Omit<StudySessionRecord, 'id' | 'createdAt' | 'pauses' | 'updatedAt'>): Promise<StudySessionRecord>
   updateSession(profileId: string, id: string, input: Partial<Pick<StudySessionRecord, 'subjectId' | 'dailyTaskId' | 'startedAt' | 'endedAt' | 'notes'>>): Promise<StudySessionRecord | null>
   startTaskSession(
     profileId: string,
@@ -41,6 +42,18 @@ export interface StudyTrackingStore {
     endedAt: Date,
     input: StudySessionFeedbackInput & { notes?: string | null },
   ): Promise<FinishStudySessionResult>
+  pauseSession(
+    profileId: string,
+    id: string,
+    pausedAt: Date,
+    expectedUpdatedAt: Date,
+  ): Promise<TimerTransitionResult>
+  resumeSession(
+    profileId: string,
+    id: string,
+    resumedAt: Date,
+    expectedUpdatedAt: Date,
+  ): Promise<TimerTransitionResult>
   cancelSession(
     profileId: string,
     id: string,

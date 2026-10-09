@@ -48,21 +48,28 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
             {
               cancelledAt: null,
               endedAt: new Date('2026-09-11T09:30:00.000Z'),
+              pauses: [{
+                pausedAt: new Date('2026-09-11T09:10:00.000Z'),
+                resumedAt: new Date('2026-09-11T09:20:00.000Z'),
+              }],
               startedAt: new Date('2026-09-11T09:00:00.000Z'),
             },
             {
               cancelledAt: null,
               endedAt: new Date('2026-09-11T10:45:00.000Z'),
+              pauses: [],
               startedAt: new Date('2026-09-11T10:00:00.000Z'),
             },
             {
               cancelledAt: null,
               endedAt: null,
+              pauses: [],
               startedAt: new Date('2026-09-11T11:00:00.000Z'),
             },
             {
               cancelledAt: new Date('2026-09-11T12:10:00.000Z'),
               endedAt: null,
+              pauses: [],
               startedAt: new Date('2026-09-11T12:00:00.000Z'),
             },
           ],
@@ -125,7 +132,12 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       startMinuteOfDay: true,
       status: true,
       studySessions: {
-        select: { cancelledAt: true, endedAt: true, startedAt: true },
+        select: {
+          cancelledAt: true,
+          endedAt: true,
+          pauses: { select: { pausedAt: true, resumedAt: true } },
+          startedAt: true,
+        },
       },
       studentProfileId: true,
       studyPlanId: true,
@@ -143,7 +155,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
     where: { studentProfileId: ids.student },
   }])
   assert.equal(result.items[0]?.source, 'PERSONAL')
-  assert.equal(result.items[0]?.recordedMinutes, 75)
+  assert.equal(result.items[0]?.recordedMinutes, 65)
   assert.equal(result.items[0]?.studySessionCount, 4)
   assert.equal(result.items[0]?.completedStudySessionCount, 2)
   assert.equal(result.items[0]?.hasActiveStudySession, true)

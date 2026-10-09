@@ -91,6 +91,8 @@ const store: StudyTrackingStore = {
       }
     : { ok: false, reason: 'TASK_NOT_FOUND' },
   finishSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
+  pauseSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
+  resumeSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   cancelSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   updateSessionFeedback: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   listGoals: async () => [],
@@ -748,6 +750,132 @@ test('focused feedback route is strict, owner scoped, clearable, and finished-on
     method: 'PATCH',
     payload: { focusRating: 3 },
     url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+  })
+  assert.equal(anonymous.statusCode, 401)
+  await anonymousApp.close()
+})
+
+test('pause and resume routes are owner scoped, server timed, and return canonical timer state', async () => {
+  const startedAt = new Date('2026-09-03T08:00:00.000Z')
+  const updatedAt = new Date('2026-09-03T08:00:00.000Z')
+  const serverNow = new Date('2026-09-03T09:00:00.000Z')
+  const base = {
+    cancelledAt: null,
+    createdAt: startedAt,
+    dailyTaskId: taskId,
+    endedAt: null,
+    focusRating: null,
+    id: '00000000-0000-4000-8000-000000000040',
+    isTimerManaged: true,
+    notes: null,
+    startedAt,
+    studentProfileId: 'student-profile-1',
+    studyQualityRating: null,
+    subjectId,
+    updatedAt,
+  }
+  const received: Array<{ action: string; expectedUpdatedAt: Date; transitionAt: Date }> = []
+  const app = createApp(user, {
+    ...store,
+    pauseSession: async (profileId, id, transitionAt, expected) => {
+      assert.equal(profileId, base.studentProfileId)
+      assert.equal(id, base.id)
+      received.push({ action: 'pause', expectedUpdatedAt: expected, transitionAt })
+      return {
+        ok: true,
+        value: {
+          ...base,
+          pauses: [{ id: 'pause-1', pausedAt: transitionAt, resumedAt: null, studySessionId: base.id }],
+          updatedAt: transitionAt,
+        },
+      }
+    },
+    resumeSession: async (_profileId, _id, transitionAt, expected) => {
+      received.push({ action: 'resume', expectedUpdatedAt: expected, transitionAt })
+      return {
+        ok: true,
+        value: {
+          ...base,
+          pauses: [{ id: 'pause-1', pausedAt: serverNow, resumedAt: transitionAt, studySessionId: base.id }],
+          updatedAt: transitionAt,
+        },
+      }
+    },
+  })
+
+  const pause = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { expectedUpdatedAt: updatedAt.toISOString() },
+    url: `/api/v1/student/study-sessions/${base.id}/pause`,
+  })
+  assert.equal(pause.statusCode, 200)
+  assert.equal(pause.json().data.timerState, 'PAUSED')
+  assert.equal(pause.json().data.serverNow, serverNow.toISOString())
+  assert.equal(pause.json().data.activeElapsedMs, 3_600_000)
+  assert.equal(pause.json().data.pausedAt, serverNow.toISOString())
+
+  const resume = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { expectedUpdatedAt: serverNow.toISOString() },
+    url: `/api/v1/student/study-sessions/${base.id}/resume`,
+  })
+  assert.equal(resume.statusCode, 200)
+  assert.equal(resume.json().data.timerState, 'RUNNING')
+  assert.equal(resume.json().data.pausedAt, null)
+  assert.deepEqual(received, [
+    { action: 'pause', expectedUpdatedAt: updatedAt, transitionAt: serverNow },
+    { action: 'resume', expectedUpdatedAt: serverNow, transitionAt: serverNow },
+  ])
+  await app.close()
+})
+
+test('timer transition routes reject stale, forged, unauthenticated, and non-Student requests', async () => {
+  const sessionId = '00000000-0000-4000-8000-000000000041'
+  const staleApp = createApp(user, {
+    ...store,
+    pauseSession: async () => ({ ok: false, reason: 'SESSION_STATE_STALE' }),
+  })
+  const stale = await staleApp.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { expectedUpdatedAt: '2026-09-03T08:00:00.000Z' },
+    url: `/api/v1/student/study-sessions/${sessionId}/pause`,
+  })
+  assert.equal(stale.statusCode, 409)
+  assert.equal(stale.json().error.code, 'SESSION_STATE_STALE')
+
+  for (const payload of [{}, { expectedUpdatedAt: 'invalid' }, {
+    expectedUpdatedAt: '2026-09-03T08:00:00.000Z',
+    pausedAt: '2026-09-03T08:30:00.000Z',
+  }]) {
+    const invalid = await staleApp.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: `/api/v1/student/study-sessions/${sessionId}/pause`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
+  await staleApp.close()
+
+  const counselorApp = createApp(counselor)
+  const forbidden = await counselorApp.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { expectedUpdatedAt: '2026-09-03T08:00:00.000Z' },
+    url: `/api/v1/student/study-sessions/${sessionId}/resume`,
+  })
+  assert.equal(forbidden.statusCode, 403)
+  await counselorApp.close()
+
+  const anonymousApp = createApp()
+  const anonymous = await anonymousApp.inject({
+    method: 'PATCH',
+    payload: { expectedUpdatedAt: '2026-09-03T08:00:00.000Z' },
+    url: `/api/v1/student/study-sessions/${sessionId}/resume`,
   })
   assert.equal(anonymous.statusCode, 401)
   await anonymousApp.close()

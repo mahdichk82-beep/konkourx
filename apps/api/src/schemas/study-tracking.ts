@@ -31,6 +31,9 @@ export const switchStudyTaskSchema = z.object({
   currentSessionAction: z.enum(['FINISH', 'CANCEL']).optional().default('FINISH'),
 }).strict()
 export const cancelStudySessionSchema = z.object({}).strict()
+export const timerTransitionSchema = z.object({
+  expectedUpdatedAt: dateTime,
+}).strict()
 
 export const finishStudySessionSchema = z.object({
   focusRating: studySessionRating.optional(),
