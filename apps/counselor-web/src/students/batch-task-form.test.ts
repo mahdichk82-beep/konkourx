@@ -5,6 +5,7 @@ import {
   createBatchTaskRow,
   removeBatchTaskRow,
   submitBatchTaskRows,
+  toBatchTaskInputs,
   updateBatchTaskRowCurriculum,
   validateBatchTaskRows,
 } from './batch-task-form.ts'
@@ -31,7 +32,7 @@ const validRow = () => ({
 test('batch form validates required and non-negative row fields', () => {
   assert.equal(validateBatchTaskRows([validRow()]), null)
   assert.match(validateBatchTaskRows([{ ...validRow(), title: ' ' }]) ?? '', /عنوان/)
-  assert.match(validateBatchTaskRows([{ ...validRow(), plannedMinutes: '-1' }]) ?? '', /زمان/)
+  assert.match(validateBatchTaskRows([{ ...validRow(), plannedMinutes: '-1' }]) ?? '', /مدت تخمینی/)
   assert.match(validateBatchTaskRows([{ ...validRow(), plannedTestCount: '-1' }]) ?? '', /تعداد تست/)
   assert.match(validateBatchTaskRows([{ ...validRow(), contentType: '' }]) ?? '', /نوع کار/)
   assert.ok(validateBatchTaskRows([{
@@ -74,9 +75,11 @@ test('batch form submits normalized rows and returns successful responses', asyn
       selectors: [{ rootKind: 'NODE', rootId: 'node-1', selector: 'SUBTREE' }],
     },
     description: 'مرور فصل',
+    endMinuteOfDay: null,
     plannedMinutes: 90,
     plannedTestCount: 12,
     scheduledFor: '2026-09-15',
+    startMinuteOfDay: null,
     subjectId: null,
     title: 'مطالعه زیست فصل ۳',
     topicId: null,
@@ -99,9 +102,11 @@ test('batch GENERAL omits both Curriculum contracts and legacy links', async () 
   assert.deepEqual(submitted, [{
     contentType: 'GENERAL',
     description: 'مرور فصل',
+    endMinuteOfDay: null,
     plannedMinutes: 90,
     plannedTestCount: 0,
     scheduledFor: '2026-09-15',
+    startMinuteOfDay: null,
     subjectId: null,
     title: 'مطالعه زیست فصل ۳',
     topicId: null,
@@ -119,4 +124,20 @@ test('batch form reports request errors without presenting success', async () =>
 
   assert.equal(result.ok, false)
   if (!result.ok) assert.equal(result.error, requestError)
+})
+
+test('batch form validates and serializes an independent timed schedule per row', () => {
+  const timed = {
+    ...validRow(),
+    schedule: { isVolumetric: false, startTime: '23:45', endTime: '24:00' },
+  }
+  assert.equal(validateBatchTaskRows([timed]), null)
+  assert.deepEqual(toBatchTaskInputs([timed])[0] && {
+    startMinuteOfDay: toBatchTaskInputs([timed])[0]?.startMinuteOfDay,
+    endMinuteOfDay: toBatchTaskInputs([timed])[0]?.endMinuteOfDay,
+  }, { startMinuteOfDay: 1425, endMinuteOfDay: 1440 })
+  assert.match(validateBatchTaskRows([{
+    ...timed,
+    schedule: { ...timed.schedule, endTime: '23:30' },
+  }]) ?? '', /زمان‌بندی/)
 })

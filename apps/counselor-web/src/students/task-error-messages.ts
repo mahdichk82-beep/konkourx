@@ -7,6 +7,7 @@ const messages: Record<string, string> = {
   TASK_STUDY_TARGET_REQUIRED: 'برای کار درسی حداقل یک مبحث لازم است.',
   TASK_GENERAL_TARGET_FORBIDDEN: 'کار عمومی نباید مبحث درسی داشته باشد.',
   TASK_LEGACY_LINK_FORBIDDEN: 'پیوند درس یا مبحث قدیمی برای این نوع کار مجاز نیست.',
+  TASK_SCHEDULE_INVALID: 'بازه زمانی باید در همان روز، با فاصله‌های ۱۵ دقیقه‌ای و ساعت پایان بعد از شروع باشد.',
 }
 
 export const taskContentErrorMessage = (code: string): string | null => messages[code] ?? null

@@ -118,6 +118,13 @@
 .planning-form input:focus, .planning-form textarea:focus, .planning-form select:focus, .planning-filters select:focus { border-color: var(--action-primary); }
 .planning-form select:disabled { cursor: not-allowed; opacity: 0.68; }
 .planning-form__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.planning-form label > small { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
+.task-schedule-fields { min-width: 0; padding: 0.8rem; display: grid; gap: 0.65rem; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); }
+.task-schedule-fields legend { padding-inline: 0.35rem; color: var(--text-primary); font-size: 0.84rem; font-weight: 800; }
+.task-schedule-fields__toggle, .planning-form .task-schedule-fields__toggle { display: flex; align-items: center; gap: 0.55rem; }
+.task-schedule-fields__toggle input, .planning-form .task-schedule-fields__toggle input { width: auto; min-height: 0; accent-color: var(--action-primary); }
+.task-schedule-fields > small { color: var(--text-muted); font-size: 0.75rem; line-height: 1.7; }
+.task-schedule-fields__times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .planning-topic-field__state, .planning-topic-field__error { font-size: 0.78rem; font-weight: 500; line-height: 1.7; }
 .planning-topic-field__state { color: var(--text-muted); }
 .planning-topic-field__error { color: var(--status-danger); }
@@ -163,8 +170,9 @@
 .task-curriculum-execution small { color: var(--text-muted); font-size: 0.72rem; line-height: 1.6; }
 .task-schedule { margin-top: 0.8rem; display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem; }
 .task-schedule label { display: grid; gap: 0.4rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; }
-.task-schedule input { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }
-.task-schedule input:focus { border-color: var(--action-primary); outline: none; }
+.task-schedule input, .task-schedule select { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }
+.task-schedule input:focus, .task-schedule select:focus { border-color: var(--action-primary); outline: none; }
+.task-schedule > .task-schedule-fields { flex: 1 1 100%; }
 .task-execution { margin-top: 0.8rem; display: grid; justify-items: start; gap: 0.75rem; }
 .task-execution__panel { width: 100%; padding: 0.9rem; display: grid; gap: 0.8rem; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); }
 .task-execution__state { margin: 0; color: var(--text-muted); font-size: 0.84rem; }
@@ -273,7 +281,7 @@
   .planning-hero, .active-study-card, .task-item { align-items: stretch; flex-direction: column; }
   .planning-hero__actions, .weekly-planning-toolbar__actions { display: grid; grid-template-columns: 1fr; }
   .planning-hero .button, .task-actions .button, .weekly-planning-toolbar__actions .button { width: 100%; }
-  .planning-form__row, .planning-filters, .inline-subject__form { grid-template-columns: 1fr; }
+  .planning-form__row, .planning-filters, .inline-subject__form, .task-schedule-fields__times { grid-template-columns: 1fr; }
   .planning-form__actions .button { width: 100%; }
   .active-study-card__actions, .active-study-card .button, .study-switch-card__actions, .study-switch-card__actions .button { width: 100%; }
   .task-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

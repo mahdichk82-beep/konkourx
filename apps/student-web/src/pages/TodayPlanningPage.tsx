@@ -24,7 +24,17 @@ import {
   type StudySubject,
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
+import { TaskScheduleFields } from '../planning/TaskScheduleFields'
 import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
+import {
+  createScheduleDraft,
+  formatJalaliDate,
+  formatTaskSchedule,
+  prepareTaskSchedule,
+  scheduleDraftFromTask,
+  scheduleHasChanged,
+  type TaskScheduleDraft,
+} from '../planning/task-scheduling'
 import { createStudentCurriculumClient } from '../curriculum/curriculum-client'
 import {
   activeSessionAfterCancel,
@@ -90,7 +100,8 @@ const planningErrorMessage = (error: unknown): string => {
     SUBJECT_NOT_FOUND: 'درس انتخاب‌شده دیگر در دسترس نیست.',
     TASK_ACTIVE_SESSION_EXISTS: 'ابتدا مطالعه فعال این کار را پایان دهید، سپس نتیجه کار را ثبت کنید.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست. فهرست را تازه‌سازی کنید.',
-    TASK_ALREADY_EXECUTED: 'برای این کار سابقه مطالعه ثبت شده است و تاریخ آن قابل تغییر نیست.',
+    TASK_ALREADY_EXECUTED: 'برای این کار سابقه اجرا ثبت شده است و زمان‌بندی آن قابل تغییر نیست.',
+    TASK_SCHEDULE_INVALID: 'بازه زمانی باید در همان روز، با فاصله‌های ۱۵ دقیقه‌ای و ساعت پایان بعد از شروع باشد.',
     CURRICULUM_EXECUTION_STARTED: 'به‌دلیل شروع اجرای مباحث، ویرایش آن‌ها ممکن نیست.',
     STUDENT_TRACK_NOT_SET: 'برای انتخاب مباحث، ابتدا رشته تحصیلی خود را در پروفایل مشخص کنید.',
     CURRICULUM_TARGET_NOT_IN_STUDENT_TRACK: 'مبحث انتخاب‌شده برای رشته تحصیلی شما مجاز نیست.',
@@ -102,7 +113,7 @@ const planningErrorMessage = (error: unknown): string => {
     TASK_LEGACY_LINK_FORBIDDEN: 'پیوند درس یا مبحث قدیمی برای این نوع کار مجاز نیست.',
     TASK_NOT_PENDING: 'مباحث کار نهایی‌شده قابل ویرایش نیستند.',
     TASK_SOURCE_FORBIDDEN: 'فقط مباحث کار شخصی را می‌توانید ویرایش کنید.',
-    TASK_RESCHEDULE_FORBIDDEN: 'تغییر تاریخ کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
+    TASK_RESCHEDULE_FORBIDDEN: 'تغییر زمان‌بندی کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
     TASK_UPDATE_FORBIDDEN: 'تغییر محتوای کار تعیین‌شده توسط مشاور مجاز نیست.',
     CURRICULUM_UNAVAILABLE: 'فهرست مباحث در حال حاضر در دسترس نیست. کمی بعد دوباره تلاش کنید.',
     TOPIC_ARCHIVED: 'این مبحث بایگانی شده و برای کار جدید قابل استفاده نیست.',
@@ -217,7 +228,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [refreshKey, setRefreshKey] = useState(0)
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set())
   const [reschedulingTaskIds, setReschedulingTaskIds] = useState<Set<string>>(new Set())
-  const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
+  const [scheduleDrafts, setScheduleDrafts] = useState<
+    Record<string, TaskScheduleDraft & { scheduledFor: string }>
+  >({})
   const [skipReasonDrafts, setSkipReasonDrafts] = useState<
     Record<string, DailyTaskSkipReason | ''>
   >({})
@@ -227,6 +240,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [taskScheduledFor, setTaskScheduledFor] = useState(todayKey)
   const [description, setDescription] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
+  const [taskSchedule, setTaskSchedule] = useState<TaskScheduleDraft>(createScheduleDraft)
   const [contentType, setContentType] = useState<'STUDY' | 'GENERAL' | ''>('')
   const [isSubmittingTask, setIsSubmittingTask] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -594,13 +608,29 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   }
 
   const handleScheduleUpdate = async (task: DailyTask) => {
-    const scheduledFor = scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)
-    if (!scheduledFor || scheduledFor === task.scheduledFor.slice(0, 10)) return
+    const draft = scheduleDrafts[task.id] ?? {
+      ...scheduleDraftFromTask(task.startMinuteOfDay, task.endMinuteOfDay),
+      scheduledFor: task.scheduledFor.slice(0, 10),
+    }
+    const schedule = prepareTaskSchedule(draft)
+    if (!draft.scheduledFor) return
+    if (!schedule.ok) {
+      setActionError(schedule.message)
+      return
+    }
+    if (
+      draft.scheduledFor === task.scheduledFor.slice(0, 10)
+      && !scheduleHasChanged(draft, task.startMinuteOfDay, task.endMinuteOfDay)
+    ) return
     setActionError(null)
     setReschedulingTaskIds((current) => new Set(current).add(task.id))
 
     try {
-      const updated = await planningClient.rescheduleTask(task.id, scheduledFor)
+      const updated = await planningClient.rescheduleTask(task.id, {
+        endMinuteOfDay: schedule.value.endMinuteOfDay,
+        scheduledFor: draft.scheduledFor,
+        startMinuteOfDay: schedule.value.startMinuteOfDay,
+      })
       setTasks((current) => updated.scheduledFor.slice(0, 10) === todayKey
         ? current.map((item) => item.id === updated.id ? updated : item)
         : current.filter((item) => item.id !== updated.id))
@@ -628,6 +658,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     const trimmedTitle = title.trim()
     const trimmedDescription = description.trim()
     const minutes = estimatedMinutes === '' ? null : Number(estimatedMinutes)
+    const schedule = prepareTaskSchedule(taskSchedule)
 
     if (!trimmedTitle) {
       setFormError('عنوان کار را وارد کنید.')
@@ -645,6 +676,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setFormError('زمان تخمینی باید عددی صحیح بین ۱ تا ۱۴۴۰ دقیقه باشد.')
       return
     }
+    if (!schedule.ok) {
+      setFormError(schedule.message)
+      return
+    }
     const taskContent = prepareTaskContent(contentType, taskCurriculum)
     if (!taskContent.ok) {
       setFormError(taskContent.message)
@@ -659,8 +694,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
           ? { curriculumSelection: taskContent.curriculumSelection }
           : {}),
         description: trimmedDescription || null,
+        endMinuteOfDay: schedule.value.endMinuteOfDay,
         estimatedMinutes: minutes,
         scheduledFor: taskScheduledFor,
+        startMinuteOfDay: schedule.value.startMinuteOfDay,
         subjectId: taskContent.subjectId,
         title: trimmedTitle,
         topicId: taskContent.topicId,
@@ -674,6 +711,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setTitle('')
       setDescription('')
       setEstimatedMinutes('')
+      setTaskSchedule(createScheduleDraft())
       setTaskScheduledFor(todayKey)
       setContentType('')
       setTaskCurriculum(createEmptyPlanningCurriculumValue())
@@ -865,9 +903,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
               <label htmlFor="task-date">
                 تاریخ انجام
                 <input id="task-date" onChange={(event) => setTaskScheduledFor(event.target.value)} required type="date" value={taskScheduledFor} />
+                <small>تاریخ شمسی: {formatJalaliDate(taskScheduledFor)}</small>
               </label>
               <label htmlFor="task-minutes">
-                زمان تخمینی (دقیقه)
+                مدت تخمینی مطالعه (دقیقه)
                 <input
                   id="task-minutes"
                   inputMode="numeric"
@@ -880,6 +919,12 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                 />
               </label>
             </div>
+
+            <TaskScheduleFields
+              idPrefix="student-task-schedule"
+              onChange={setTaskSchedule}
+              value={taskSchedule}
+            />
 
             {contentType === 'STUDY' ? <PlanningCurriculumField
               audience="student"
@@ -1006,6 +1051,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
               const taskCurriculumValue = planningCurriculumValueFromSnapshots(task.curriculum.targets)
               const executionItems = curriculumExecutionItems(task.curriculum.targets)
               const completionState = taskCompletionState(task.curriculum)
+              const scheduleDraft = scheduleDrafts[task.id] ?? {
+                ...scheduleDraftFromTask(task.startMinuteOfDay, task.endMinuteOfDay),
+                scheduledFor: task.scheduledFor.slice(0, 10),
+              }
               const canToggleExecutionItems = canToggleCurriculumExecutionItems({
                 contentType: task.contentType,
                 source: task.source,
@@ -1028,8 +1077,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       {task.source === 'COUNSELOR' && (
                         <span className="task-source--counselor">تعیین‌شده توسط مشاور</span>
                       )}
+                      <span>{formatJalaliDate(task.scheduledFor.slice(0, 10))}</span>
+                      <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
                       {task.estimatedMinutes !== null && (
-                        <span>{numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
+                        <span>مدت تخمینی: {numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
                       )}
                       {task.plannedTestCount > 0 && (
                         <span>{numberFormatter.format(task.plannedTestCount)} تست برنامه‌ریزی‌شده</span>
@@ -1118,21 +1169,38 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                             id={`task-schedule-${task.id}`}
                             onChange={(event) => setScheduleDrafts((current) => ({
                               ...current,
-                              [task.id]: event.target.value,
+                              [task.id]: { ...scheduleDraft, scheduledFor: event.target.value },
                             }))}
                             type="date"
-                            value={scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)}
+                            value={scheduleDraft.scheduledFor}
                           />
+                          <small>تاریخ شمسی: {formatJalaliDate(scheduleDraft.scheduledFor)}</small>
                         </label>
+                        <TaskScheduleFields
+                          disabled={reschedulingTaskIds.has(task.id)}
+                          idPrefix={`student-task-${task.id}-schedule`}
+                          onChange={(value) => setScheduleDrafts((current) => ({
+                            ...current,
+                            [task.id]: { ...value, scheduledFor: scheduleDraft.scheduledFor },
+                          }))}
+                          value={scheduleDraft}
+                        />
                         <Button
                           disabled={
                             reschedulingTaskIds.has(task.id)
-                            || (scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)) === task.scheduledFor.slice(0, 10)
+                            || (
+                              scheduleDraft.scheduledFor === task.scheduledFor.slice(0, 10)
+                              && !scheduleHasChanged(
+                                scheduleDraft,
+                                task.startMinuteOfDay,
+                                task.endMinuteOfDay,
+                              )
+                            )
                           }
                           type="submit"
                           variant="secondary"
                         >
-                          {reschedulingTaskIds.has(task.id) ? 'در حال جابه‌جایی…' : 'ثبت تاریخ جدید'}
+                          {reschedulingTaskIds.has(task.id) ? 'در حال ثبت…' : 'ثبت زمان‌بندی'}
                         </Button>
                       </form>
                     )}

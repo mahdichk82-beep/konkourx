@@ -109,6 +109,13 @@
 .student-task-form input:focus, .student-task-form select:focus, .student-task-form textarea:focus { border-color: var(--action-primary); }
 .student-task-form input[type='date'], .student-task-form input[type='number'] { direction: ltr; text-align: right; }
 .student-task-form select:disabled { opacity: 0.65; cursor: not-allowed; }
+.student-task-form label > small { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
+.task-schedule-fields { min-width: 0; padding: 0.8rem; display: grid; gap: 0.65rem; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); }
+.task-schedule-fields legend { padding-inline: 0.35rem; color: var(--text-primary); font-size: 0.84rem; font-weight: 800; }
+.task-schedule-fields__toggle, .student-task-form .task-schedule-fields__toggle { display: flex; align-items: center; gap: 0.55rem; }
+.task-schedule-fields__toggle input, .student-task-form .task-schedule-fields__toggle input { width: auto; min-height: 0; accent-color: var(--action-primary); }
+.task-schedule-fields > small { color: var(--text-muted); font-size: 0.75rem; line-height: 1.7; }
+.task-schedule-fields__times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .student-task-form__hint { margin: 0; padding: 0.8rem; border-radius: 10px; color: var(--text-muted); background: var(--bg-subtle); font-size: 0.84rem; line-height: 1.7; }
 .student-task-form__actions { display: flex; justify-content: flex-start; }
 .student-batch-rows { display: grid; gap: 1rem; }
@@ -136,8 +143,9 @@
 .counselor-task__meta span { padding: 0.25rem 0.5rem; border-radius: 8px; background: var(--bg-surface); }
 .counselor-task__schedule { margin-top: 0.8rem; display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem; }
 .counselor-task__schedule label { display: grid; gap: 0.4rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; }
-.counselor-task__schedule input { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }
-.counselor-task__schedule input:focus { border-color: var(--action-primary); outline: none; }
+.counselor-task__schedule input, .counselor-task__schedule select { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }
+.counselor-task__schedule input:focus, .counselor-task__schedule select:focus { border-color: var(--action-primary); outline: none; }
+.counselor-task__schedule > .task-schedule-fields { flex: 1 1 100%; }
 .counselor-task__schedule small { align-self: center; color: var(--text-muted); font-size: 0.75rem; }
 .student-task-list__actions { display: flex; justify-content: center; }
 
@@ -209,7 +217,7 @@
   .student-card__heading .student-status { grid-column: 1 / -1; justify-self: start; }
   .student-card__facts { grid-template-columns: 1fr; }
   .students-inline-error { align-items: stretch; flex-direction: column; }
-  .student-task-form__grid { grid-template-columns: 1fr; }
+  .student-task-form__grid, .task-schedule-fields__times { grid-template-columns: 1fr; }
   .student-batch-row__grid { grid-template-columns: 1fr; }
   .student-batch-row__description { grid-column: auto; }
   .student-batch-actions { display: grid; grid-template-columns: 1fr; }

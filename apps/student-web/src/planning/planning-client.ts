@@ -42,6 +42,7 @@ export type DailyTask = {
     totalItemCount: number
   }
   description: string | null
+  endMinuteOfDay: number | null
   estimatedMinutes: number | null
   id: string
   plannedTestCount: number
@@ -49,6 +50,7 @@ export type DailyTask = {
   skipReason: DailyTaskSkipReason | null
   skippedAt: string | null
   source: DailyTaskSource
+  startMinuteOfDay: number | null
   status: DailyTaskStatus
   subjectId: string | null
   topicId: string | null
@@ -99,7 +101,9 @@ export type CreateTaskInput = {
   curriculumSelection?: CurriculumSelectionV2
   description: string | null
   estimatedMinutes: number | null
+  endMinuteOfDay: number | null
   scheduledFor: string
+  startMinuteOfDay: number | null
   subjectId: string | null
   topicId: string | null
   title: string
@@ -110,6 +114,12 @@ export type UpdateTaskInput = {
   status?: DailyTaskStatus
   subjectId?: string | null
   topicId?: string | null
+}
+
+export type RescheduleTaskInput = {
+  endMinuteOfDay: number | null
+  scheduledFor: string
+  startMinuteOfDay: number | null
 }
 
 export type CreateTaskSessionInput = {
@@ -325,11 +335,11 @@ class PlanningClient {
     })
   }
 
-  rescheduleTask(id: string, scheduledFor: string): Promise<DailyTask> {
+  rescheduleTask(id: string, input: RescheduleTaskInput): Promise<DailyTask> {
     return authClient.authorizedRequest<DailyTask>(
       `/student/daily-tasks/${encodeURIComponent(id)}/schedule`,
       {
-        body: JSON.stringify({ scheduledFor }),
+        body: JSON.stringify(input),
         method: 'PATCH',
       },
     )

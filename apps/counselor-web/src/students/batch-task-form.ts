@@ -3,6 +3,11 @@ import type {
   CreateCounselorTaskBatchResult,
 } from './student-tasks-client'
 import type { PlanningCurriculumValue } from '@konkourx/curriculum-browser'
+import {
+  createScheduleDraft,
+  prepareTaskSchedule,
+  type TaskScheduleDraft,
+} from './task-scheduling.ts'
 
 export type BatchTaskRow = {
   contentType: 'STUDY' | 'GENERAL' | ''
@@ -13,6 +18,7 @@ export type BatchTaskRow = {
   scheduledFor: string
   plannedMinutes: string
   plannedTestCount: string
+  schedule: TaskScheduleDraft
 }
 
 export type BatchSubmitResult =
@@ -42,6 +48,7 @@ export const createBatchTaskRow = (id: string, scheduledFor: string): BatchTaskR
   id,
   plannedMinutes: '0',
   plannedTestCount: '0',
+  schedule: createScheduleDraft(),
   scheduledFor,
   title: '',
 })
@@ -71,8 +78,10 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
     if (!row.title.trim()) return `عنوان ردیف ${rowNumber} الزامی است.`
     if (row.title.trim().length > 200) return `عنوان ردیف ${rowNumber} بیش از حد طولانی است.`
     if (!dateOnly(row.scheduledFor)) return `تاریخ ردیف ${rowNumber} معتبر نیست.`
+    const schedule = prepareTaskSchedule(row.schedule)
+    if (!schedule.ok) return `زمان‌بندی ردیف ${rowNumber}: ${schedule.message}`
     if (!nonNegativeInteger(row.plannedMinutes, 1440)) {
-      return `زمان برنامه‌ریزی‌شده ردیف ${rowNumber} باید عدد صحیح بین صفر و ۱۴۴۰ باشد.`
+      return `مدت تخمینی مطالعه ردیف ${rowNumber} باید عدد صحیح بین صفر و ۱۴۴۰ باشد.`
     }
     if (!nonNegativeInteger(row.plannedTestCount)) {
       return `تعداد تست ردیف ${rowNumber} باید عدد صحیح نامنفی باشد.`
@@ -92,19 +101,25 @@ export const validateBatchTaskRows = (rows: BatchTaskRow[]): string | null => {
 }
 
 export const toBatchTaskInputs = (rows: BatchTaskRow[]): CreateCounselorBatchTaskInput[] =>
-  rows.map((row) => ({
+  rows.map((row) => {
+    const schedule = prepareTaskSchedule(row.schedule)
+    if (!schedule.ok) throw new Error(schedule.message)
+    return {
     contentType: row.contentType as 'STUDY' | 'GENERAL',
     ...(row.contentType === 'STUDY' && row.curriculum.kind === 'V2'
       ? { curriculumSelection: row.curriculum.selection }
       : {}),
     description: row.description.trim() || null,
+    endMinuteOfDay: schedule.value.endMinuteOfDay,
     plannedMinutes: Number(row.plannedMinutes),
     plannedTestCount: row.contentType === 'STUDY' ? Number(row.plannedTestCount) : 0,
     scheduledFor: row.scheduledFor,
+    startMinuteOfDay: schedule.value.startMinuteOfDay,
     subjectId: null,
     title: row.title.trim(),
     topicId: null,
-  }))
+    }
+  })
 
 export const submitBatchTaskRows = async (
   rows: BatchTaskRow[],

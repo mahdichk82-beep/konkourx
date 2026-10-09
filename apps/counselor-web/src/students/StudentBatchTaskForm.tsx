@@ -8,6 +8,7 @@ import { AuthApiError, authClient } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { createCounselorCurriculumClient } from '../curriculum/curriculum-client'
+import { TaskScheduleFields } from './TaskScheduleFields'
 import {
   addBatchTaskRow,
   createBatchTaskRow,
@@ -18,6 +19,7 @@ import {
 } from './batch-task-form'
 import { studentTasksClient } from './student-tasks-client'
 import { taskContentErrorMessage } from './task-error-messages'
+import { formatJalaliDate } from './task-scheduling'
 
 type StudentBatchTaskFormProps = {
   onTasksCreated?(): void
@@ -164,9 +166,10 @@ export function StudentBatchTaskForm({
                         type="date"
                         value={row.scheduledFor}
                       />
+                      <small>تاریخ شمسی: {formatJalaliDate(row.scheduledFor)}</small>
                     </label>
                     <label htmlFor={`${row.id}-minutes`}>
-                      زمان برنامه‌ریزی‌شده (دقیقه)
+                      مدت تخمینی مطالعه (دقیقه)
                       <input
                         id={`${row.id}-minutes`}
                         max={1440}
@@ -199,6 +202,11 @@ export function StudentBatchTaskForm({
                       />
                     </label>
                   </div>
+                  <TaskScheduleFields
+                    idPrefix={`${row.id}-schedule`}
+                    onChange={(schedule) => updateRow(row.id, 'schedule', schedule)}
+                    value={row.schedule}
+                  />
                   {row.contentType === 'STUDY' ? <PlanningCurriculumField
                     audience="counselor"
                     client={curriculumClient}

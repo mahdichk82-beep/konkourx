@@ -9,8 +9,15 @@ import { AuthApiError, authClient } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { createCounselorCurriculumClient } from '../curriculum/curriculum-client'
+import { TaskScheduleFields } from './TaskScheduleFields'
 import { studentTasksClient } from './student-tasks-client'
 import { taskContentErrorMessage } from './task-error-messages'
+import {
+  createScheduleDraft,
+  formatJalaliDate,
+  prepareTaskSchedule,
+  type TaskScheduleDraft,
+} from './task-scheduling'
 
 type StudentTaskFormProps = {
   onTaskCreated?(): void
@@ -47,6 +54,7 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
   const [description, setDescription] = useState('')
   const [scheduledFor, setScheduledFor] = useState(localDate)
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
+  const [schedule, setSchedule] = useState<TaskScheduleDraft>(createScheduleDraft)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -72,6 +80,11 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
       setFormError('برای کار درسی حداقل یک مبحث معتبر انتخاب کنید.')
       return
     }
+    const preparedSchedule = prepareTaskSchedule(schedule)
+    if (!preparedSchedule.ok) {
+      setFormError(preparedSchedule.message)
+      return
+    }
 
     setSubmitting(true)
     setFormError(null)
@@ -84,7 +97,9 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
           : {}),
         title: normalizedTitle,
         description: description.trim() || null,
+        endMinuteOfDay: preparedSchedule.value.endMinuteOfDay,
         scheduledFor,
+        startMinuteOfDay: preparedSchedule.value.startMinuteOfDay,
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
         subjectId: null,
         topicId: null,
@@ -92,6 +107,7 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
       setTitle('')
       setDescription('')
       setEstimatedMinutes('')
+      setSchedule(createScheduleDraft())
       setContentType('')
       setTaskCurriculum(createEmptyPlanningCurriculumValue())
       setSuccess(`وظیفه «${task.title}» برای دانش‌آموز ثبت شد.`)
@@ -136,9 +152,10 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
                 type="date"
                 value={scheduledFor}
               />
+              <small>تاریخ شمسی: {formatJalaliDate(scheduledFor)}</small>
             </label>
             <label htmlFor="counselor-task-minutes">
-              زمان تخمینی (دقیقه)
+              مدت تخمینی مطالعه (دقیقه)
               <input
                 id="counselor-task-minutes"
                 max={1440}
@@ -150,6 +167,12 @@ export function StudentTaskForm({ onTaskCreated, studentId, studentLabel }: Stud
               />
             </label>
           </div>
+
+          <TaskScheduleFields
+            idPrefix="counselor-task-schedule"
+            onChange={setSchedule}
+            value={schedule}
+          />
 
           {contentType === 'STUDY' ? <PlanningCurriculumField
             audience="counselor"

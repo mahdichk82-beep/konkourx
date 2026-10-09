@@ -28,6 +28,7 @@ export type CounselorTask = {
     totalItemCount: number
   }
   description: string | null
+  endMinuteOfDay: number | null
   estimatedMinutes: number | null
   id: string
   plannedTestCount: number
@@ -35,6 +36,7 @@ export type CounselorTask = {
   skipReason: CounselorTaskSkipReason | null
   skippedAt: string | null
   source: 'PERSONAL' | 'COUNSELOR'
+  startMinuteOfDay: number | null
   status: 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
   studentProfileId: string
   studyPlanId: string | null
@@ -66,8 +68,10 @@ export type CreateCounselorTaskInput = {
   contentType: 'STUDY' | 'GENERAL'
   curriculumSelection?: CurriculumSelectionV2
   description: string | null
+  endMinuteOfDay: number | null
   estimatedMinutes: number | null
   scheduledFor: string
+  startMinuteOfDay: number | null
   subjectId: string | null
   title: string
   topicId: string | null
@@ -77,9 +81,11 @@ export type CreateCounselorBatchTaskInput = {
   contentType: 'STUDY' | 'GENERAL'
   curriculumSelection?: CurriculumSelectionV2
   description: string | null
+  endMinuteOfDay: number | null
   plannedMinutes: number
   plannedTestCount: number
   scheduledFor: string
+  startMinuteOfDay: number | null
   subjectId: string | null
   title: string
   topicId: string | null
@@ -88,6 +94,12 @@ export type CreateCounselorBatchTaskInput = {
 export type CreateCounselorTaskBatchResult = {
   created: number
   tasks: CounselorCreatedTask[]
+}
+
+export type RescheduleCounselorTaskInput = {
+  endMinuteOfDay: number | null
+  scheduledFor: string
+  startMinuteOfDay: number | null
 }
 
 const resourcePath = (studentProfileId: string, suffix: string) =>
@@ -177,7 +189,7 @@ export const studentTasksClient = {
   reschedule(
     studentProfileId: string,
     taskId: string,
-    scheduledFor: string,
+    input: RescheduleCounselorTaskInput,
   ): Promise<CounselorTask> {
     return authClient.authorizedRequest<CounselorTask>(
       resourcePath(
@@ -185,7 +197,7 @@ export const studentTasksClient = {
         `/tasks/${encodeURIComponent(taskId)}/schedule`,
       ),
       {
-        body: JSON.stringify({ scheduledFor }),
+        body: JSON.stringify(input),
         method: 'PATCH',
       },
     )

@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/students/batch-task-form.test.ts src/students/planning-curriculum.test.ts src/students/task-error-messages.test.ts src/students/task-view.test.ts src/components/layout/shell-state.test.ts src/curriculum/curriculum-client.test.ts src/curriculum/curriculum-page.test.ts src/profile/profile-client.test.ts src/profile/profile-state.test.ts src/profile/profile-ui.test.ts"
+    "test": "node --test src/students/batch-task-form.test.ts src/students/planning-curriculum.test.ts src/students/task-error-messages.test.ts src/students/task-scheduling.test.ts src/students/task-view.test.ts src/components/layout/shell-state.test.ts src/curriculum/curriculum-client.test.ts src/curriculum/curriculum-page.test.ts src/profile/profile-client.test.ts src/profile/profile-state.test.ts src/profile/profile-ui.test.ts"
   },
   "dependencies": {
     "@konkourx/brand": "workspace:*",

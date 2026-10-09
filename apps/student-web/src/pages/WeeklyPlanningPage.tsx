@@ -251,7 +251,11 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
     setTasks((current) => replaceTaskDate(current, task.id, scheduledFor))
 
     try {
-      const updated = await planningClient.rescheduleTask(task.id, scheduledFor)
+      const updated = await planningClient.rescheduleTask(task.id, {
+        endMinuteOfDay: task.endMinuteOfDay,
+        scheduledFor,
+        startMinuteOfDay: task.startMinuteOfDay,
+      })
       setTasks((current) => current.map((item) => item.id === updated.id ? updated : item))
       const targetDay = days.find((day) => day.key === scheduledFor)
       setFeedback({
