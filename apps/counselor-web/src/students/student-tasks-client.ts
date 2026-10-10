@@ -18,6 +18,7 @@ export type CounselorTaskTopic = {
 export type CounselorTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
 export type CounselorTask = {
+  actualSolvedTestCount: number
   contentType: 'STUDY' | 'GENERAL' | null
   completedAt: string | null
   createdAt: string

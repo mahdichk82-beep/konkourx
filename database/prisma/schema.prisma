@@ -266,6 +266,7 @@ model DailyTask {
   endMinuteOfDay   Int?                 @db.SmallInt
   estimatedMinutes Int?
   plannedTestCount Int                  @default(0)
+  actualSolvedTestCount Int             @default(0)
   status           DailyTaskStatus      @default(PENDING)
   completedAt      DateTime?
   partialAt        DateTime?

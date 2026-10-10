@@ -14,6 +14,7 @@ import {
   listSubjectsSchema,
   listTasksSchema,
   listTopicsSchema,
+  recordTaskProgressSchema,
   rescheduleTaskSchema,
   subjectIdParamSchema,
   updatePlanSchema,
@@ -161,13 +162,14 @@ export const registerStudentCoreRoutes = (
   )
 
   app.get('/student/daily-tasks', studentOnly, async (request) => {
-    const { date, from, to, ...query } = parseBody(listTasksSchema.safeParse(request.query))
+    const { date, from, to, overdueBefore, ...query } = parseBody(listTasksSchema.safeParse(request.query))
     return successResponse(
       await options.studentCore.tasks.list(request.user!, {
         ...query,
         ...(date === undefined ? {} : { scheduledFor: date }),
         ...(from === undefined ? {} : { scheduledFrom: from }),
         ...(to === undefined ? {} : { scheduledTo: to }),
+        ...(overdueBefore === undefined ? {} : { overdueBefore }),
       }),
       request.context.requestId,
     )
@@ -207,6 +209,17 @@ export const registerStudentCoreRoutes = (
         request.user!,
         parseId(request.params),
         parseBody(rescheduleTaskSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/daily-tasks/:id/progress', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.tasks.recordProgress(
+        request.user!,
+        parseId(request.params),
+        parseBody(recordTaskProgressSchema.safeParse(request.body)),
       ),
       request.context.requestId,
     ),

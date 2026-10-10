@@ -139,6 +139,7 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
     0,
   )
   const plannedTests = tasks.reduce((total, task) => total + task.plannedTestCount, 0)
+  const actualSolvedTests = tasks.reduce((total, task) => total + task.actualSolvedTestCount, 0)
   const presentationSummary = summarizeTaskPresentations(tasks, todayKey)
 
   return (
@@ -172,6 +173,7 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
             <span>{tasks.length.toLocaleString('fa-IR')} وظیفه</span>
             <span>{plannedMinutes.toLocaleString('fa-IR')} دقیقه برنامه‌ریزی‌شده</span>
             <span>{plannedTests.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
+            <span>{actualSolvedTests.toLocaleString('fa-IR')} تست حل‌شده</span>
             {presentationSummary.MISSED > 0 && (
               <span>{presentationSummary.MISSED.toLocaleString('fa-IR')} انجام‌نشده</span>
             )}
@@ -222,6 +224,9 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
                           {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}
                           {task.topicId ? ` · ${topicNames.get(task.topicId) ?? 'مبحث ثبت‌شده'}` : ''}
                         </p>
+                      )}
+                      {task.contentType === 'STUDY' && (
+                        <small>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</small>
                       )}
                       <small>{task.source === 'COUNSELOR' ? 'تعیین‌شده توسط مشاور' : 'برنامه شخصی دانش‌آموز'}</small>
                     </article>

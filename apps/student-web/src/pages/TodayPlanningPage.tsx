@@ -59,6 +59,15 @@ import {
   taskOutcomeErrorCodeMessage,
   type CurriculumExecutionItem,
 } from '../planning/task-completion'
+import {
+  canRecordSolvedTestProgress,
+  progressDraftForTask,
+  prepareSolvedTestProgress,
+  shouldShowOverdueGroup,
+  studySessionPanelMode,
+  toggleExpandedTask,
+  type SolvedTestProgressDraft,
+} from '../planning/task-progress'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
 
@@ -107,6 +116,8 @@ const planningErrorMessage = (error: unknown): string => {
     TASK_GENERAL_TARGET_FORBIDDEN: 'کار عمومی نباید مبحث درسی داشته باشد.',
     TASK_LEGACY_LINK_FORBIDDEN: 'پیوند درس یا مبحث قدیمی برای این نوع کار مجاز نیست.',
     TASK_NOT_PENDING: 'مباحث کار نهایی‌شده قابل ویرایش نیستند.',
+    TASK_PROGRESS_NOT_APPLICABLE: 'ثبت تعداد تست فقط برای کار درسیِ در انتظار انجام ممکن است.',
+    TASK_PROGRESS_STALE: 'این کار در صفحه دیگری تغییر کرده است. مقدار تازه دریافت شد؛ دوباره بررسی و ثبت کنید.',
     TASK_SOURCE_FORBIDDEN: 'فقط مباحث کار شخصی را می‌توانید ویرایش کنید.',
     TASK_RESCHEDULE_FORBIDDEN: 'تغییر زمان‌بندی کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
     TASK_UPDATE_FORBIDDEN: 'تغییر محتوای کار تعیین‌شده توسط مشاور مجاز نیست.',
@@ -246,13 +257,18 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   ), [])
 
   const [tasks, setTasks] = useState<DailyTask[]>([])
+  const [overdueTasks, setOverdueTasks] = useState<DailyTask[]>([])
   const [subjects, setSubjects] = useState<StudySubject[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [overdueNextCursor, setOverdueNextCursor] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [subjectFilter, setSubjectFilter] = useState('ALL')
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isLoadingOverdue, setIsLoadingOverdue] = useState(true)
+  const [isLoadingMoreOverdue, setIsLoadingMoreOverdue] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
+  const [overdueError, setOverdueError] = useState<string | null>(null)
   const [subjectError, setSubjectError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -279,6 +295,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [taskStudyHistory, setTaskStudyHistory] = useState<Record<string, 'LOADING' | 'NONE' | 'PRESENT' | 'ERROR'>>({})
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
   const [updatingExecutionTaskIds, setUpdatingExecutionTaskIds] = useState<Set<string>>(new Set())
+  const [savingProgressTaskIds, setSavingProgressTaskIds] = useState<Set<string>>(new Set())
+  const [progressDrafts, setProgressDrafts] = useState<Record<string, SolvedTestProgressDraft>>({})
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
 
   const activeSession = studyTimer.activeSession
   const activeTaskTitle = studyTimer.activeTaskTitle
@@ -363,7 +382,36 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   useEffect(() => {
     let active = true
-    const editableTaskIds = tasks.filter((task) => (
+    const fetchOverdueTasks = async () => {
+      await Promise.resolve()
+      if (!active) return
+      setIsLoadingOverdue(true)
+      setIsLoadingMoreOverdue(false)
+      setOverdueError(null)
+      setOverdueTasks([])
+      setOverdueNextCursor(null)
+      try {
+        const page = await planningClient.listTasks({
+          limit: 20,
+          overdueBefore: todayKey,
+          status: 'PENDING',
+        })
+        if (!active) return
+        setOverdueTasks(mergeTasks(page.items))
+        setOverdueNextCursor(page.nextCursor)
+      } catch (error) {
+        if (active) setOverdueError(planningErrorMessage(error))
+      } finally {
+        if (active) setIsLoadingOverdue(false)
+      }
+    }
+    void fetchOverdueTasks()
+    return () => { active = false }
+  }, [refreshKey, todayKey])
+
+  useEffect(() => {
+    let active = true
+    const editableTaskIds = mergeTasks([...overdueTasks, ...tasks]).filter((task) => (
       task.contentType === 'STUDY'
       && task.source === 'PERSONAL'
       && task.status === 'PENDING'
@@ -382,7 +430,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       })
     }
     return () => { active = false }
-  }, [tasks, executionRevision])
+  }, [tasks, overdueTasks, executionRevision])
 
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
   const summary = summarizeTaskPresentations(tasks, todayKey)
@@ -392,12 +440,24 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     (statusFilter === 'ALL' || task.status === statusFilter) &&
     (subjectFilter === 'ALL' || task.subjectId === subjectFilter)
 
+  const isOverdueTask = (task: DailyTask): boolean =>
+    task.status === 'PENDING' && task.scheduledFor.slice(0, 10) < todayKey
+
   const replaceTaskFromServer = (updated: DailyTask) => {
     setTasks((current) => {
       if (!taskMatchesFilters(updated)) {
         return current.filter((item) => item.id !== updated.id)
       }
-      return current.map((item) => item.id === updated.id ? updated : item)
+      return current.some((item) => item.id === updated.id)
+        ? current.map((item) => item.id === updated.id ? updated : item)
+        : mergeTasks([updated, ...current])
+    })
+    setOverdueTasks((current) => {
+      if (!isOverdueTask(updated)) return current.filter((item) => item.id !== updated.id)
+      if (current.some((item) => item.id === updated.id)) {
+        return current.map((item) => item.id === updated.id ? updated : item)
+      }
+      return mergeTasks([updated, ...current])
     })
   }
 
@@ -407,6 +467,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     } catch (error) {
       if (error instanceof AuthApiError && error.code === 'TASK_NOT_FOUND') {
         setTasks((current) => current.filter((item) => item.id !== taskId))
+        setOverdueTasks((current) => current.filter((item) => item.id !== taskId))
       }
     }
   }
@@ -434,6 +495,69 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       }
     } finally {
       setIsLoadingMore(false)
+    }
+  }
+
+  const handleLoadMoreOverdue = async () => {
+    if (!overdueNextCursor || isLoadingMoreOverdue) return
+    setIsLoadingMoreOverdue(true)
+    setOverdueError(null)
+    try {
+      const page = await planningClient.listTasks({
+        cursor: overdueNextCursor,
+        limit: 20,
+        overdueBefore: todayKey,
+        status: 'PENDING',
+      })
+      setOverdueTasks((current) => mergeTasks([...current, ...page.items]))
+      setOverdueNextCursor(page.nextCursor)
+    } catch (error) {
+      setOverdueError(planningErrorMessage(error))
+    } finally {
+      setIsLoadingMoreOverdue(false)
+    }
+  }
+
+  const handleProgressUpdate = async (task: DailyTask) => {
+    const draft = progressDraftForTask(
+      progressDrafts[task.id],
+      task.actualSolvedTestCount,
+      task.updatedAt,
+    )
+    const prepared = prepareSolvedTestProgress(
+      draft.count,
+      draft.expectedUpdatedAt,
+    )
+    if (!prepared.ok) {
+      setActionError(prepared.message)
+      return
+    }
+    setActionError(null)
+    setSavingProgressTaskIds((current) => new Set(current).add(task.id))
+    try {
+      const updated = await planningClient.recordTaskProgress(task.id, prepared.value)
+      replaceTaskFromServer(updated)
+      setProgressDrafts((current) => ({
+        ...current,
+        [task.id]: {
+          count: String(updated.actualSolvedTestCount),
+          expectedUpdatedAt: updated.updatedAt,
+        },
+      }))
+    } catch (error) {
+      setActionError(planningErrorMessage(error))
+      await reconcileTaskFromServer(task.id)
+      setProgressDrafts((current) => {
+        const next = { ...current }
+        delete next[task.id]
+        return next
+      })
+    } finally {
+      setSavingProgressTaskIds((current) => {
+        const next = new Set(current)
+        next.delete(task.id)
+        return next
+      })
     }
   }
 
@@ -610,9 +734,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         scheduledFor: draft.scheduledFor,
         startMinuteOfDay: schedule.value.startMinuteOfDay,
       })
-      setTasks((current) => updated.scheduledFor.slice(0, 10) === todayKey
-        ? current.map((item) => item.id === updated.id ? updated : item)
-        : current.filter((item) => item.id !== updated.id))
+      replaceTaskFromServer(updated)
       setScheduleDrafts((current) => {
         const next = { ...current }
         delete next[task.id]
@@ -739,6 +861,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     hasActiveStudySession: activeSession?.dailyTaskId === task.id,
     hasStudyHistory: taskStudyHistory[task.id] !== 'NONE',
   })
+
+  const showOverdueGroup = shouldShowOverdueGroup(
+    overdueTasks.length,
+    overdueNextCursor,
+  )
 
   return (
     <div className="page-stack planning-page">
@@ -1022,6 +1149,10 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         )}
         {actionError && <div className="planning-alert" role="alert">{actionError}</div>}
         {listError && tasks.length > 0 && <div className="planning-alert" role="alert">{listError}</div>}
+        {overdueError && <div className="planning-alert" role="alert">{overdueError}</div>}
+        {isLoadingOverdue && (
+          <p className="task-group__loading" role="status">در حال دریافت کارهای عقب‌افتاده…</p>
+        )}
 
         {isInitialLoading ? (
           <ContentState
@@ -1036,7 +1167,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             kind="error"
             title="برنامه امروز دریافت نشد"
           />
-        ) : tasks.length === 0 ? (
+        ) : tasks.length === 0 && !showOverdueGroup && !isLoadingOverdue ? (
           <ContentState
             action={<Button onClick={() => setIsCreateOpen(true)}>ساخت اولین کار امروز</Button>}
             description="برای فیلتر فعلی کاری وجود ندارد. می‌توانید یک کار شخصی برای امروز بسازید."
@@ -1044,8 +1175,18 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             title="فهرست امروز خالی است"
           />
         ) : (
-          <div className="task-list">
-            {tasks.map((task) => {
+          <div className="task-groups">
+            {([
+              ...(showOverdueGroup ? [{ id: 'overdue', items: overdueTasks, title: 'ادامه کارهای عقب‌افتاده' }] : []),
+              ...(tasks.length > 0 ? [{ id: 'today', items: tasks, title: 'کارهای امروز' }] : []),
+            ] as const).map((group) => (
+              <section className="task-group" key={group.id}>
+                <div className="task-group__heading">
+                  <h3>{group.title}</h3>
+                  <span>{numberFormatter.format(group.items.length)} کار</span>
+                </div>
+                <div className="task-list">
+            {group.items.map((task) => {
               const subject = task.subjectId ? subjectById.get(task.subjectId) : undefined
               const isUpdating = updatingTaskIds.has(task.id)
               const isUpdatingCurriculum = updatingCurriculumTaskIds.has(task.id)
@@ -1065,9 +1206,44 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
               })
               const presentation = classifyTaskPresentation(task, todayKey)
               const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
+              const isExpanded = expandedTaskId === task.id
+              const sessionPanelMode = studySessionPanelMode(task.contentType)
 
               return (
                 <article className={`task-item task-item--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
+                  <button
+                    aria-controls={`task-details-${task.id}`}
+                    aria-expanded={isExpanded}
+                    className="task-item__summary-toggle"
+                    onClick={() => setExpandedTaskId((current) => toggleExpandedTask(current, task.id))}
+                    type="button"
+                  >
+                    <span className="task-item__summary-main">
+                      <strong>{task.title}</strong>
+                      <span className="task-item__summary-meta">
+                        <span>{task.source === 'COUNSELOR' ? 'تعیین‌شده توسط مشاور' : 'کار شخصی'}</span>
+                        <span>{formatJalaliDate(task.scheduledFor.slice(0, 10))}</span>
+                        <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
+                        {task.contentType === 'STUDY' && (
+                          <span>{numberFormatter.format(task.actualSolvedTestCount)} تست حل‌شده</span>
+                        )}
+                        {task.curriculum.totalItemCount > 0 && (
+                          <span>{formatCurriculumProgress(task.curriculum.completedItemCount, task.curriculum.totalItemCount)}</span>
+                        )}
+                      </span>
+                    </span>
+                    <span className={`task-status task-status--${task.status.toLowerCase()} task-presentation-badge--${presentationClass}`}>
+                      {presentation.label}
+                    </span>
+                    <span aria-hidden="true" className="task-item__chevron">⌄</span>
+                  </button>
+                  <div
+                    aria-hidden={!isExpanded}
+                    className={`task-item__collapsible${isExpanded ? ' is-expanded' : ''}`}
+                    id={`task-details-${task.id}`}
+                    inert={isExpanded ? undefined : true}
+                  >
+                    <div className="task-item__collapsible-inner">
                   <div className="task-item__main">
                     <div className="task-item__heading">
                       <h3>{task.title}</h3>
@@ -1217,18 +1393,65 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                         </Button>
                       </form>
                     )}
-                    <TaskExecutionPanel
-                      activeSession={activeSession}
-                      executionReady={executionReady && !executionBusy}
-                      executionRevision={executionRevision}
-                      onFinish={handleExecutionFinish}
-                      onPause={studyTimer.pause}
-                      onResume={studyTimer.resume}
-                      onStart={handleExecutionStart}
-                      taskId={task.id}
-                      taskStatus={task.status}
-                      taskTitle={task.title}
-                    />
+                    {canRecordSolvedTestProgress(task.contentType, task.status) && (
+                      <form
+                        className="task-progress"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          void handleProgressUpdate(task)
+                        }}
+                      >
+                        <label htmlFor={`task-progress-${task.id}`}>
+                          تعداد تست حل‌شده
+                          <input
+                            id={`task-progress-${task.id}`}
+                            inputMode="numeric"
+                            min="0"
+                            onChange={(event) => setProgressDrafts((current) => ({
+                              ...current,
+                              [task.id]: {
+                                ...progressDraftForTask(
+                                  current[task.id],
+                                  task.actualSolvedTestCount,
+                                  task.updatedAt,
+                                ),
+                                count: event.target.value,
+                              },
+                            }))}
+                            step="1"
+                            type="number"
+                            value={progressDraftForTask(
+                              progressDrafts[task.id],
+                              task.actualSolvedTestCount,
+                              task.updatedAt,
+                            ).count}
+                          />
+                        </label>
+                        <Button
+                          disabled={savingProgressTaskIds.has(task.id)}
+                          type="submit"
+                          variant="secondary"
+                        >
+                          {savingProgressTaskIds.has(task.id) ? 'در حال ثبت…' : 'ثبت پیشرفت'}
+                        </Button>
+                        <small>این مقدار مجموع تست‌های حل‌شده برای همین کار است و نتیجه کار را تغییر نمی‌دهد.</small>
+                      </form>
+                    )}
+                    {sessionPanelMode !== 'HIDDEN' && (
+                      <TaskExecutionPanel
+                        activeSession={activeSession}
+                        executionReady={executionReady && !executionBusy}
+                        executionRevision={executionRevision}
+                        onFinish={handleExecutionFinish}
+                        onPause={studyTimer.pause}
+                        onResume={studyTimer.resume}
+                        onStart={handleExecutionStart}
+                        readOnly={sessionPanelMode === 'READ_ONLY'}
+                        taskId={task.id}
+                        taskStatus={task.status}
+                        taskTitle={task.title}
+                      />
+                    )}
                   </div>
                   {task.status === 'PENDING' && (
                     <div className="task-actions" aria-label={`اقدام‌های ${task.title}`}>
@@ -1281,9 +1504,21 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       </Button>
                     </div>
                   )}
+                    </div>
+                  </div>
                 </article>
               )
             })}
+                </div>
+                {group.id === 'overdue' && overdueNextCursor && (
+                  <div className="load-more">
+                    <Button disabled={isLoadingMoreOverdue} onClick={() => void handleLoadMoreOverdue()} variant="secondary">
+                      {isLoadingMoreOverdue ? 'در حال دریافت…' : 'نمایش کارهای عقب‌افتاده بیشتر'}
+                    </Button>
+                  </div>
+                )}
+              </section>
+            ))}
           </div>
         )}
 

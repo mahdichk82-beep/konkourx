@@ -226,6 +226,7 @@ export const DailyTaskScalarFieldEnum = {
   endMinuteOfDay: 'endMinuteOfDay',
   estimatedMinutes: 'estimatedMinutes',
   plannedTestCount: 'plannedTestCount',
+  actualSolvedTestCount: 'actualSolvedTestCount',
   status: 'status',
   completedAt: 'completedAt',
   partialAt: 'partialAt',

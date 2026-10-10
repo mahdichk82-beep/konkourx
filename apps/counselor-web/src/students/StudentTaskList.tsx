@@ -346,6 +346,9 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                   {task.plannedTestCount > 0 && (
                     <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
                   )}
+                  {task.contentType === 'STUDY' && (
+                    <span>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده توسط دانش‌آموز</span>
+                  )}
                 </div>
                 {task.curriculum.totalItemCount > 0 && (
                   <p className="task-curriculum-progress">

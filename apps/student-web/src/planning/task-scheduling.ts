@@ -1,5 +1,5 @@
 export type TaskScheduleDraft = {
-  isVolumetric: boolean
+  mode: 'VOLUMETRIC' | 'TIMED'
   startTime: string
   endTime: string
 }
@@ -52,7 +52,7 @@ export const taskStartTimeOptions = createTimeOptions(0, MINUTES_PER_DAY - STEP)
 export const taskEndTimeOptions = createTimeOptions(STEP, MINUTES_PER_DAY)
 
 export const createScheduleDraft = (): TaskScheduleDraft => ({
-  isVolumetric: true,
+  mode: 'VOLUMETRIC',
   startTime: '',
   endTime: '',
 })
@@ -71,7 +71,7 @@ const parseTimeValue = (value: string, allowEndOfDay: boolean): number | null =>
 export const prepareTaskSchedule = (
   draft: TaskScheduleDraft,
 ): PreparedTaskSchedule => {
-  if (draft.isVolumetric) {
+  if (draft.mode === 'VOLUMETRIC') {
     return {
       ok: true,
       value: { startMinuteOfDay: null, endMinuteOfDay: null },
@@ -115,7 +115,7 @@ export const scheduleDraftFromTask = (
     return fallback
   }
   return {
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: timeValue(startMinuteOfDay),
     endTime: timeValue(endMinuteOfDay),
   }

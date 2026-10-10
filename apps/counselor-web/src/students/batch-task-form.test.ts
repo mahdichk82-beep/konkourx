@@ -129,7 +129,7 @@ test('batch form reports request errors without presenting success', async () =>
 test('batch form validates and serializes an independent timed schedule per row', () => {
   const timed = {
     ...validRow(),
-    schedule: { isVolumetric: false, startTime: '23:45', endTime: '24:00' },
+    schedule: { mode: 'TIMED', startTime: '23:45', endTime: '24:00' },
   }
   assert.equal(validateBatchTaskRows([timed]), null)
   assert.deepEqual(toBatchTaskInputs([timed])[0] && {

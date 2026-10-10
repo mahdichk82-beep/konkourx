@@ -2,6 +2,7 @@ import type {
   DailyTaskRecord,
   DailyTaskStatus,
   PageQuery,
+  OverdueTaskCursor,
   StudyPlanRecord,
   StudyPlanStatus,
   StudySubjectRecord,
@@ -9,6 +10,8 @@ import type {
   TopicRecord,
   RescheduleStudentTaskResult,
   TaskSchedulePatch,
+  TaskProgressPatch,
+  UpdateTaskProgressResult,
   UpdateTerminalStudentTaskResult,
 } from './types.js'
 import type {
@@ -32,11 +35,12 @@ export interface StudentCoreStore {
   findPlanById(profileId: string, id: string): Promise<StudyPlanRecord | null>
   createPlan(input: Omit<StudyPlanRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<StudyPlanRecord>
   updatePlan(profileId: string, id: string, input: Partial<Pick<StudyPlanRecord, 'title' | 'description' | 'status' | 'startsOn' | 'endsOn'>>): Promise<StudyPlanRecord | null>
-  listTasks(profileId: string, query?: PageQuery & { scheduledFor?: Date; scheduledFrom?: Date; scheduledTo?: Date; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }): Promise<DailyTaskRecord[]>
+  listTasks(profileId: string, query?: PageQuery & { scheduledFor?: Date; scheduledFrom?: Date; scheduledTo?: Date; scheduledBefore?: Date; overdueCursor?: OverdueTaskCursor; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }): Promise<DailyTaskRecord[]>
   findTaskById(profileId: string, id: string): Promise<DailyTaskRecord | null>
   createTask(input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'>, curriculumTargets?: ResolvedCurriculumTarget[], expectedTrack?: CurriculumTrackId | null): Promise<DailyTaskRecord>
   updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'partialAt' | 'skipReason' | 'skippedAt'>>): Promise<DailyTaskRecord | null>
   updateTerminalTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'partialAt' | 'skipReason' | 'skippedAt'>>): Promise<UpdateTerminalStudentTaskResult>
+  updateTaskProgress(profileId: string, id: string, input: TaskProgressPatch): Promise<UpdateTaskProgressResult>
   replacePersonalTaskCurriculumTargets?(profileId: string, id: string, targets: ResolvedCurriculumTarget[], expectedTrack?: CurriculumTrackId | null): Promise<ReplaceCurriculumTargetsResult>
   toggleTaskCurriculumItem?(profileId: string, taskId: string, itemId: string, completedAt: Date | null): Promise<ToggleCurriculumItemResult>
   reschedulePersonalTask(profileId: string, id: string, schedule: TaskSchedulePatch): Promise<RescheduleStudentTaskResult>

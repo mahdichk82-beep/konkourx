@@ -67,6 +67,7 @@ const page = <T extends { id: string }>(
 
 const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): CounselorTaskView => ({
   ...task,
+  actualSolvedTestCount: task.actualSolvedTestCount ?? 0,
   startMinuteOfDay: task.startMinuteOfDay ?? null,
   endMinuteOfDay: task.endMinuteOfDay ?? null,
   miniBoxSpan: deriveMiniBoxSpan(task),
@@ -84,6 +85,7 @@ const toVisibleTaskView = ({
   ...task
 }: import('./types.js').CounselorVisibleTaskRecord): CounselorVisibleTaskView => ({
   ...task,
+  actualSolvedTestCount: task.actualSolvedTestCount ?? 0,
   startMinuteOfDay: task.startMinuteOfDay ?? null,
   endMinuteOfDay: task.endMinuteOfDay ?? null,
   miniBoxSpan: deriveMiniBoxSpan(task),

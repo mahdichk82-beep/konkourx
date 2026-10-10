@@ -34,6 +34,7 @@ type TaskExecutionPanelProps = {
   onPause(): Promise<StudySession>
   onResume(): Promise<StudySession>
   onStart(taskId: string, taskTitle: string): Promise<'STARTED' | 'CONTINUED' | 'SWITCH_PENDING'>
+  readOnly?: boolean
 }
 
 type RatingControlProps = {
@@ -103,6 +104,7 @@ export function TaskExecutionPanel({
   onPause,
   onResume,
   onStart,
+  readOnly = false,
   taskId,
   taskStatus,
   taskTitle,
@@ -127,7 +129,7 @@ export function TaskExecutionPanel({
     [sessions],
   )
   const taskActiveSession = activeSession?.dailyTaskId === taskId ? activeSession : null
-  const action = taskExecutionAction(taskStatus, taskId, activeSession)
+  const action = readOnly ? null : taskExecutionAction(taskStatus, taskId, activeSession)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -258,7 +260,9 @@ export function TaskExecutionPanel({
   return (
     <div className="task-execution">
       <Button onClick={toggle} variant="secondary">
-        {expanded ? 'بستن ثبت مطالعه' : 'ثبت و مشاهده مطالعه'}
+        {expanded
+          ? 'بستن سابقه مطالعه'
+          : readOnly ? 'مشاهده سابقه مطالعه' : 'ثبت و مشاهده مطالعه'}
       </Button>
 
       {expanded && (
@@ -305,7 +309,7 @@ export function TaskExecutionPanel({
                             {feedbackLabels.map((label) => <span key={label}>{label}</span>)}
                           </div>
                         )}
-                        {lifecycle === 'FINISHED' && editingFeedbackId !== session.id && (
+                        {!readOnly && lifecycle === 'FINISHED' && editingFeedbackId !== session.id && (
                           <Button onClick={() => beginFeedbackEdit(session)} variant="ghost">
                             {feedbackLabels.length > 0 ? 'ویرایش بازخورد' : 'ثبت بازخورد'}
                           </Button>
@@ -397,6 +401,8 @@ export function TaskExecutionPanel({
                         : additionalSessionLabel(sessions)}
                   </Button>
                 </div>
+              ) : readOnly ? (
+                <p className="task-execution__state">این سابقه تاریخی فقط قابل مشاهده است.</p>
               ) : (
                 <p className="task-execution__state">برای این وضعیت امکان شروع جلسه تازه وجود ندارد.</p>
               )}

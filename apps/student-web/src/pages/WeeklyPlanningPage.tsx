@@ -437,7 +437,8 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                           )}
                           <div className="weekly-task__meta">
                             {task.estimatedMinutes !== null && <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>}
-                            {task.plannedTestCount > 0 && <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست</span>}
+                            {task.plannedTestCount > 0 && <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>}
+                            {task.contentType === 'STUDY' && <span>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</span>}
                             {task.status === 'SKIPPED' && task.skipReason && (
                               <span>دلیل: {skipReasonLabels[task.skipReason]}</span>
                             )}

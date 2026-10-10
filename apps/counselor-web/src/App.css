@@ -112,6 +112,7 @@
 .student-task-form label > small { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
 .task-schedule-fields { min-width: 0; padding: 0.8rem; display: grid; gap: 0.65rem; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); }
 .task-schedule-fields legend { padding-inline: 0.35rem; color: var(--text-primary); font-size: 0.84rem; font-weight: 800; }
+.task-schedule-fields__modes { display: flex; flex-wrap: wrap; gap: 0.55rem 1rem; }
 .task-schedule-fields__toggle, .student-task-form .task-schedule-fields__toggle { display: flex; align-items: center; gap: 0.55rem; }
 .task-schedule-fields__toggle input, .student-task-form .task-schedule-fields__toggle input { width: auto; min-height: 0; accent-color: var(--action-primary); }
 .task-schedule-fields > small { color: var(--text-muted); font-size: 0.75rem; line-height: 1.7; }

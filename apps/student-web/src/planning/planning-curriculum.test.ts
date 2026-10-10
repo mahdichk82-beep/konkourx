@@ -49,7 +49,7 @@ test('Student Planning uses the profile-bound picker without a track selector', 
   assert.match(source, /planningCurriculumValueFromSnapshots/)
   assert.doesNotMatch(source, /loadPlanningTaskDrafts|PlanningTargetDraftItem/)
   assert.doesNotMatch(source, /trackSelector|selectedTrack|<select[^>]*id="[^"]*track/)
-  assert.match(source, /\}, \[tasks, executionRevision\]\)/)
+  assert.match(source, /\}, \[tasks, overdueTasks, executionRevision\]\)/)
   assert.match(source, /\[id, 'LOADING'\]/)
 });
 

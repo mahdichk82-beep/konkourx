@@ -282,7 +282,7 @@ test('planning migrations only touch approved DailyTask planning structures', as
   const names = (await readdir(migrationsUrl, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-  assert.equal(names.length, 26)
+  assert.equal(names.length, 27)
   assert.ok(names.includes('20261009090000_add_study_timer_lifecycle'))
   const migrationName = '20260930020000_add_planning_curriculum_references'
   assert.ok(names.includes(migrationName))
@@ -305,6 +305,17 @@ test('planning migrations only touch approved DailyTask planning structures', as
   assert.match(scheduleSql, /daily_tasks_schedule_window_check/)
   assert.doesNotMatch(scheduleSql, /ALTER TABLE "(?!daily_tasks")/)
   assert.doesNotMatch(scheduleSql, /(?:DROP|TRUNCATE|DELETE FROM|UPDATE |INSERT INTO)/)
+
+  const progressMigrationName = '20261009230000_add_daily_task_actual_solved_test_count'
+  assert.ok(names.includes(progressMigrationName))
+  const progressSql = await readFile(
+    new URL(`${progressMigrationName}/migration.sql`, migrationsUrl),
+    'utf8',
+  )
+  assert.match(progressSql, /ADD COLUMN "actualSolvedTestCount" INTEGER NOT NULL DEFAULT 0/)
+  assert.match(progressSql, /daily_tasks_actualSolvedTestCount_nonnegative/)
+  assert.doesNotMatch(progressSql, /ALTER TABLE "(?!daily_tasks")/)
+  assert.doesNotMatch(progressSql, /(?:DROP|TRUNCATE|DELETE FROM|UPDATE |INSERT INTO)/)
 
   const subtreeMigrationName = '20261007195354_add_subtree_curriculum_selection'
   assert.ok(names.includes(subtreeMigrationName))

@@ -113,6 +113,9 @@ const createStore = (): StudentCoreStore & {
       Object.assign(task, input, { updatedAt: timestamp })
       return { ok: true as const, value: task }
     },
+    async updateTaskProgress() {
+      return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+    },
     async reschedulePersonalTask(profileId: string, id: string, schedule: Partial<DailyTaskRecord>) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
@@ -843,6 +846,115 @@ test('student core rejects archived subjects for new task assignments', async ()
   )
 })
 
+const progressTaskRecord = (
+  overrides: Partial<DailyTaskRecord> = {},
+): DailyTaskRecord => ({
+  id: 'progress-task',
+  studentProfileId: profile.id,
+  createdByUserId: 'counselor-user-1',
+  source: 'COUNSELOR',
+  contentType: 'STUDY',
+  studyPlanId: null,
+  subjectId: null,
+  topicId: null,
+  title: 'Test practice',
+  description: null,
+  scheduledFor: timestamp,
+  startMinuteOfDay: null,
+  endMinuteOfDay: null,
+  estimatedMinutes: 30,
+  plannedTestCount: 20,
+  actualSolvedTestCount: 0,
+  status: 'PENDING',
+  completedAt: null,
+  partialAt: null,
+  skipReason: null,
+  skippedAt: null,
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  ...overrides,
+})
+
+test('student progress replaces the cumulative total and permits pending corrections on counselor tasks', async () => {
+  const store = createStore()
+  const task = progressTaskRecord()
+  store.tasks.push(task)
+  const writes: Array<{ count: number; expectedUpdatedAt: Date }> = []
+  ;(store as StudentCoreStore & {
+    updateTaskProgress(
+      profileId: string,
+      id: string,
+      input: { actualSolvedTestCount: number; expectedUpdatedAt: Date },
+    ): Promise<{ ok: true; value: DailyTaskRecord }>
+  }).updateTaskProgress = async (profileId, id, input) => {
+    assert.equal(profileId, profile.id)
+    assert.equal(id, task.id)
+    writes.push({ count: input.actualSolvedTestCount, expectedUpdatedAt: input.expectedUpdatedAt })
+    task.actualSolvedTestCount = input.actualSolvedTestCount
+    task.updatedAt = new Date(task.updatedAt.getTime() + 1_000)
+    return { ok: true, value: task }
+  }
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  const first = await services.tasks.recordProgress(student, task.id, {
+    actualSolvedTestCount: 14,
+    expectedUpdatedAt: timestamp.toISOString(),
+  })
+  const corrected = await services.tasks.recordProgress(student, task.id, {
+    actualSolvedTestCount: 11,
+    expectedUpdatedAt: first.updatedAt.toISOString(),
+  })
+
+  assert.equal(first.actualSolvedTestCount, 14)
+  assert.equal(corrected.actualSolvedTestCount, 11)
+  assert.deepEqual(writes.map(({ count }) => count), [14, 11])
+  assert.equal(corrected.source, 'COUNSELOR')
+  assert.equal('createdByUserId' in corrected, false)
+})
+
+test('student progress rejects non-study and terminal task records', async () => {
+  const store = createStore()
+  const task = progressTaskRecord({ contentType: 'GENERAL' })
+  store.tasks.push(task)
+  const services = createStudentCoreServices(store, () => timestamp)
+  const input = { actualSolvedTestCount: 4, expectedUpdatedAt: timestamp.toISOString() }
+
+  await assert.rejects(
+    services.tasks.recordProgress(student, task.id, input),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_PROGRESS_NOT_APPLICABLE',
+  )
+  task.contentType = null
+  await assert.rejects(
+    services.tasks.recordProgress(student, task.id, input),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_PROGRESS_NOT_APPLICABLE',
+  )
+  task.contentType = 'STUDY'
+  task.status = 'PARTIAL'
+  await assert.rejects(
+    services.tasks.recordProgress(student, task.id, input),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_TERMINAL',
+  )
+})
+
+test('student progress reports stale conditional writes without overwriting the authoritative total', async () => {
+  const store = createStore()
+  const task = progressTaskRecord({ actualSolvedTestCount: 8 })
+  store.tasks.push(task)
+  ;(store as StudentCoreStore & {
+    updateTaskProgress(): Promise<{ ok: false; reason: 'TASK_PROGRESS_STALE' }>
+  }).updateTaskProgress = async () => ({ ok: false, reason: 'TASK_PROGRESS_STALE' })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  await assert.rejects(
+    services.tasks.recordProgress(student, task.id, {
+      actualSolvedTestCount: 13,
+      expectedUpdatedAt: timestamp.toISOString(),
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_PROGRESS_STALE',
+  )
+  assert.equal(task.actualSolvedTestCount, 8)
+})
+
 test('student core plan and task pages use lookahead rows without repeating the cursor', async () => {
   const store = createStore()
   store.plans.push(
@@ -896,4 +1008,66 @@ test('student core plan and task pages use lookahead rows without repeating the 
   assert.equal(taskPage1.nextCursor, 'task-2')
   assert.deepEqual(taskPage2.items.map(({ id }) => id), ['task-3'])
   assert.equal(taskPage2.nextCursor, null)
+})
+
+test('student overdue query is bounded, paginated, and forces pending tasks before the exclusive date', async () => {
+  const store = createStore()
+  const received: Array<Parameters<StudentCoreStore['listTasks']>[1]> = []
+  const records = [
+    progressTaskRecord({
+      createdAt: new Date('2026-09-03T09:00:00.000Z'),
+      id: '00000000-0000-4000-8000-000000000121',
+      scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    }),
+    progressTaskRecord({
+      createdAt: new Date('2026-09-02T09:00:00.000Z'),
+      id: '00000000-0000-4000-8000-000000000122',
+      scheduledFor: new Date('2026-09-02T00:00:00.000Z'),
+    }),
+    progressTaskRecord({
+      createdAt: new Date('2026-09-01T09:00:00.000Z'),
+      id: '00000000-0000-4000-8000-000000000123',
+      scheduledFor: new Date('2026-09-01T00:00:00.000Z'),
+    }),
+  ]
+  let call = 0
+  store.listTasks = async (_profileId, query) => {
+    received.push(query)
+    call += 1
+    return call === 1 ? records : [records[2]!]
+  }
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  const firstPage = await services.tasks.list(student, {
+    limit: 2,
+    overdueBefore: '2026-09-04',
+  })
+  assert.deepEqual(firstPage.items.map(({ id }) => id), records.slice(0, 2).map(({ id }) => id))
+  assert.match(firstPage.nextCursor ?? '', /^overdue\./)
+
+  const secondPage = await services.tasks.list(student, {
+    cursor: firstPage.nextCursor!,
+    limit: 2,
+    overdueBefore: '2026-09-04',
+  })
+
+  assert.deepEqual(secondPage.items.map(({ id }) => id), [records[2]!.id])
+  assert.equal(secondPage.nextCursor, null)
+  assert.deepEqual(received, [
+    {
+      limit: 2,
+      scheduledBefore: new Date('2026-09-04T00:00:00.000Z'),
+      status: 'PENDING',
+    },
+    {
+      limit: 2,
+      overdueCursor: {
+        createdAt: records[1]!.createdAt,
+        id: records[1]!.id,
+        scheduledFor: records[1]!.scheduledFor,
+      },
+      scheduledBefore: new Date('2026-09-04T00:00:00.000Z'),
+      status: 'PENDING',
+    },
+  ])
 })

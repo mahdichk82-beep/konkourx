@@ -68,6 +68,7 @@ export type DailyTaskRecord = {
   endMinuteOfDay?: number | null
   estimatedMinutes: number | null
   plannedTestCount: number
+  actualSolvedTestCount?: number
   status: DailyTaskStatus
   completedAt: Date | null
   partialAt?: Date | null
@@ -82,6 +83,7 @@ export type DailyTaskView = Omit<
   DailyTaskRecord,
   'createdByUserId' | 'curriculumTargets' | 'startMinuteOfDay' | 'endMinuteOfDay'
 > & {
+  actualSolvedTestCount: number
   partialAt: Date | null
   startMinuteOfDay: number | null
   endMinuteOfDay: number | null
@@ -118,6 +120,22 @@ export type TaskSchedulePatch = {
   endMinuteOfDay?: number | null
 }
 
+export type TaskProgressPatch = {
+  actualSolvedTestCount: number
+  expectedUpdatedAt: Date
+}
+
+export type UpdateTaskProgressResult =
+  | { ok: true; value: DailyTaskRecord }
+  | {
+      ok: false
+      reason:
+        | 'TASK_NOT_FOUND'
+        | 'TASK_PROGRESS_NOT_APPLICABLE'
+        | 'TASK_TERMINAL'
+        | 'TASK_PROGRESS_STALE'
+    }
+
 export type RescheduleStudentTaskResult =
   | { ok: true; value: DailyTaskRecord }
   | {
@@ -131,3 +149,9 @@ export type UpdateTerminalStudentTaskResult =
 
 export type PageQuery = { cursor?: string; limit?: number }
 export type Page<T> = { items: T[]; nextCursor: string | null }
+
+export type OverdueTaskCursor = {
+  createdAt: Date
+  id: string
+  scheduledFor: Date
+}

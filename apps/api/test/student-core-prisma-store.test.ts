@@ -31,6 +31,12 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
   const scheduledFor = new Date('2026-09-03T00:00:00.000Z')
   const scheduledFrom = new Date('2026-09-12T00:00:00.000Z')
   const scheduledTo = new Date('2026-09-18T00:00:00.000Z')
+  const scheduledBefore = new Date('2026-09-03T00:00:00.000Z')
+  const overdueCursor = {
+    createdAt: new Date('2026-09-02T09:30:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000123',
+    scheduledFor: new Date('2026-09-02T00:00:00.000Z'),
+  }
 
   await store.listPlans('student-profile-1', { cursor: 'plan-2', limit: 2, status: 'ACTIVE' })
   await store.listTasks('student-profile-1', {
@@ -42,6 +48,11 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
     subjectId: 'subject-1',
   })
   await store.listTasks('student-profile-1', { scheduledFrom, scheduledTo })
+  await store.listTasks('student-profile-1', {
+    limit: 20,
+    overdueCursor,
+    scheduledBefore,
+  })
 
   assert.deepEqual(planQueries[0], {
     cursor: { id: 'plan-2' },
@@ -76,6 +87,31 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
       studentProfileId: 'student-profile-1',
       studyPlanId: undefined,
       subjectId: undefined,
+    },
+  })
+  assert.deepEqual(taskQueries[2], {
+    include: curriculumInclude,
+    cursor: undefined,
+    orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+    skip: undefined,
+    take: 21,
+    where: {
+      AND: [
+        {
+          scheduledFor: { lt: scheduledBefore },
+          status: 'PENDING',
+          studentProfileId: 'student-profile-1',
+          studyPlanId: undefined,
+          subjectId: undefined,
+        },
+        {
+          OR: [
+            { scheduledFor: { lt: overdueCursor.scheduledFor } },
+            { createdAt: { lt: overdueCursor.createdAt }, scheduledFor: overdueCursor.scheduledFor },
+            { createdAt: overdueCursor.createdAt, id: { lt: overdueCursor.id }, scheduledFor: overdueCursor.scheduledFor },
+          ],
+        },
+      ],
     },
   })
 })
@@ -283,4 +319,62 @@ test('Prisma topic lists, reads, and updates always include subject ownership', 
     data: { title: 'Updated' },
     where: { id: 'topic-1', subject: { studentProfileId: 'student-profile-1' } },
   }])
+})
+
+test('Prisma progress mutation atomically replaces the cumulative total for the matching pending study version', async () => {
+  const expectedUpdatedAt = new Date('2026-09-03T08:00:00.000Z')
+  const updatedTask = {
+    actualSolvedTestCount: 12,
+    contentType: 'STUDY' as const,
+    id: 'task-1',
+    status: 'PENDING' as const,
+    studentProfileId: 'student-profile-1',
+    updatedAt: new Date('2026-09-03T08:01:00.000Z'),
+  }
+  const calls: unknown[] = []
+  let findCount = 0
+  const transaction = {
+    async $queryRawUnsafe(sql: string, profileId: string) {
+      calls.push({ lock: { profileId, sql } })
+      return [{ id: profileId }]
+    },
+    dailyTask: {
+      async findFirst(query: unknown) {
+        findCount += 1
+        calls.push({ find: query })
+        return findCount === 1
+          ? { contentType: 'STUDY', id: 'task-1', status: 'PENDING' }
+          : updatedTask
+      },
+      async updateMany(query: unknown) {
+        calls.push({ update: query })
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudentCoreStore(prisma).updateTaskProgress(
+    'student-profile-1',
+    'task-1',
+    { actualSolvedTestCount: 12, expectedUpdatedAt },
+  )
+
+  assert.deepEqual(result, { ok: true, value: updatedTask })
+  assert.deepEqual(calls[2], {
+    update: {
+      data: { actualSolvedTestCount: 12 },
+      where: {
+        contentType: 'STUDY',
+        id: 'task-1',
+        status: 'PENDING',
+        studentProfileId: 'student-profile-1',
+        updatedAt: expectedUpdatedAt,
+      },
+    },
+  })
 })

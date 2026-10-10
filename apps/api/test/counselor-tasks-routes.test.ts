@@ -462,6 +462,7 @@ test('assigned counselor sees personal and counselor-created tasks without creat
   const completedAt = new Date('2026-09-12T10:30:00.000Z')
   store.tasks.push(
     taskRecord('60000000-0000-4000-8000-000000000010', {
+      actualSolvedTestCount: 13,
       completedAt,
       status: 'COMPLETED',
       title: 'Personal completed task',
@@ -490,6 +491,7 @@ test('assigned counselor sees personal and counselor-created tasks without creat
   )
   assert.equal(response.json().data.items[0].completedAt, completedAt.toISOString())
   assert.equal(response.json().data.items[0].status, 'COMPLETED')
+  assert.equal(response.json().data.items[0].actualSolvedTestCount, 13)
   assert.equal(response.json().data.items[0].recordedMinutes, 75)
   assert.equal(response.json().data.items[0].studySessionCount, 2)
   assert.equal(response.json().data.items[1].status, 'PENDING')

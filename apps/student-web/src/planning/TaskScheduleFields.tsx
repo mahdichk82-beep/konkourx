@@ -18,28 +18,27 @@ export function TaskScheduleFields({
   value,
 }: TaskScheduleFieldsProps) {
   const volumetricId = `${idPrefix}-volumetric`
+  const timedId = `${idPrefix}-timed`
   const startId = `${idPrefix}-start`
   const endId = `${idPrefix}-end`
 
   return (
     <fieldset className="task-schedule-fields" disabled={disabled}>
       <legend>زمان‌بندی</legend>
-      <label className="task-schedule-fields__toggle" htmlFor={volumetricId}>
-        <input
-          checked={value.isVolumetric}
-          id={volumetricId}
-          onChange={(event) => onChange({
-            ...value,
-            isVolumetric: event.currentTarget.checked,
-          })}
-          type="checkbox"
-        />
-        حجمی (بدون ساعت ثابت)
-      </label>
+      <div className="task-schedule-fields__modes">
+        <label className="task-schedule-fields__toggle" htmlFor={volumetricId}>
+          <input checked={value.mode === 'VOLUMETRIC'} id={volumetricId} name={`${idPrefix}-mode`} onChange={() => onChange({ ...value, mode: 'VOLUMETRIC' })} type="radio" />
+          حجمی (بدون ساعت ثابت)
+        </label>
+        <label className="task-schedule-fields__toggle" htmlFor={timedId}>
+          <input checked={value.mode === 'TIMED'} id={timedId} name={`${idPrefix}-mode`} onChange={() => onChange({ ...value, mode: 'TIMED' })} type="radio" />
+          زمان‌دار (ساعت شروع و پایان)
+        </label>
+      </div>
       <small>
         زمان ثابت با مدت تخمینی مطالعه متفاوت است.
       </small>
-      {!value.isVolumetric && (
+      {value.mode === 'TIMED' && (
         <div className="task-schedule-fields__times">
           <label htmlFor={startId}>
             ساعت شروع

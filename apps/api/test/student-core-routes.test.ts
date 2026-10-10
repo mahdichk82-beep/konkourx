@@ -54,6 +54,7 @@ const store: StudentCoreStore = {
   createTask: async (input) => ({ id: 'task-1', ...input, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
   updateTask: async () => null,
   updateTerminalTask: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
+  updateTaskProgress: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
   reschedulePersonalTask: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
 }
 
@@ -748,6 +749,69 @@ test('daily task filters retain authenticated profile scope', async () => {
   await app.close()
 })
 
+test('overdue task route maps a bounded exclusive date query and rejects ambiguous filters', async () => {
+  const received: Array<Parameters<StudentCoreStore['listTasks']>[1]> = []
+  const overdueStore: StudentCoreStore = {
+    ...store,
+    async listTasks(_profileId, query) {
+      received.push(query)
+      return []
+    },
+  }
+  const app = createApp(overdueStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks?overdueBefore=2026-09-04&limit=20',
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(received, [{
+    limit: 20,
+    scheduledBefore: new Date('2026-09-04T00:00:00.000Z'),
+    status: 'PENDING',
+  }])
+
+  const overdueCursorBoundary = {
+    createdAt: '2026-09-02T09:30:00.000Z',
+    id: '00000000-0000-4000-8000-000000000123',
+    scheduledFor: '2026-09-02T00:00:00.000Z',
+  }
+  const overdueCursor = `overdue.${Buffer.from(JSON.stringify(overdueCursorBoundary)).toString('base64url')}`
+  const nextPage = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: `/api/v1/student/daily-tasks?overdueBefore=2026-09-04&limit=20&cursor=${encodeURIComponent(overdueCursor)}`,
+  })
+  assert.equal(nextPage.statusCode, 200)
+  assert.deepEqual(received[1], {
+    limit: 20,
+    overdueCursor: {
+      createdAt: new Date(overdueCursorBoundary.createdAt),
+      id: overdueCursorBoundary.id,
+      scheduledFor: new Date(overdueCursorBoundary.scheduledFor),
+    },
+    scheduledBefore: new Date('2026-09-04T00:00:00.000Z'),
+    status: 'PENDING',
+  })
+
+  for (const query of [
+    'overdueBefore=2026-09-04&date=2026-09-03',
+    'overdueBefore=2026-09-04&from=2026-09-01&to=2026-09-03',
+    'overdueBefore=2026-09-04&status=COMPLETED',
+  ]) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'GET',
+      url: `/api/v1/student/daily-tasks?${query}`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(received.length, 2)
+  await app.close()
+})
+
 test('student toggles owned Curriculum execution items and receives coverage counts', async () => {
   const taskId = '00000000-0000-4000-8000-000000000401'
   const itemId = '00000000-0000-4000-8000-000000000402'
@@ -951,4 +1015,80 @@ test('student task creates persist nullable content type and enforce own-track w
   assert.equal(noTrack.json().error.code, 'STUDENT_TRACK_NOT_SET')
   assert.equal(saved.length, 4)
   await noTrackApp.close()
+})
+
+test('student progress route accepts one cumulative total with an optimistic concurrency token', async () => {
+  const taskId = '00000000-0000-4000-8000-000000000455'
+  const expectedUpdatedAt = new Date('2026-09-03T08:00:00.000Z')
+  const task: DailyTaskRecord = {
+    actualSolvedTestCount: 3,
+    completedAt: null,
+    contentType: 'STUDY',
+    createdAt: expectedUpdatedAt,
+    createdByUserId: 'counselor-user-1',
+    description: null,
+    estimatedMinutes: 30,
+    id: taskId,
+    plannedTestCount: 20,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    skipReason: null,
+    skippedAt: null,
+    source: 'COUNSELOR',
+    status: 'PENDING',
+    studentProfileId: 'student-profile-1',
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Practice',
+    topicId: null,
+    updatedAt: expectedUpdatedAt,
+  }
+  const writes: unknown[] = []
+  const progressStore = {
+    ...store,
+    findTaskById: async () => task,
+    async updateTaskProgress(profileId: string, id: string, input: unknown) {
+      writes.push({ profileId, id, input })
+      task.actualSolvedTestCount = 12
+      task.updatedAt = new Date('2026-09-03T08:01:00.000Z')
+      return { ok: true as const, value: task }
+    },
+  } as StudentCoreStore
+  const app = createApp(progressStore)
+
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: {
+      actualSolvedTestCount: 12,
+      expectedUpdatedAt: expectedUpdatedAt.toISOString(),
+    },
+    url: `/api/v1/student/daily-tasks/${taskId}/progress`,
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().data.actualSolvedTestCount, 12)
+  assert.deepEqual(writes, [{
+    id: taskId,
+    input: { actualSolvedTestCount: 12, expectedUpdatedAt },
+    profileId: 'student-profile-1',
+  }])
+
+  for (const payload of [
+    { actualSolvedTestCount: -1, expectedUpdatedAt: expectedUpdatedAt.toISOString() },
+    { actualSolvedTestCount: 1.5, expectedUpdatedAt: expectedUpdatedAt.toISOString() },
+    { actualSolvedTestCount: 2_147_483_648, expectedUpdatedAt: expectedUpdatedAt.toISOString() },
+    { actualSolvedTestCount: 5 },
+    { actualSolvedTestCount: 5, expectedUpdatedAt: expectedUpdatedAt.toISOString(), title: 'forged' },
+  ]) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: `/api/v1/student/daily-tasks/${taskId}/progress`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(writes.length, 1)
+  await app.close()
 })

@@ -46,6 +46,7 @@ export const createPrismaCounselorTaskStore = (
           estimatedMinutes: true,
           id: true,
           plannedTestCount: true,
+          actualSolvedTestCount: true,
           assessmentAttempts: {
             select: { id: true },
             take: 1,

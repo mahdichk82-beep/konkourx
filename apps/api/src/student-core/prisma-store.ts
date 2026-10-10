@@ -110,23 +110,44 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
   },
 
   async listTasks(studentProfileId, query) {
+    const baseWhere = {
+      scheduledFor: query?.scheduledBefore
+        ? { lt: query.scheduledBefore }
+        : query?.scheduledFor ?? (
+            query?.scheduledFrom || query?.scheduledTo
+              ? { gte: query.scheduledFrom, lte: query.scheduledTo }
+              : undefined
+          ),
+      status: query?.scheduledBefore ? 'PENDING' as const : query?.status,
+      studentProfileId,
+      studyPlanId: query?.studyPlanId,
+      subjectId: query?.subjectId,
+    }
+    const overdueBoundary = query?.overdueCursor
+      ? {
+          OR: [
+            { scheduledFor: { lt: query.overdueCursor.scheduledFor } },
+            {
+              createdAt: { lt: query.overdueCursor.createdAt },
+              scheduledFor: query.overdueCursor.scheduledFor,
+            },
+            {
+              createdAt: query.overdueCursor.createdAt,
+              id: { lt: query.overdueCursor.id },
+              scheduledFor: query.overdueCursor.scheduledFor,
+            },
+          ],
+        }
+      : undefined
     return prisma.dailyTask.findMany({
       include: curriculumInclude,
-      cursor: query?.cursor ? { id: query.cursor } : undefined,
-      orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
-      skip: query?.cursor ? 1 : undefined,
+      cursor: !query?.scheduledBefore && query?.cursor ? { id: query.cursor } : undefined,
+      orderBy: query?.scheduledBefore
+        ? [{ scheduledFor: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
+        : [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
+      skip: !query?.scheduledBefore && query?.cursor ? 1 : undefined,
       take: query?.limit ? query.limit + 1 : undefined,
-      where: {
-        scheduledFor: query?.scheduledFor ?? (
-          query?.scheduledFrom || query?.scheduledTo
-            ? { gte: query.scheduledFrom, lte: query.scheduledTo }
-            : undefined
-        ),
-        status: query?.status,
-        studentProfileId,
-        studyPlanId: query?.studyPlanId,
-        subjectId: query?.subjectId,
-      },
+      where: overdueBoundary ? { AND: [baseWhere, overdueBoundary] } : baseWhere,
     })
   },
 
@@ -207,6 +228,54 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       })
       if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
       return { ok: true, value: task }
+    })
+  },
+
+  async updateTaskProgress(studentProfileId, id, input) {
+    return prisma.$transaction(async (transaction) => {
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const current = await transaction.dailyTask.findFirst({
+        select: { contentType: true, id: true, status: true },
+        where: { id, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (current.contentType !== 'STUDY') {
+        return { ok: false, reason: 'TASK_PROGRESS_NOT_APPLICABLE' as const }
+      }
+      if (current.status !== 'PENDING') {
+        return { ok: false, reason: 'TASK_TERMINAL' as const }
+      }
+
+      const updated = await transaction.dailyTask.updateMany({
+        data: { actualSolvedTestCount: input.actualSolvedTestCount },
+        where: {
+          contentType: 'STUDY',
+          id,
+          status: 'PENDING',
+          studentProfileId,
+          updatedAt: input.expectedUpdatedAt,
+        },
+      })
+      if (updated.count !== 1) {
+        const latest = await transaction.dailyTask.findFirst({
+          select: { contentType: true, id: true, status: true },
+          where: { id, studentProfileId },
+        })
+        if (!latest) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+        if (latest.contentType !== 'STUDY') {
+          return { ok: false, reason: 'TASK_PROGRESS_NOT_APPLICABLE' as const }
+        }
+        if (latest.status !== 'PENDING') {
+          return { ok: false, reason: 'TASK_TERMINAL' as const }
+        }
+        return { ok: false, reason: 'TASK_PROGRESS_STALE' as const }
+      }
+      const value = await transaction.dailyTask.findFirst({
+        include: curriculumInclude,
+        where: { id, studentProfileId },
+      })
+      if (!value) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      return { ok: true, value }
     })
   },
 

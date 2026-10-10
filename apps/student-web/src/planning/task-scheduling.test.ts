@@ -12,17 +12,17 @@ import {
 } from './task-scheduling.ts'
 
 test('volumetric schedules serialize both time fields as null without discarding draft times', () => {
-  const draft = { isVolumetric: true, startTime: '08:15', endTime: '09:45' }
+  const draft = { mode: 'VOLUMETRIC' as const, startTime: '08:15', endTime: '09:45' }
   assert.deepEqual(prepareTaskSchedule(draft), {
     ok: true,
     value: { startMinuteOfDay: null, endMinuteOfDay: null },
   })
-  assert.deepEqual(draft, { isVolumetric: true, startTime: '08:15', endTime: '09:45' })
+  assert.deepEqual(draft, { mode: 'VOLUMETRIC', startTime: '08:15', endTime: '09:45' })
 })
 
 test('timed schedules require ordered 15-minute values and accept 24:00 only as an end', () => {
   assert.deepEqual(prepareTaskSchedule({
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: '23:45',
     endTime: '24:00',
   }), {
@@ -31,12 +31,12 @@ test('timed schedules require ordered 15-minute values and accept 24:00 only as 
   })
   assert.equal(taskEndTimeOptions.at(-1)?.value, '24:00')
   assert.equal(prepareTaskSchedule({
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: '08:10',
     endTime: '09:00',
   }).ok, false)
   assert.equal(prepareTaskSchedule({
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: '09:00',
     endTime: '09:00',
   }).ok, false)
@@ -44,7 +44,7 @@ test('timed schedules require ordered 15-minute values and accept 24:00 only as 
 
 test('persisted schedules initialize edit drafts and unchanged historical values stay unchanged', () => {
   const timed = scheduleDraftFromTask(495, 585)
-  assert.deepEqual(timed, { isVolumetric: false, startTime: '08:15', endTime: '09:45' })
+  assert.deepEqual(timed, { mode: 'TIMED', startTime: '08:15', endTime: '09:45' })
   assert.equal(scheduleHasChanged(timed, 495, 585), false)
 
   const volumetric = scheduleDraftFromTask(null, null)

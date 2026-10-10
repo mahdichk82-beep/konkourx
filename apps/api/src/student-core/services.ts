@@ -17,6 +17,7 @@ import type {
   DomainStudent,
   Page,
   PageQuery,
+  OverdueTaskCursor,
   StudyPlanRecord,
   StudyPlanStatus,
   StudySubjectRecord,
@@ -41,8 +42,51 @@ const page = <T extends { id: string }>(items: T[], query: PageQuery = {}): Page
 }
 
 const dateOnly = (value: string): Date => new Date(`${value}T00:00:00.000Z`)
+const overdueCursorPrefix = 'overdue.'
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const encodeOverdueCursor = (task: Pick<DailyTaskRecord, 'createdAt' | 'id' | 'scheduledFor'>): string =>
+  `${overdueCursorPrefix}${Buffer.from(JSON.stringify({
+    createdAt: task.createdAt.toISOString(),
+    id: task.id,
+    scheduledFor: task.scheduledFor.toISOString(),
+  })).toString('base64url')}`
+
+const decodeOverdueCursor = (cursor: string): OverdueTaskCursor => {
+  try {
+    if (!cursor.startsWith(overdueCursorPrefix)) throw new Error('prefix')
+    const parsed = JSON.parse(Buffer.from(cursor.slice(overdueCursorPrefix.length), 'base64url').toString('utf8')) as Record<string, unknown>
+    if (
+      typeof parsed.createdAt !== 'string'
+      || typeof parsed.scheduledFor !== 'string'
+      || typeof parsed.id !== 'string'
+      || !uuidPattern.test(parsed.id)
+    ) throw new Error('shape')
+    const createdAt = new Date(parsed.createdAt)
+    const scheduledFor = new Date(parsed.scheduledFor)
+    if (Number.isNaN(createdAt.getTime()) || Number.isNaN(scheduledFor.getTime())) {
+      throw new Error('date')
+    }
+    return { createdAt, id: parsed.id, scheduledFor }
+  } catch {
+    throw new ApiError(400, 'TASK_CURSOR_INVALID', 'Overdue task cursor is invalid')
+  }
+}
+
+const overduePage = (items: DailyTaskRecord[], limitInput?: number): Page<DailyTaskView> => {
+  const limit = Math.min(Math.max(limitInput ?? 50, 1), 100)
+  const selected = items.slice(0, limit)
+  return {
+    items: selected.map(toTaskView),
+    nextCursor: items.length > limit && selected.length > 0
+      ? encodeOverdueCursor(selected[selected.length - 1]!)
+      : null,
+  }
+}
+
 const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): DailyTaskView => ({
   ...task,
+  actualSolvedTestCount: task.actualSolvedTestCount ?? 0,
   startMinuteOfDay: task.startMinuteOfDay ?? null,
   endMinuteOfDay: task.endMinuteOfDay ?? null,
   miniBoxSpan: deriveMiniBoxSpan(task),
@@ -263,7 +307,7 @@ export const createStudentCoreServices = (
   }
 
   const tasks = {
-    async list(actor: DomainStudent, query?: PageQuery & { scheduledFor?: string; scheduledFrom?: string; scheduledTo?: string; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }) {
+    async list(actor: DomainStudent, query?: PageQuery & { scheduledFor?: string; scheduledFrom?: string; scheduledTo?: string; overdueBefore?: string; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }) {
       const profile = await requireProfile(store, actor)
       if (query?.scheduledFor && !validDate(query.scheduledFor)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
@@ -274,11 +318,22 @@ export const createStudentCoreServices = (
       if (query?.scheduledTo && !validDate(query.scheduledTo)) {
         throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date range is invalid')
       }
+      if (query?.overdueBefore && !validDate(query.overdueBefore)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Overdue boundary is invalid')
+      }
       if ((query?.scheduledFrom === undefined) !== (query?.scheduledTo === undefined)) {
         throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
       }
       if (query?.scheduledFor && (query.scheduledFrom || query.scheduledTo)) {
         throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date cannot be combined with a range')
+      }
+      if (query?.overdueBefore && (
+        query.scheduledFor
+        || query.scheduledFrom
+        || query.scheduledTo
+        || (query.status !== undefined && query.status !== 'PENDING')
+      )) {
+        throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Overdue tasks use an exclusive pending-only date filter')
       }
       const scheduledFrom = query?.scheduledFrom ? dateOnly(query.scheduledFrom) : undefined
       const scheduledTo = query?.scheduledTo ? dateOnly(query.scheduledTo) : undefined
@@ -286,18 +341,28 @@ export const createStudentCoreServices = (
         throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
       }
       const {
+        cursor,
         scheduledFor: scheduledForInput,
         scheduledFrom: _scheduledFromInput,
         scheduledTo: _scheduledToInput,
+        overdueBefore,
         ...storeQuery
       } = query ?? {}
       const records = await store.listTasks(profile.id, {
         ...storeQuery,
+        ...(!overdueBefore && cursor ? { cursor } : {}),
         ...(scheduledForInput ? { scheduledFor: dateOnly(scheduledForInput) } : {}),
         ...(scheduledFrom ? { scheduledFrom } : {}),
         ...(scheduledTo ? { scheduledTo } : {}),
+        ...(overdueBefore ? {
+          ...(cursor ? { overdueCursor: decodeOverdueCursor(cursor) } : {}),
+          scheduledBefore: dateOnly(overdueBefore),
+          status: 'PENDING' as const,
+        } : {}),
       })
-      return page(records.map(toTaskView), query)
+      return overdueBefore
+        ? overduePage(records, query?.limit)
+        : page(records.map(toTaskView), query)
     },
     async get(actor: DomainStudent, id: string) {
       const profile = await requireProfile(store, actor)
@@ -345,6 +410,42 @@ export const createStudentCoreServices = (
         studentProfileId: profile.id,
       }, resolvedTargets, profile.track ?? null)
       return toTaskView(result)
+    },
+    async recordProgress(
+      actor: DomainStudent,
+      id: string,
+      input: { actualSolvedTestCount: number; expectedUpdatedAt: string },
+    ) {
+      const profile = await requireProfile(store, actor)
+      const current = await store.findTaskById(profile.id, id)
+      if (!current) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+      if (current.contentType !== 'STUDY') {
+        throw new ApiError(409, 'TASK_PROGRESS_NOT_APPLICABLE', 'Solved-test progress is available only for study tasks')
+      }
+      if (current.status !== 'PENDING') {
+        throw new ApiError(409, 'TASK_TERMINAL', 'Finalized task progress cannot be changed')
+      }
+      const expectedUpdatedAt = new Date(input.expectedUpdatedAt)
+      if (Number.isNaN(expectedUpdatedAt.getTime())) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Expected task version is invalid')
+      }
+      const result = await store.updateTaskProgress(profile.id, id, {
+        actualSolvedTestCount: input.actualSolvedTestCount,
+        expectedUpdatedAt,
+      })
+      if (!result.ok) {
+        if (result.reason === 'TASK_NOT_FOUND') {
+          throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+        }
+        if (result.reason === 'TASK_PROGRESS_NOT_APPLICABLE') {
+          throw new ApiError(409, result.reason, 'Solved-test progress is available only for study tasks')
+        }
+        if (result.reason === 'TASK_TERMINAL') {
+          throw new ApiError(409, result.reason, 'Finalized task progress cannot be changed')
+        }
+        throw new ApiError(409, 'TASK_PROGRESS_STALE', 'Task changed after it was loaded')
+      }
+      return toTaskView(result.value)
     },
     async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; estimatedMinutes?: number | null; status?: DailyTaskStatus; skipReason?: DailyTaskSkipReason | null }) {
       const profile = await requireProfile(store, actor)

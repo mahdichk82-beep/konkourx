@@ -31,6 +31,7 @@ export type DailyTaskAvgAggregateOutputType = {
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   plannedTestCount: number | null
+  actualSolvedTestCount: number | null
 }
 
 export type DailyTaskSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type DailyTaskSumAggregateOutputType = {
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   plannedTestCount: number | null
+  actualSolvedTestCount: number | null
 }
 
 export type DailyTaskMinAggregateOutputType = {
@@ -56,6 +58,7 @@ export type DailyTaskMinAggregateOutputType = {
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   plannedTestCount: number | null
+  actualSolvedTestCount: number | null
   status: $Enums.DailyTaskStatus | null
   completedAt: Date | null
   partialAt: Date | null
@@ -81,6 +84,7 @@ export type DailyTaskMaxAggregateOutputType = {
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   plannedTestCount: number | null
+  actualSolvedTestCount: number | null
   status: $Enums.DailyTaskStatus | null
   completedAt: Date | null
   partialAt: Date | null
@@ -106,6 +110,7 @@ export type DailyTaskCountAggregateOutputType = {
   endMinuteOfDay: number
   estimatedMinutes: number
   plannedTestCount: number
+  actualSolvedTestCount: number
   status: number
   completedAt: number
   partialAt: number
@@ -122,6 +127,7 @@ export type DailyTaskAvgAggregateInputType = {
   endMinuteOfDay?: true
   estimatedMinutes?: true
   plannedTestCount?: true
+  actualSolvedTestCount?: true
 }
 
 export type DailyTaskSumAggregateInputType = {
@@ -129,6 +135,7 @@ export type DailyTaskSumAggregateInputType = {
   endMinuteOfDay?: true
   estimatedMinutes?: true
   plannedTestCount?: true
+  actualSolvedTestCount?: true
 }
 
 export type DailyTaskMinAggregateInputType = {
@@ -147,6 +154,7 @@ export type DailyTaskMinAggregateInputType = {
   endMinuteOfDay?: true
   estimatedMinutes?: true
   plannedTestCount?: true
+  actualSolvedTestCount?: true
   status?: true
   completedAt?: true
   partialAt?: true
@@ -172,6 +180,7 @@ export type DailyTaskMaxAggregateInputType = {
   endMinuteOfDay?: true
   estimatedMinutes?: true
   plannedTestCount?: true
+  actualSolvedTestCount?: true
   status?: true
   completedAt?: true
   partialAt?: true
@@ -197,6 +206,7 @@ export type DailyTaskCountAggregateInputType = {
   endMinuteOfDay?: true
   estimatedMinutes?: true
   plannedTestCount?: true
+  actualSolvedTestCount?: true
   status?: true
   completedAt?: true
   partialAt?: true
@@ -309,6 +319,7 @@ export type DailyTaskGroupByOutputType = {
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   plannedTestCount: number
+  actualSolvedTestCount: number
   status: $Enums.DailyTaskStatus
   completedAt: Date | null
   partialAt: Date | null
@@ -357,6 +368,7 @@ export type DailyTaskWhereInput = {
   endMinuteOfDay?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   plannedTestCount?: Prisma.IntFilter<"DailyTask"> | number
+  actualSolvedTestCount?: Prisma.IntFilter<"DailyTask"> | number
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   partialAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
@@ -391,6 +403,7 @@ export type DailyTaskOrderByWithRelationInput = {
   endMinuteOfDay?: Prisma.SortOrderInput | Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   partialAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -428,6 +441,7 @@ export type DailyTaskWhereUniqueInput = Prisma.AtLeast<{
   endMinuteOfDay?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   plannedTestCount?: Prisma.IntFilter<"DailyTask"> | number
+  actualSolvedTestCount?: Prisma.IntFilter<"DailyTask"> | number
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   partialAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
@@ -462,6 +476,7 @@ export type DailyTaskOrderByWithAggregationInput = {
   endMinuteOfDay?: Prisma.SortOrderInput | Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   partialAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -495,6 +510,7 @@ export type DailyTaskScalarWhereWithAggregatesInput = {
   endMinuteOfDay?: Prisma.IntNullableWithAggregatesFilter<"DailyTask"> | number | null
   estimatedMinutes?: Prisma.IntNullableWithAggregatesFilter<"DailyTask"> | number | null
   plannedTestCount?: Prisma.IntWithAggregatesFilter<"DailyTask"> | number
+  actualSolvedTestCount?: Prisma.IntWithAggregatesFilter<"DailyTask"> | number
   status?: Prisma.EnumDailyTaskStatusWithAggregatesFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyTask"> | Date | string | null
   partialAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyTask"> | Date | string | null
@@ -515,6 +531,7 @@ export type DailyTaskCreateInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -549,6 +566,7 @@ export type DailyTaskUncheckedCreateInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -573,6 +591,7 @@ export type DailyTaskUpdateInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -607,6 +626,7 @@ export type DailyTaskUncheckedUpdateInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -636,6 +656,7 @@ export type DailyTaskCreateManyInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -656,6 +677,7 @@ export type DailyTaskUpdateManyMutationInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -681,6 +703,7 @@ export type DailyTaskUncheckedUpdateManyInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -716,6 +739,7 @@ export type DailyTaskCountOrderByAggregateInput = {
   endMinuteOfDay?: Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   partialAt?: Prisma.SortOrder
@@ -730,6 +754,7 @@ export type DailyTaskAvgOrderByAggregateInput = {
   endMinuteOfDay?: Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
 }
 
 export type DailyTaskMaxOrderByAggregateInput = {
@@ -748,6 +773,7 @@ export type DailyTaskMaxOrderByAggregateInput = {
   endMinuteOfDay?: Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   partialAt?: Prisma.SortOrder
@@ -773,6 +799,7 @@ export type DailyTaskMinOrderByAggregateInput = {
   endMinuteOfDay?: Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   partialAt?: Prisma.SortOrder
@@ -787,6 +814,7 @@ export type DailyTaskSumOrderByAggregateInput = {
   endMinuteOfDay?: Prisma.SortOrder
   estimatedMinutes?: Prisma.SortOrder
   plannedTestCount?: Prisma.SortOrder
+  actualSolvedTestCount?: Prisma.SortOrder
 }
 
 export type DailyTaskScalarRelationFilter = {
@@ -1112,6 +1140,7 @@ export type DailyTaskCreateWithoutCreatedByInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1144,6 +1173,7 @@ export type DailyTaskUncheckedCreateWithoutCreatedByInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1202,6 +1232,7 @@ export type DailyTaskScalarWhereInput = {
   endMinuteOfDay?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   plannedTestCount?: Prisma.IntFilter<"DailyTask"> | number
+  actualSolvedTestCount?: Prisma.IntFilter<"DailyTask"> | number
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   partialAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
@@ -1222,6 +1253,7 @@ export type DailyTaskCreateWithoutStudentProfileInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1254,6 +1286,7 @@ export type DailyTaskUncheckedCreateWithoutStudentProfileInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1304,6 +1337,7 @@ export type DailyTaskCreateWithoutSubjectInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1336,6 +1370,7 @@ export type DailyTaskUncheckedCreateWithoutSubjectInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1386,6 +1421,7 @@ export type DailyTaskCreateWithoutTopicInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1418,6 +1454,7 @@ export type DailyTaskUncheckedCreateWithoutTopicInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1468,6 +1505,7 @@ export type DailyTaskCreateWithoutStudyPlanInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1500,6 +1538,7 @@ export type DailyTaskUncheckedCreateWithoutStudyPlanInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1550,6 +1589,7 @@ export type DailyTaskCreateWithoutCurriculumTargetsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1583,6 +1623,7 @@ export type DailyTaskUncheckedCreateWithoutCurriculumTargetsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1622,6 +1663,7 @@ export type DailyTaskUpdateWithoutCurriculumTargetsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1655,6 +1697,7 @@ export type DailyTaskUncheckedUpdateWithoutCurriculumTargetsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1678,6 +1721,7 @@ export type DailyTaskCreateWithoutCurriculumItemsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1711,6 +1755,7 @@ export type DailyTaskUncheckedCreateWithoutCurriculumItemsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1750,6 +1795,7 @@ export type DailyTaskUpdateWithoutCurriculumItemsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1783,6 +1829,7 @@ export type DailyTaskUncheckedUpdateWithoutCurriculumItemsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1806,6 +1853,7 @@ export type DailyTaskCreateWithoutStudySessionsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1839,6 +1887,7 @@ export type DailyTaskUncheckedCreateWithoutStudySessionsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1878,6 +1927,7 @@ export type DailyTaskUpdateWithoutStudySessionsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1911,6 +1961,7 @@ export type DailyTaskUncheckedUpdateWithoutStudySessionsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1934,6 +1985,7 @@ export type DailyTaskCreateWithoutAssessmentAttemptsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -1967,6 +2019,7 @@ export type DailyTaskUncheckedCreateWithoutAssessmentAttemptsInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2006,6 +2059,7 @@ export type DailyTaskUpdateWithoutAssessmentAttemptsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2039,6 +2093,7 @@ export type DailyTaskUncheckedUpdateWithoutAssessmentAttemptsInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2066,6 +2121,7 @@ export type DailyTaskCreateManyCreatedByInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2086,6 +2142,7 @@ export type DailyTaskUpdateWithoutCreatedByInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2118,6 +2175,7 @@ export type DailyTaskUncheckedUpdateWithoutCreatedByInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2146,6 +2204,7 @@ export type DailyTaskUncheckedUpdateManyWithoutCreatedByInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2170,6 +2229,7 @@ export type DailyTaskCreateManyStudentProfileInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2190,6 +2250,7 @@ export type DailyTaskUpdateWithoutStudentProfileInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2222,6 +2283,7 @@ export type DailyTaskUncheckedUpdateWithoutStudentProfileInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2250,6 +2312,7 @@ export type DailyTaskUncheckedUpdateManyWithoutStudentProfileInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2274,6 +2337,7 @@ export type DailyTaskCreateManySubjectInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2294,6 +2358,7 @@ export type DailyTaskUpdateWithoutSubjectInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2326,6 +2391,7 @@ export type DailyTaskUncheckedUpdateWithoutSubjectInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2354,6 +2420,7 @@ export type DailyTaskUncheckedUpdateManyWithoutSubjectInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2378,6 +2445,7 @@ export type DailyTaskCreateManyTopicInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2398,6 +2466,7 @@ export type DailyTaskUpdateWithoutTopicInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2430,6 +2499,7 @@ export type DailyTaskUncheckedUpdateWithoutTopicInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2458,6 +2528,7 @@ export type DailyTaskUncheckedUpdateManyWithoutTopicInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2482,6 +2553,7 @@ export type DailyTaskCreateManyStudyPlanInput = {
   endMinuteOfDay?: number | null
   estimatedMinutes?: number | null
   plannedTestCount?: number
+  actualSolvedTestCount?: number
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
   partialAt?: Date | string | null
@@ -2502,6 +2574,7 @@ export type DailyTaskUpdateWithoutStudyPlanInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2534,6 +2607,7 @@ export type DailyTaskUncheckedUpdateWithoutStudyPlanInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2562,6 +2636,7 @@ export type DailyTaskUncheckedUpdateManyWithoutStudyPlanInput = {
   endMinuteOfDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   plannedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
+  actualSolvedTestCount?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partialAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2645,6 +2720,7 @@ export type DailyTaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   endMinuteOfDay?: boolean
   estimatedMinutes?: boolean
   plannedTestCount?: boolean
+  actualSolvedTestCount?: boolean
   status?: boolean
   completedAt?: boolean
   partialAt?: boolean
@@ -2680,6 +2756,7 @@ export type DailyTaskSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   endMinuteOfDay?: boolean
   estimatedMinutes?: boolean
   plannedTestCount?: boolean
+  actualSolvedTestCount?: boolean
   status?: boolean
   completedAt?: boolean
   partialAt?: boolean
@@ -2710,6 +2787,7 @@ export type DailyTaskSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   endMinuteOfDay?: boolean
   estimatedMinutes?: boolean
   plannedTestCount?: boolean
+  actualSolvedTestCount?: boolean
   status?: boolean
   completedAt?: boolean
   partialAt?: boolean
@@ -2740,6 +2818,7 @@ export type DailyTaskSelectScalar = {
   endMinuteOfDay?: boolean
   estimatedMinutes?: boolean
   plannedTestCount?: boolean
+  actualSolvedTestCount?: boolean
   status?: boolean
   completedAt?: boolean
   partialAt?: boolean
@@ -2749,7 +2828,7 @@ export type DailyTaskSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DailyTaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "createdByUserId" | "source" | "contentType" | "studyPlanId" | "subjectId" | "topicId" | "title" | "description" | "scheduledFor" | "startMinuteOfDay" | "endMinuteOfDay" | "estimatedMinutes" | "plannedTestCount" | "status" | "completedAt" | "partialAt" | "skipReason" | "skippedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyTask"]>
+export type DailyTaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "createdByUserId" | "source" | "contentType" | "studyPlanId" | "subjectId" | "topicId" | "title" | "description" | "scheduledFor" | "startMinuteOfDay" | "endMinuteOfDay" | "estimatedMinutes" | "plannedTestCount" | "actualSolvedTestCount" | "status" | "completedAt" | "partialAt" | "skipReason" | "skippedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyTask"]>
 export type DailyTaskInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -2806,6 +2885,7 @@ export type $DailyTaskPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     endMinuteOfDay: number | null
     estimatedMinutes: number | null
     plannedTestCount: number
+    actualSolvedTestCount: number
     status: $Enums.DailyTaskStatus
     completedAt: Date | null
     partialAt: Date | null
@@ -3260,6 +3340,7 @@ export interface DailyTaskFieldRefs {
   readonly endMinuteOfDay: Prisma.FieldRef<"DailyTask", 'Int'>
   readonly estimatedMinutes: Prisma.FieldRef<"DailyTask", 'Int'>
   readonly plannedTestCount: Prisma.FieldRef<"DailyTask", 'Int'>
+  readonly actualSolvedTestCount: Prisma.FieldRef<"DailyTask", 'Int'>
   readonly status: Prisma.FieldRef<"DailyTask", 'DailyTaskStatus'>
   readonly completedAt: Prisma.FieldRef<"DailyTask", 'DateTime'>
   readonly partialAt: Prisma.FieldRef<"DailyTask", 'DateTime'>

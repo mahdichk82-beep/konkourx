@@ -32,6 +32,7 @@ export type DailyTaskCurriculumTarget = PlanningCurriculumTargetSnapshot & {
 }
 
 export type DailyTask = {
+  actualSolvedTestCount: number
   contentType: 'STUDY' | 'GENERAL' | null
   completedAt: string | null
   createdAt: string
@@ -96,6 +97,7 @@ export type TaskListQuery = {
   date?: string
   from?: string
   limit?: number
+  overdueBefore?: string
   status?: DailyTaskStatus
   subjectId?: string
   to?: string
@@ -125,6 +127,11 @@ export type RescheduleTaskInput = {
   endMinuteOfDay: number | null
   scheduledFor: string
   startMinuteOfDay: number | null
+}
+
+export type UpdateTaskProgressInput = {
+  actualSolvedTestCount: number
+  expectedUpdatedAt: string
 }
 
 export type CreateTaskSessionInput = {
@@ -192,6 +199,7 @@ class PlanningClient {
         date: query.date,
         from: query.from,
         limit: query.limit ?? 20,
+        overdueBefore: query.overdueBefore,
         status: query.status,
         subjectId: query.subjectId,
         to: query.to,
@@ -340,6 +348,16 @@ class PlanningClient {
   updateTask(id: string, input: UpdateTaskInput): Promise<DailyTask> {
     return authClient.authorizedRequest<DailyTask>(
       `/student/daily-tasks/${encodeURIComponent(id)}`,
+      {
+        body: JSON.stringify(input),
+        method: 'PATCH',
+      },
+    )
+  }
+
+  recordTaskProgress(id: string, input: UpdateTaskProgressInput): Promise<DailyTask> {
+    return authClient.authorizedRequest<DailyTask>(
+      `/student/daily-tasks/${encodeURIComponent(id)}/progress`,
       {
         body: JSON.stringify(input),
         method: 'PATCH',

@@ -120,6 +120,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       estimatedMinutes: true,
       id: true,
       plannedTestCount: true,
+      actualSolvedTestCount: true,
       assessmentAttempts: {
         select: { id: true },
         take: 1,

@@ -48,15 +48,32 @@ export const updatePlanSchema = z.object({
 
 export const listTasksSchema = z.object({
   ...pagination,
+  cursor: z.string().min(1).max(512).optional(),
   date: dateOnly.optional(),
   from: dateOnly.optional(),
   to: dateOnly.optional(),
+  overdueBefore: dateOnly.optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED']).optional(),
   studyPlanId: z.string().uuid().optional(),
   subjectId: z.string().uuid().optional(),
 }).strict()
   .refine((value) => !value.date || (!value.from && !value.to), 'Date cannot be combined with a range')
   .refine((value) => (value.from === undefined) === (value.to === undefined), 'Both range dates are required')
+  .refine(
+    (value) => !value.overdueBefore || (!value.date && !value.from && !value.to),
+    'Overdue date cannot be combined with another date filter',
+  )
+  .refine(
+    (value) => !value.overdueBefore || value.status === undefined || value.status === 'PENDING',
+    'Overdue tasks must be pending',
+  )
+  .refine(
+    (value) => !value.cursor
+      || (value.overdueBefore
+        ? /^overdue\.[A-Za-z0-9_-]+$/.test(value.cursor)
+        : z.string().uuid().safeParse(value.cursor).success),
+    'Task cursor is invalid',
+  )
 export const createTaskSchema = z.object({
   contentType: z.enum(['STUDY', 'GENERAL']).optional(),
   studyPlanId: z.string().uuid().nullable().optional().default(null),
@@ -107,6 +124,11 @@ export const rescheduleTaskSchema = z.object({
 }).strict()
   .refine((value) => Object.keys(value).length > 0, 'At least one scheduling field is required')
   .superRefine(refineTaskSchedule)
+
+export const recordTaskProgressSchema = z.object({
+  actualSolvedTestCount: z.number().int().min(0).max(2_147_483_647),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
+}).strict()
 
 export const uuidParamSchema = z.object({ id: z.string().uuid() }).strict()
 export const subjectIdParamSchema = z.object({ subjectId: z.string().uuid() }).strict()

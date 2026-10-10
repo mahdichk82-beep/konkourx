@@ -60,7 +60,7 @@ test('one forward retirement migration follows the four immutable historical mig
   const entries = await readdir(migrationsUrl, { withFileTypes: true })
   const migrationNames = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 
-  assert.equal(migrationNames.length, 26)
+  assert.equal(migrationNames.length, 27)
   for (const historicalMigration of historicalMigrations) {
     assert.ok(migrationNames.includes(historicalMigration), historicalMigration)
   }

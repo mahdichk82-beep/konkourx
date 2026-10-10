@@ -12,17 +12,17 @@ import {
 } from './task-scheduling.ts'
 
 test('volumetric schedules serialize both time fields as null and retain unsaved time values', () => {
-  const draft = { isVolumetric: true, startTime: '10:00', endTime: '11:30' }
+  const draft = { mode: 'VOLUMETRIC' as const, startTime: '10:00', endTime: '11:30' }
   assert.deepEqual(prepareTaskSchedule(draft), {
     ok: true,
     value: { startMinuteOfDay: null, endMinuteOfDay: null },
   })
-  assert.deepEqual(draft, { isVolumetric: true, startTime: '10:00', endTime: '11:30' })
+  assert.deepEqual(draft, { mode: 'VOLUMETRIC', startTime: '10:00', endTime: '11:30' })
 })
 
 test('timed schedules enforce 15-minute same-day ranges and include backend-supported 24:00', () => {
   assert.deepEqual(prepareTaskSchedule({
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: '23:45',
     endTime: '24:00',
   }), {
@@ -31,7 +31,7 @@ test('timed schedules enforce 15-minute same-day ranges and include backend-supp
   })
   assert.equal(taskEndTimeOptions.at(-1)?.value, '24:00')
   assert.equal(prepareTaskSchedule({
-    isVolumetric: false,
+    mode: 'TIMED',
     startTime: '23:45',
     endTime: '00:15',
   }).ok, false)
@@ -39,9 +39,9 @@ test('timed schedules enforce 15-minute same-day ranges and include backend-supp
 
 test('persisted values initialize edits and remain unchanged until an intentional schedule change', () => {
   const timed = scheduleDraftFromTask(900, 1020)
-  assert.deepEqual(timed, { isVolumetric: false, startTime: '15:00', endTime: '17:00' })
+  assert.deepEqual(timed, { mode: 'TIMED', startTime: '15:00', endTime: '17:00' })
   assert.equal(scheduleHasChanged(timed, 900, 1020), false)
-  assert.equal(scheduleHasChanged({ ...timed, isVolumetric: true }, 900, 1020), true)
+  assert.equal(scheduleHasChanged({ ...timed, mode: 'VOLUMETRIC' }, 900, 1020), true)
 
   const volumetric = scheduleDraftFromTask(null, null)
   assert.deepEqual(volumetric, createScheduleDraft())
