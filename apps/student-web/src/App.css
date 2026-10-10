@@ -168,7 +168,8 @@
 .task-item__summary-toggle[aria-expanded='true'] .task-item__chevron { transform: rotate(180deg); }
 .task-item__collapsible { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 250ms cubic-bezier(.22, 1, .36, 1), visibility 0s linear 250ms; }
 .task-item__collapsible.is-expanded { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 250ms cubic-bezier(.22, 1, .36, 1), visibility 0s linear 0s; }
-.task-item__collapsible-inner { min-height: 0; overflow: hidden; }
+.task-item__collapsible-inner { min-height: 0; overflow: hidden; opacity: 0; transition: opacity 250ms cubic-bezier(.22, 1, .36, 1); }
+.task-item__collapsible.is-expanded .task-item__collapsible-inner { opacity: 1; }
 .task-item__collapsible-inner > .task-item__main { margin: 0 1rem; padding: 0.25rem 0 1rem; border-top: 1px solid var(--border-default); }
 .task-item__collapsible-inner > .task-actions { padding: 0 1rem 1rem; }
 .task-item__main { min-width: 0; flex: 1; }
@@ -332,7 +333,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .task-item__collapsible, .task-item__chevron { transition-duration: 0.01ms; }
+  .task-item__collapsible, .task-item__collapsible-inner, .task-item__chevron { transition-duration: 0.01ms; }
 }
 
 /* Milestone A: approved Konkourix brand and application shell */

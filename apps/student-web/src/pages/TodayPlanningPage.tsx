@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   classifyTaskPresentation,
   formatCurriculumProgress,
@@ -61,8 +61,11 @@ import {
 } from '../planning/task-completion'
 import {
   canRecordSolvedTestProgress,
+  overdueLoadRequestKey,
   progressDraftForTask,
   prepareSolvedTestProgress,
+  settleSolvedTestProgressDraft,
+  shouldApplyOverdueLoadMoreResponse,
   shouldShowOverdueGroup,
   studySessionPanelMode,
   toggleExpandedTask,
@@ -313,10 +316,16 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   const currentQueryKey = `${todayKey}:${statusFilter}:${subjectFilter}`
   const currentQueryKeyRef = useRef(currentQueryKey)
+  const overdueQueryKey = overdueLoadRequestKey(todayKey, refreshKey)
+  const overdueQueryKeyRef = useRef(overdueQueryKey)
 
   useEffect(() => {
     currentQueryKeyRef.current = currentQueryKey
   }, [currentQueryKey])
+
+  useLayoutEffect(() => {
+    overdueQueryKeyRef.current = overdueQueryKey
+  }, [overdueQueryKey])
 
   const refreshSubjects = useCallback(async () => {
     setSubjectError(null)
@@ -461,14 +470,17 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     })
   }
 
-  const reconcileTaskFromServer = async (taskId: string) => {
+  const reconcileTaskFromServer = async (taskId: string): Promise<DailyTask | null> => {
     try {
-      replaceTaskFromServer(await planningClient.getTask(taskId))
+      const updated = await planningClient.getTask(taskId)
+      replaceTaskFromServer(updated)
+      return updated
     } catch (error) {
       if (error instanceof AuthApiError && error.code === 'TASK_NOT_FOUND') {
         setTasks((current) => current.filter((item) => item.id !== taskId))
         setOverdueTasks((current) => current.filter((item) => item.id !== taskId))
       }
+      return null
     }
   }
 
@@ -500,6 +512,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   const handleLoadMoreOverdue = async () => {
     if (!overdueNextCursor || isLoadingMoreOverdue) return
+    const requestKey = overdueQueryKey
     setIsLoadingMoreOverdue(true)
     setOverdueError(null)
     try {
@@ -509,12 +522,17 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         overdueBefore: todayKey,
         status: 'PENDING',
       })
+      if (!shouldApplyOverdueLoadMoreResponse(requestKey, overdueQueryKeyRef.current)) return
       setOverdueTasks((current) => mergeTasks([...current, ...page.items]))
       setOverdueNextCursor(page.nextCursor)
     } catch (error) {
-      setOverdueError(planningErrorMessage(error))
+      if (shouldApplyOverdueLoadMoreResponse(requestKey, overdueQueryKeyRef.current)) {
+        setOverdueError(planningErrorMessage(error))
+      }
     } finally {
-      setIsLoadingMoreOverdue(false)
+      if (shouldApplyOverdueLoadMoreResponse(requestKey, overdueQueryKeyRef.current)) {
+        setIsLoadingMoreOverdue(false)
+      }
     }
   }
 
@@ -539,19 +557,22 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       replaceTaskFromServer(updated)
       setProgressDrafts((current) => ({
         ...current,
-        [task.id]: {
-          count: String(updated.actualSolvedTestCount),
-          expectedUpdatedAt: updated.updatedAt,
-        },
+        [task.id]: settleSolvedTestProgressDraft(current[task.id], draft, {
+          actualSolvedTestCount: updated.actualSolvedTestCount,
+          kind: 'SAVED',
+          updatedAt: updated.updatedAt,
+        }),
       }))
     } catch (error) {
       setActionError(planningErrorMessage(error))
-      await reconcileTaskFromServer(task.id)
-      setProgressDrafts((current) => {
-        const next = { ...current }
-        delete next[task.id]
-        return next
-      })
+      const reconciled = await reconcileTaskFromServer(task.id)
+      setProgressDrafts((current) => ({
+        ...current,
+        [task.id]: settleSolvedTestProgressDraft(current[task.id], draft, {
+          kind: 'FAILED',
+          ...(reconciled ? { reconciledUpdatedAt: reconciled.updatedAt } : {}),
+        }),
+      }))
     } finally {
       setSavingProgressTaskIds((current) => {
         const next = new Set(current)

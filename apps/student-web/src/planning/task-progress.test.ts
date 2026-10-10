@@ -3,8 +3,11 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import {
   canRecordSolvedTestProgress,
+  overdueLoadRequestKey,
   progressDraftForTask,
   prepareSolvedTestProgress,
+  settleSolvedTestProgressDraft,
+  shouldApplyOverdueLoadMoreResponse,
   studySessionPanelMode,
   shouldShowOverdueGroup,
   toggleExpandedTask,
@@ -45,6 +48,66 @@ test('overdue pagination remains reachable after the currently loaded page is cl
   assert.equal(shouldShowOverdueGroup(1, null), true)
 })
 
+test('obsolete overdue pages are rejected after refresh or Tehran-day rollover', () => {
+  const initial = overdueLoadRequestKey('2026-10-10', 4)
+  assert.equal(
+    shouldApplyOverdueLoadMoreResponse(
+      initial,
+      overdueLoadRequestKey('2026-10-10', 4),
+    ),
+    true,
+  )
+  assert.equal(
+    shouldApplyOverdueLoadMoreResponse(
+      initial,
+      overdueLoadRequestKey('2026-10-10', 5),
+    ),
+    false,
+  )
+  assert.equal(
+    shouldApplyOverdueLoadMoreResponse(
+      initial,
+      overdueLoadRequestKey('2026-10-11', 4),
+    ),
+    false,
+  )
+})
+
+test('save settlement never overwrites a newer solved-test draft', () => {
+  const submitted = { count: '12', expectedUpdatedAt: 'version-1' }
+  assert.deepEqual(
+    settleSolvedTestProgressDraft(submitted, submitted, {
+      actualSolvedTestCount: 12,
+      kind: 'SAVED',
+      updatedAt: 'version-2',
+    }),
+    { count: '12', expectedUpdatedAt: 'version-2' },
+  )
+  assert.deepEqual(
+    settleSolvedTestProgressDraft(
+      { count: '19', expectedUpdatedAt: 'version-1' },
+      submitted,
+      { actualSolvedTestCount: 12, kind: 'SAVED', updatedAt: 'version-2' },
+    ),
+    { count: '19', expectedUpdatedAt: 'version-2' },
+  )
+  assert.deepEqual(
+    settleSolvedTestProgressDraft(
+      { count: '21', expectedUpdatedAt: 'version-1' },
+      submitted,
+      { kind: 'FAILED' },
+    ),
+    { count: '21', expectedUpdatedAt: 'version-1' },
+  )
+  assert.deepEqual(
+    settleSolvedTestProgressDraft(undefined, submitted, {
+      kind: 'FAILED',
+      reconciledUpdatedAt: 'version-3',
+    }),
+    { count: '12', expectedUpdatedAt: 'version-3' },
+  )
+})
+
 test('only pending STUDY tasks expose execution-progress recording', () => {
   assert.equal(canRecordSolvedTestProgress('STUDY', 'PENDING'), true)
   assert.equal(canRecordSolvedTestProgress('GENERAL', 'PENDING'), false)
@@ -70,6 +133,7 @@ test('Today wires bounded overdue continuation, optimistic progress, and STUDY-o
   const page = readFileSync(new URL('../pages/TodayPlanningPage.tsx', import.meta.url), 'utf8')
   const client = readFileSync(new URL('./planning-client.ts', import.meta.url), 'utf8')
   assert.match(page, /overdueBefore: todayKey/)
+  assert.match(page, /shouldApplyOverdueLoadMoreResponse\(requestKey, overdueQueryKeyRef\.current\)/)
   assert.match(page, /prepareSolvedTestProgress\([\s\S]*task\.updatedAt/)
   assert.match(page, /sessionPanelMode !== 'HIDDEN' && \(\s*<TaskExecutionPanel/)
   assert.match(page, /readOnly=\{sessionPanelMode === 'READ_ONLY'\}/)

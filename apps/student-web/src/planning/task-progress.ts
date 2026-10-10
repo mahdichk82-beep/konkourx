@@ -47,6 +47,44 @@ export const progressDraftForTask = (
   expectedUpdatedAt: updatedAt,
 }
 
+export type SolvedTestProgressSaveResult =
+  | { kind: 'SAVED'; actualSolvedTestCount: number; updatedAt: string }
+  | { kind: 'FAILED'; reconciledUpdatedAt?: string }
+
+export const settleSolvedTestProgressDraft = (
+  current: SolvedTestProgressDraft | undefined,
+  submitted: SolvedTestProgressDraft,
+  result: SolvedTestProgressSaveResult,
+): SolvedTestProgressDraft => {
+  const latest = current ?? submitted
+  if (result.kind === 'FAILED') {
+    return {
+      ...latest,
+      expectedUpdatedAt: result.reconciledUpdatedAt ?? latest.expectedUpdatedAt,
+    }
+  }
+  if (
+    latest.count === submitted.count
+    && latest.expectedUpdatedAt === submitted.expectedUpdatedAt
+  ) {
+    return {
+      count: String(result.actualSolvedTestCount),
+      expectedUpdatedAt: result.updatedAt,
+    }
+  }
+  return { ...latest, expectedUpdatedAt: result.updatedAt }
+}
+
+export const overdueLoadRequestKey = (
+  todayKey: string,
+  refreshKey: number,
+): string => `${todayKey}:${refreshKey}`
+
+export const shouldApplyOverdueLoadMoreResponse = (
+  requestKey: string,
+  currentKey: string,
+): boolean => requestKey === currentKey
+
 export const shouldShowOverdueGroup = (
   loadedTaskCount: number,
   nextCursor: string | null,
