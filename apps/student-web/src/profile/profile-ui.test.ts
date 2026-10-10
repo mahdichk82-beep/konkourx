@@ -66,3 +66,10 @@ test('Student settings and security remain real but visually compact', () => {
   assert.match(page, /خروج از همه دستگاه‌ها/)
   assert.doesNotMatch(page, /تغییر ایمیل|تغییر شماره|فراموشی رمز|بازنشانی رمز/)
 })
+
+test('Planning and Curriculum remain free of client-side track selectors', () => {
+  const planning = readFileSync(new URL('../pages/TodayPlanningPage.tsx', import.meta.url), 'utf8')
+  const curriculum = readFileSync(new URL('../curriculum/StudentCurriculumPage.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(planning, /trackSelector|selectedTrack|StudentTrack/)
+  assert.doesNotMatch(curriculum, /trackSelector|selectedTrack|StudentTrack/)
+})

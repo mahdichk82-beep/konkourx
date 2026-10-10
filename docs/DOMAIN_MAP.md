@@ -1,7 +1,9 @@
 # Konkourix Domain Map
 
-**Status:** Official domain baseline
-**Last synchronized:** 2026-09-17
+**Status:** SUPPORTING TECHNICAL DOMAIN REFERENCE
+**Last synchronized:** 2026-10-02
+
+This document records domain semantics and historical target modeling. It does not define product scope or sequencing. [PRODUCT_MAP.md](PRODUCT_MAP.md) governs intended behavior, [ROADMAP.md](ROADMAP.md) governs build order, [PROJECT_STATE.md](PROJECT_STATE.md) governs implemented reality, and [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md) governs Curriculum educational truth. Conflicting product or Curriculum architecture statements below are historical and must not override those documents.
 
 Konkourix organizes its core exam-preparation loop into three distinct domains. These are semantic boundaries inside the current modular monolith, not separate deployed services.
 

@@ -1,15 +1,35 @@
 # Konkourix Product Decisions
 
-**Status:** Current product-architecture decision history
+**Status:** SUPPORTING HISTORICAL DECISION RECORD
 **Last synchronized:** 2026-10-07
 
-This log records product and domain decisions. Existing technical ADRs remain in [DECISIONS.md](DECISIONS.md); they are not replaced by this file.
+This log preserves product and domain decision history. It is not the primary current product-definition source. [PRODUCT_MAP.md](PRODUCT_MAP.md) defines current intended product behavior, and [ROADMAP.md](ROADMAP.md) defines implementation sequencing. Where historical entries below conflict with either canonical document, the canonical documents govern. New consolidated product truth belongs in `PRODUCT_MAP.md`, while this file may retain the decision history that led to it.
+
+Existing technical ADRs remain in [DECISIONS.md](DECISIONS.md); they are not replaced by this file. Curriculum educational truth remains governed by [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md).
 
 Status meanings:
 
 - **Accepted:** governs current and future work.
 - **Replaced/Superseded:** retained as history but must not guide new work.
 - **Deferred:** possible direction with no current implementation authority.
+
+## Decision: Product Master Blueprint and Anti-Drift
+
+**Status:** Accepted principle; consolidated into [PRODUCT_MAP.md](PRODUCT_MAP.md), which now governs product behavior.
+
+**Decision:** Konkourix is a comprehensive Persian educational SaaS / EdTech platform, not merely a planner, counseling CRM, Question Bank, content website, or virtual classroom. Its product family includes Public Web, Student Web/App, Counselor Web, future School Web, future Admin, API, Content/SEO, and a future Classroom provider layer.
+
+The current implementation priority is Student + Counselor + Planning. Current priority and current implementation do not redefine the whole product. A deferred capability remains in the approved future vision when [PRODUCT_MAP.md](PRODUCT_MAP.md) says it does, while future vision never authorizes implementation by itself.
+
+**Consequence:** Product and architecture documentation must distinguish `CURRENT IMPLEMENTED STATE`, `APPROVED FUTURE STATE`, and `EXPLORATORY / DEFERRED`. Every implementation still requires an approved milestone, architect-defined scope and acceptance conditions, and applicable Product Owner or Student UX Decision Gates.
+
+## Decision: Public Web Is a Product Surface
+
+**Status:** Accepted future product direction; not implemented by this documentation milestone.
+
+**Decision:** Public Web is the platform's acquisition, educational publishing, product-education, trust, and conversion layer. It is not a static brochure. Public SEO content and authenticated learning content are related but distinct, and both use the same Konkourix brand family as the applications.
+
+**Deferred details:** Exact information architecture, CMS model, editorial roles, content workflow, SEO implementation, pricing presentation, and conversion journeys require separate milestones.
 
 ## Decision: Planning vs Execution Separation
 
@@ -76,50 +96,25 @@ Future external-exam support may include providers such as قلمچی, گزین�
 
 ## Decision: Curriculum Is Strategic Infrastructure
 
-**Status:** Accepted principle. The ownership and depth details are superseded by **Canonical Deep Curriculum Architecture** below.
+**Status:** Accepted principle. Source ownership and structural rules are governed by **Source-Faithful Canonical Curriculum** below.
 
-**Decision:** Subjects and topics must provide stable educational meaning for planning, study tracking, assessment, a future question bank, and future analytics. Curriculum design must support تجربی, ریاضی, انسانی, and additional tracks.
+**Decision:** Canonical Curriculum supplies stable educational references for planning, progress measurement, reporting, and future Question Bank linking. Its authored organizations and labels come only from the protected Product Owner source.
 
 **Historical implementation note:** Student-owned subjects/topics are implemented. They are not the approved curriculum architecture and must not guide new curriculum design.
 
-## Decision: Canonical Deep Curriculum Architecture
+## Decision: Source-Faithful Canonical Curriculum
 
-**Status:** Accepted. Governs future curriculum work.
+**Status:** Accepted. Replaces the historical fixed-depth “Canonical Deep Curriculum Architecture” direction.
 
-**Rejected option:** User-created or user-modifiable curriculum structures.
+**Rejected options:** User-created or user-modifiable canonical Curriculum, an invented fixed-depth tree, synthesized intermediate levels, Curriculum-as-knowledge-graph, and scientific/AI educational governance.
 
-**Decision:** Konkourix uses one centrally managed canonical curriculum tree. Students, counselors, teachers, and schools reference this tree; they do not create private curriculum branches or modify canonical nodes.
+**Decision:** `cori.docx`, governed by [CURRICULUM_SOURCE_OF_TRUTH.md](CURRICULUM_SOURCE_OF_TRUTH.md), is authoritative. Its authored hierarchy, labels, order, unequal depths, incomplete branches, and multiple source-defined organizations must be preserved without semantic normalization, merge, split, expansion, reduction, or invented structure. Runtime models are projections and never educational authority.
 
-Canonical depth:
+Students, Counselors, teachers, Schools, Administrators, AI, and implementation processes may reference Curriculum but cannot change its educational content without explicit Product Owner approval. A Product Owner-approved source change requires explicit reference migration and ID-stability planning.
 
-```text
-Curriculum
-|-- رشته
-|   `-- درس
-|       `-- فصل
-|           `-- بخش
-|               `-- مبحث
-|                   `-- مفهوم / ریزمبحث اتمیک
-```
+**Current implementation:** A deterministic, file-backed, read-only runtime projects the protected transcription. It has no Curriculum database persistence, write/admin API, authoring, review, or publication workflow. DailyTask stores validated opaque runtime references and historical display snapshots only.
 
-Illustrative branch:
-
-```text
-Mathematics
-`-- Function
-    |-- Domain and Range
-    |   |-- Domain
-    |   `-- Range
-    |-- Infinite Functions
-    |-- Composite Functions
-    `-- Inverse Functions
-```
-
-**Governance:** Domain experts manually curate the canonical tree. Canonical changes require controlled editorial review and are not ordinary user actions.
-
-**AI boundary:** AI must not generate, insert, rename, move, or otherwise modify canonical curriculum nodes. A future AI capability may consume approved curriculum data for analysis, recommendations, weak-point detection, and learning assistance.
-
-**Current implementation gap:** The repository currently allows student-owned subject/topic creation and editing. That behavior is transitional relative to this accepted decision. Reconciliation requires a separately designed and authorized implementation/migration; this documentation decision does not change current APIs, schema, or stored data.
+**Current compatibility gap:** Student-owned subjects/topics still exist as implemented historical behavior. Any reconciliation with Canonical Curriculum requires a separately approved, non-destructive milestone; this decision changes no API, schema, migration, or stored data.
 
 ## Decision: Student Progress Is an Overlay
 
@@ -220,18 +215,11 @@ External reporting must not be coupled to the internal delivery lifecycle merely
 
 ## Decision: Question Bank Uses Canonical Curriculum
 
-**Status:** Accepted future requirement; question bank not implemented.
+**Status:** Accepted future requirement; cardinality decided many-to-many; Question Bank not implemented.
 
-Every future question must reference one or more approved canonical curriculum nodes with enough depth to identify the concepts it assesses. The accepted direction is a many-to-many Question ↔ Curriculum Node relationship.
+Every future official question links to the approved Canonical Curriculum through a moderated many-to-many relationship that cannot alter Curriculum authority. One question may link to multiple topics, chapters, grades, and—where educationally valid—subjects. An optional Primary Curriculum Link may support display/grouping while all links remain semantically valid.
 
-```text
-Question
-Subject: Math
-Topic: Function
-Atomic concept: Infinite Functions
-```
-
-This enables precise search, exam generation, weakness analysis, and targeted practice.
+The linkage supports precise search, exam generation, weakness analysis, and targeted practice without making Question Bank authoritative over Curriculum.
 
 A possible governed contribution workflow is:
 
@@ -243,7 +231,7 @@ Admin review
 Approved question enters bank
 ```
 
-Submission never makes a question canonical or published automatically. Attribution, author/source provenance, copyright metadata, immutable published versions, and educational/answer/copyright/curriculum-link moderation are required. Whether one node is primary, whether an atomic node is mandatory, and whether ancestors are stored or derived remain explicitly unresolved.
+Submission never makes a question canonical or published automatically. Difficulty, explanation, attribution, author/source provenance, history, copyright metadata where appropriate, and educational/answer/copyright/curriculum-link moderation belong to the approved future direction. Detailed storage/derivation and moderation implementation still require scoped technical design, but cardinality is closed.
 
 ## Decision: Personal Learning Tasks Remain Visible and Attributed
 
@@ -253,32 +241,31 @@ Students may create their own learning tasks. Authorized counselors can see thos
 
 The target counselor view may include creator, completion, task-level quality, and student notes. Today, task provenance and counselor visibility exist, while the full task-level quality/result model described above does not.
 
-## Decision: Product Priority Order
+## Decision: Implementation Priority Is Not Product Definition
 
 **Status:** Accepted.
 
-1. Students: execution and improvement of exam preparation.
-2. Counselors: efficient planning, monitoring, and guidance.
-3. Educational content and online classes: future.
-4. Schools and organizations: future.
+The current implementation priority is Student + Counselor + Planning. The current roadmap sequence is maintained in [ROADMAP.md](ROADMAP.md) and may change through an approved decision.
 
-Post-exam services are possible later, but are not a current priority. Architecture should avoid blocking them without creating speculative domain models.
+Public Web/SEO, Question Bank and online exams, learning/content, School/Institute, Admin/CMS/business operations, subscriptions/payments, recorded education, and provider-abstracted live classrooms remain visible future product domains. Their later sequence does not make them less central to the complete product vision and does not authorize speculative models now.
 
 ## Decision: Deferred Capability Boundary
 
 **Status:** Accepted scope constraint.
 
-AI analysis, an analytics platform, ranking, a question bank, online exams, live classes, school management, a payment system, a marketplace, and a post-exam ecosystem are **not current**. Older documents describing one of these as a possible feature are interpreted as deferred, not as approved work.
+Question Bank, online exams, richer learning, live classrooms, School management, Admin/CMS expansion, subscriptions/payments, recorded courses/classes, and broader educational services are **not current**, but they remain approved future product domains under [PRODUCT_MAP.md](PRODUCT_MAP.md). Deferral removes implementation authority, not product-vision membership.
+
+AI analysis, rankings, marketplaces, post-exam ecosystems, and other capabilities not explicitly approved by the scope lock remain exploratory or outside current approval. Historical documents cannot elevate them.
 
 ## Decision: Canonical Curriculum Lifecycle and Compatibility
 
-**Status:** Accepted target architecture; not implemented.
+**Status:** Partially superseded by the 2026-09-30 source lock and recovered runtime; future product-reference compatibility remains unresolved.
 
-Canonical curriculum uses stable opaque node identities and immutable published releases. Renames and reordering retain identity when educational meaning remains compatible; semantic splits and merges create new identities with reviewed lineage. Sibling order is explicit. Published nodes are deactivated, deprecated, or retired rather than hard-deleted.
+The historical proposal for a database-managed Curriculum lifecycle, editable releases, and domain-expert publication does not govern the current file-backed runtime. `cori.docx` remains authoritative, and no role may rename, reorder, split, merge, retire, or otherwise change educational content without explicit Product Owner approval.
 
-Domain experts prepare and review curriculum changes, and an authorized admin publishes an internally consistent release. Students, counselors, schools, teachers, integrations, and AI have no curriculum mutation authority.
+Product runtime versioning may later manage deployment, compatibility, and auditability of source-faithful projections, but it cannot approve or alter educational truth. Stable-reference behavior for Product Owner-approved source changes remains a future architecture Decision Gate.
 
-Migration from `StudySubject` and `Topic` is non-destructive. Legacy rows and historical links remain readable while an explicit reviewed mapping registry supports compatibility reads and eventual canonical-only new writes. No automatic destructive merge, history rewrite, or applied-migration rewrite is permitted. See [CANONICAL_CURRICULUM_SPECIFICATION.md](CANONICAL_CURRICULUM_SPECIFICATION.md).
+Any future migration from `StudySubject` and `Topic` must be non-destructive. Legacy rows and historical links remain readable, and no automatic destructive merge, history rewrite, or applied-migration rewrite is permitted. [CANONICAL_CURRICULUM_SPECIFICATION.md](CANONICAL_CURRICULUM_SPECIFICATION.md) is historical architecture input only where it conflicts with the current source lock or recovered runtime.
 
 ## Decision: Counselor Plans Are Published and Versioned
 
@@ -296,13 +283,45 @@ Practice is daily learning activity without an exam lifecycle. External Exam Rep
 
 These capabilities may feed a shared read/reporting layer, but they do not share one write lifecycle and never manufacture study sessions or automatic task outcomes. See [ASSESSMENT_ARCHITECTURE.md](ASSESSMENT_ARCHITECTURE.md).
 
-## Decision: Question Bank Governance and Multi-Node Linkage
+## Decision: Question Bank Governance and Curriculum Linkage
 
-**Status:** Accepted target architecture; not implemented.
+**Status:** Accepted governance direction; many-to-many cardinality decided 2026-10-02; not implemented.
 
 Questions have stable identities and immutable approved versions. Author/source attribution, submission provenance, copyright or license metadata, and moderated publication eligibility are required. Internal exams reference exact approved question versions.
 
-Questions link to multiple canonical curriculum nodes through explicit moderated relationships. The primary-node rule, atomic-node requirement, ancestor inheritance, and link-role vocabulary remain intentionally unresolved until a later data-design decision. See [QUESTION_BANK_ARCHITECTURE.md](QUESTION_BANK_ARCHITECTURE.md).
+Questions link to Canonical Curriculum through explicit moderated many-to-many relationships. An optional Primary Curriculum Link may support display/grouping. Detailed storage/derivation, link-role, and moderation mechanics remain implementation design concerns; they must preserve the decided product behavior. Any conflicting cardinality claim in [QUESTION_BANK_ARCHITECTURE.md](QUESTION_BANK_ARCHITECTURE.md) is historical.
+
+## Decision: Learning and Live Classroom Capability Boundaries
+
+**Status:** Accepted future direction; not implemented.
+
+The learning platform may support articles, lessons, documents/resources, video, recorded classes, and courses or learning collections. Public educational publishing and authenticated learning delivery are related but distinct. This decision preserves capability without approving a deep LMS architecture.
+
+Current Classroom direction is lightweight: session title, host, date/time, audience, external meeting URL, and Join Class. Example providers include Google Meet and Skyroom.
+
+**Architecture boundary:** Classroom begins provider-abstracted. Core Student, Counselor, Curriculum, and Planning models must not couple to a selected vendor. Internal video/WebRTC, attendance, recording, whiteboard, Classroom Chat, and richer learning integration remain future capabilities and are not authorized here.
+
+## Decision: School and Admin Remain Future Surfaces
+
+**Status:** Accepted future direction; not implemented.
+
+School/Institute is an Organization and an organizational layer over the shared Student, Counselor, Question Bank, Exam, Content, and Communication engines. It may contain managers, Counselors, teachers, Students, classes, grades, and groups, with organization permissions, reporting, content, exams, session links, and Plan Entitlements. Shared engines must not be duplicated for School.
+
+Future Admin/CMS/business capability includes permission-driven user and application administration, operations queues, content/blog publishing, Question Bank review, Plans/Entitlements, payments, notifications, moderation, Audit, and future course/live-class administration.
+
+Reference images establish design direction only. This decision authorizes no School or Admin UI, data model, API, migration, or workflow.
+
+## Decision: Commercial Model and Payments
+
+**Status:** Accepted future direction; not implemented.
+
+Product, Plan, Entitlement, Subscription, and Payment are separate concepts. Admin may configure commercial packaging, pricing, trials, and numeric limits for implemented capabilities without code changes; new software capabilities still require development.
+
+Effective access combines Role, Plan Entitlements, Organization Entitlements, and User Overrides. Question Bank and Student Exam Builder are Paid/Entitled capabilities.
+
+Payment is provider-abstracted. A materially different provider API normally requires a developer-written adapter; authorized Admin configuration applies after the adapter exists. Backend verification—not frontend callback success—authorizes Payment success and purchase/Subscription/Entitlement activation.
+
+Card-to-Card is a manual payment method with receipt/reference submission, Finance/Admin review, `APPROVED` / `REJECTED` outcome, and activation after approval.
 
 ## Decision: Communication Is Separated by Purpose
 
@@ -330,11 +349,13 @@ Private notes are not chat, student feedback, plan content, progress facts, or a
 
 ## Decision: Role-Specific Product Experience and Visual Direction
 
-**Status:** Accepted UX direction; not an implementation specification.
+**Status:** Accepted UX and visual-governance direction; scoped implementation specification remains milestone-bound.
 
 Konkourix must not resemble Todoist, a generic calendar, or a CRM. The student experience is motivating, alive, and progress-oriented. The counselor experience emphasizes control, planning, monitoring, and analysis.
 
-The visual identity is blue-based, modern, premium, comfortable, and energetic. Glass UI elements may be used selectively where they preserve accessibility, contrast, performance, and clarity. Exact components and design tokens require later UX work.
+Product Owner-approved Konkourix reference images are the visual specification, not loose inspiration. Implementations converge toward their composition, density, hierarchy, card system, right-side navigation, top bars, chart presentation, X/wordmark presence, blue/violet/cyan accents, premium light mode, professional navy dark mode, and responsive quality. They interpret rather than mechanically copy pixels and must not replace the approved direction with generic developer-designed dashboards.
+
+Mobile primary navigation uses a hamburger and right-side drawer, not a main bottom-navigation replacement. External educational platforms may inform capability and information-architecture research, but they are not the visual identity source.
 
 ## Decision: Curriculum Browser, Study Task Picker, and Legacy Study UI
 

@@ -1,7 +1,9 @@
 # Question Bank Architecture
 
-**Status:** Approved target direction; not implemented
-**Last synchronized:** 2026-09-17
+**Status:** Supporting target architecture; not implemented
+**Last synchronized:** 2026-10-02
+
+[PRODUCT_MAP.md](PRODUCT_MAP.md) governs Question Bank product behavior. This document supplies supporting architecture only and may not override the canonical many-to-many relationship or optional Primary Curriculum Link.
 
 The Question Bank is a moderated content domain built after canonical curriculum and student progress foundations. It is not an open publishing surface.
 
@@ -66,14 +68,19 @@ A question may address multiple canonical nodes. Each link is explicit, moderate
 
 Published questions cannot depend solely on retired nodes for new selection. Curriculum splits or merges do not silently rewrite historical question links; revised links are reviewed and published with appropriate question or linkage versioning.
 
-## Explicitly Unresolved
+## Product Decisions Closed by the Product Map
 
-The following require later decisions and must not be guessed during implementation:
+- Question ↔ Curriculum is many-to-many.
+- A Primary Curriculum Link is optional and may be used for display/grouping.
+- Linked nodes may span topics, chapters, grades, and valid cross-subject classification.
+- Difficulty uses the product vocabulary easy / medium / hard.
 
-- whether exactly one link must be marked primary;
-- whether at least one linked node must be an atomic/micro topic;
+## Remaining Implementation Design Questions
+
+The following require scoped technical/product decisions and must not be guessed during implementation:
+
 - whether ancestor links are stored explicitly or derived from the published tree;
 - whether prerequisite, supporting, and assessed concepts need distinct link roles;
 - whether curriculum-link corrections create a new question version or a separate linkage revision;
-- difficulty, format, language, and psychometric metadata;
+- additional format, language, and psychometric metadata beyond the canonical baseline;
 - duplicate detection and media storage.

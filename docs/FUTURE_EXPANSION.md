@@ -1,9 +1,9 @@
 # Konkourix Future Expansion
 
-**Status:** Directional, not current scope
-**Last synchronized:** 2026-09-15
+**Status:** LEGACY / EXPLORATORY SUPPORTING NOTES
+**Last synchronized:** 2026-10-02
 
-This document records plausible expansion paths so current architecture does not close them off. It is not a feature specification, delivery commitment, or authorization to add entities, APIs, UI, infrastructure, or integrations.
+This document preserves historical expansion ideas. Only capabilities included in [PRODUCT_MAP.md](PRODUCT_MAP.md) belong to the approved product vision, and only [ROADMAP.md](ROADMAP.md) defines delivery order. This file is not a product source of truth, feature specification, delivery commitment, or authorization to add entities, APIs, UI, infrastructure, or integrations.
 
 ## Expansion Rule
 

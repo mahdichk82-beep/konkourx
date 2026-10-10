@@ -1,17 +1,18 @@
 # Konkourix UI Migration Plan
 
-**Status:** Target execution blueprint; documentation only
-**Last synchronized:** 2026-09-17
+**Status:** LEGACY / SUPPORTING TARGET BLUEPRINT; REVALIDATION REQUIRED
+**Last synchronized:** 2026-10-02
 **Current baseline:** M19 (`76bc4d7`) plus the current documented working state
 **Scope:** Migration of Student Web and Counselor Web from the current UI to the approved target UX, plus the dependency-gated future Admin experience
 
-This document defines how the current Konkourix UI should evolve. It does not authorize or specify frontend code, backend code, database changes, API contracts, migrations, final URLs, component APIs, or design-token values.
+This document preserves an M19-era UI migration proposal. [PRODUCT_MAP.md](PRODUCT_MAP.md) defines behavior, [ROADMAP.md](ROADMAP.md) defines sequence, and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) defines visual rules. Every proposal here requires revalidation against those canonical documents. It does not authorize or specify implementation.
 
 ## Sources of Truth
 
 - [UI_AUDIT.md](UI_AUDIT.md)
 - [UX_ARCHITECTURE.md](UX_ARCHITECTURE.md)
-- [ROADMAP_V2.md](ROADMAP_V2.md)
+- [PRODUCT_MAP.md](PRODUCT_MAP.md)
+- [ROADMAP.md](ROADMAP.md)
 - [TARGET_DATABASE_DESIGN.md](database/TARGET_DATABASE_DESIGN.md)
 
 Where a target workflow is described but its governing ADR or policy remains unresolved, this plan marks the UI as blocked. A convenient frontend default must not resolve a domain decision.

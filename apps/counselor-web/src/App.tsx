@@ -7,6 +7,7 @@ import { ContentState } from './components/ui/ContentState'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
+import { PlanningShellPage } from './pages/PlanningShellPage'
 import { useBrowserRouter } from './routing/useBrowserRouter'
 import { StudentDetailPage } from './students/StudentDetailPage'
 import { StudentsPage } from './students/StudentsPage'
@@ -67,6 +68,7 @@ function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, 
   else if (path === '/students') content = <StudentsPage navigate={navigate} />
   else if (studentCurriculumMatch && studentId) content = <CounselorCurriculumPage key={studentId} navigate={navigate} studentId={studentId} />
   else if (studentId) content = <StudentDetailPage key={studentId} navigate={navigate} studentId={studentId} />
+  else if (path === '/planning') content = <PlanningShellPage />
   else if (profileSectionForPath(effectivePath) !== null) content = <CounselorProfilePage navigate={navigate} onPersonProfileSaved={personProfile.save} onRetryPersonProfile={personProfile.load} onThemeChange={setTheme} path={effectivePath} personProfile={personProfile.profile} personProfileError={personProfile.error} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
   else content = <ContentState kind="error" title="صفحه پیدا نشد" description="نشانی واردشده در پنل مشاور وجود ندارد." action={<Button onClick={() => navigate('/')}>بازگشت به داشبورد</Button>} />

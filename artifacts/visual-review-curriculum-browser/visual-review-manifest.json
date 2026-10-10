@@ -1,0 +1,717 @@
+{
+  "generatedAt": "2026-10-04T16:22:41.466Z",
+  "screenshots": [
+    {
+      "filename": "student-light-1440-catalog.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-catalog.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "catalog",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-1440-catalog.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2342
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "curriculum-browser__node-select",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "student-dark-1440-catalog.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-dark-1440-catalog.png",
+      "role": "student",
+      "theme": "dark",
+      "width": 1440,
+      "state": "catalog",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-dark-1440-catalog.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2342
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "dark",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "student-light-390-catalog.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-390-catalog.png",
+      "role": "student",
+      "theme": "light",
+      "width": 390,
+      "state": "catalog",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-390-catalog.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 3140
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 70,
+        "menuButtonVisible": true,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 94
+      }
+    },
+    {
+      "filename": "student-dark-390-catalog.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-dark-390-catalog.png",
+      "role": "student",
+      "theme": "dark",
+      "width": 390,
+      "state": "catalog",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-dark-390-catalog.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 3140
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "dark",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 70,
+        "menuButtonVisible": true,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 94
+      }
+    },
+    {
+      "filename": "student-light-1440-expanded-biology-tree.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-expanded-biology-tree.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "expanded-biology-tree",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-1440-expanded-biology-tree.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 3619
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 2,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "student-light-1440-search-results.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-search-results.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "search-results",
+      "route": "/curriculum",
+      "query": "سلول",
+      "diagnostics": {
+        "label": "student-light-1440-search-results.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 3099
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [
+          "زیست / فصل ۷ ـ فناوری‌های نوین زیستی / گفتار ۲ ـ فناوری مهندسی پروتئین و بافت / سلول‌های بنیادی",
+          "شیمی / فصل ۲ ـ آسایش و رفاه در سایه شیمی / سلول‌های گالوانی",
+          "شیمی / فصل ۲ ـ آسایش و رفاه در سایه شیمی / سلول‌های گالوانی / واکنش کلی سلول",
+          "شیمی / فصل ۲ ـ آسایش و رفاه در سایه شیمی / سلول‌های الکتروشیمیایی و کاربردها",
+          "شیمی / فصل ۲ ـ آسایش و رفاه در سایه شیمی / سلول‌های الکتروشیمیایی و کاربردها / سلول سوختی"
+        ],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "counselor-light-1440-assigned-student.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\counselor-light-1440-assigned-student.png",
+      "role": "counselor",
+      "theme": "light",
+      "width": 1440,
+      "state": "assigned-student-catalog",
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "diagnostics": {
+        "label": "counselor-light-1440-assigned-student.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2379
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": "در حال انتخاب برای\na444feaf-961b-4a1e-926d-013a8bfe9163\nرشته از پروفایل همین دانش‌آموز خوانده می‌شود.",
+        "rawUuidVisible": true,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 155
+      }
+    },
+    {
+      "filename": "counselor-dark-1440-assigned-student.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\counselor-dark-1440-assigned-student.png",
+      "role": "counselor",
+      "theme": "dark",
+      "width": 1440,
+      "state": "assigned-student-catalog",
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "diagnostics": {
+        "label": "counselor-dark-1440-assigned-student.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2379
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "dark",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": "در حال انتخاب برای\na444feaf-961b-4a1e-926d-013a8bfe9163\nرشته از پروفایل همین دانش‌آموز خوانده می‌شود.",
+        "rawUuidVisible": true,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 155
+      }
+    },
+    {
+      "filename": "counselor-light-390-assigned-student.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\counselor-light-390-assigned-student.png",
+      "role": "counselor",
+      "theme": "light",
+      "width": 390,
+      "state": "assigned-student-catalog",
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "diagnostics": {
+        "label": "counselor-light-390-assigned-student.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 3331
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 70,
+        "menuButtonVisible": true,
+        "contextText": "در حال انتخاب برای\na444feaf-961b-4a1e-926d-013a8bfe9163\nرشته از پروفایل همین دانش‌آموز خوانده می‌شود.",
+        "rawUuidVisible": true,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 94
+      }
+    },
+    {
+      "filename": "counselor-dark-390-assigned-student.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\counselor-dark-390-assigned-student.png",
+      "role": "counselor",
+      "theme": "dark",
+      "width": 390,
+      "state": "assigned-student-catalog",
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "diagnostics": {
+        "label": "counselor-dark-390-assigned-student.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 3331
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "dark",
+        "catalogEntries": 12,
+        "thematicSiblingBadges": 4,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": 70,
+        "menuButtonVisible": true,
+        "contextText": "در حال انتخاب برای\na444feaf-961b-4a1e-926d-013a8bfe9163\nرشته از پروفایل همین دانش‌آموز خوانده می‌شود.",
+        "rawUuidVisible": true,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 94
+      }
+    },
+    {
+      "filename": "student-light-1440-humanities-arabic-groups.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-humanities-arabic-groups.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "humanities-arabic-grade-groups",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-1440-humanities-arabic-groups.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2365
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 16,
+        "thematicSiblingBadges": 3,
+        "groupLabels": [
+          "دهم",
+          "یازدهم",
+          "دوازدهم"
+        ],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 1,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "student-light-1440-multi-selection.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-multi-selection.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "multi-selection-exact-whole",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-1440-multi-selection.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 2632
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 16,
+        "thematicSiblingBadges": 3,
+        "groupLabels": [
+          "دهم",
+          "یازدهم",
+          "دوازدهم"
+        ],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 2,
+        "selectionModes": [
+          "EXACT",
+          "WHOLE"
+        ],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 1,
+        "minimumVisibleExpandHeight": 46,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": null,
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": 158
+      }
+    },
+    {
+      "filename": "student-light-1440-track-not-set.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\student-light-1440-track-not-set.png",
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "state": "student-track-not-set",
+      "route": "/curriculum",
+      "diagnostics": {
+        "label": "student-light-1440-track-not-set.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 919
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 0,
+        "thematicSiblingBadges": 0,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": null,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": "رشته تحصیلی هنوز مشخص نشده است\n\nبرای نمایش مباحث درسی، ابتدا رشته تحصیلی را در پروفایل خود مشخص کنید.\n\nتلاش دوباره",
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": null
+      }
+    },
+    {
+      "filename": "counselor-light-1440-student-track-not-set.png",
+      "path": "C:\\konkourx\\artifacts\\visual-review-curriculum-browser\\counselor-light-1440-student-track-not-set.png",
+      "role": "counselor",
+      "theme": "light",
+      "width": 1440,
+      "state": "selected-student-track-not-set",
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "diagnostics": {
+        "label": "counselor-light-1440-student-track-not-set.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 1440,
+          "scrollHeight": 919
+        },
+        "horizontalOverflow": false,
+        "direction": "rtl",
+        "theme": "light",
+        "catalogEntries": 0,
+        "thematicSiblingBadges": 0,
+        "groupLabels": [],
+        "gradeGroupIsSelectable": false,
+        "selectedNodes": 0,
+        "selectionModes": [],
+        "resultBreadcrumbs": [],
+        "maxTreeDepth": 0,
+        "minimumVisibleExpandHeight": null,
+        "menuButtonVisible": false,
+        "contextText": null,
+        "rawUuidVisible": false,
+        "technicalAmbiguityCodeVisible": false,
+        "trackSelectorVisible": false,
+        "alertText": "رشته تحصیلی هنوز مشخص نشده است\n\nرشته تحصیلی این دانش‌آموز هنوز در پروفایل او مشخص نشده است.\n\nتلاش دوباره",
+        "focusedElement": "",
+        "focusIndicator": {
+          "outlineWidth": "3px",
+          "boxShadow": "none"
+        },
+        "shellMainTop": null,
+        "browserTop": null
+      }
+    }
+  ],
+  "dataSafety": {
+    "originalTrack": null,
+    "changes": [
+      {
+        "from": null,
+        "to": "EXPERIMENTAL",
+        "reason": "Student and Counselor catalog evidence"
+      },
+      {
+        "from": "EXPERIMENTAL",
+        "to": "HUMANITIES",
+        "reason": "Humanities Arabic evidence"
+      },
+      {
+        "from": "HUMANITIES",
+        "to": null,
+        "reason": "Required null-track states"
+      }
+    ],
+    "restoration": {
+      "attempted": true,
+      "expected": null,
+      "actual": null,
+      "exact": true
+    }
+  },
+  "qa": {
+    "studentDrawer": {
+      "available": true,
+      "opened": true,
+      "closed": true,
+      "panelWithinViewport": true,
+      "closeTarget": {
+        "width": 44,
+        "height": 44
+      }
+    },
+    "counselorDrawer": {
+      "available": true,
+      "opened": true,
+      "closed": true,
+      "panelWithinViewport": true,
+      "closeTarget": {
+        "width": 44,
+        "height": 44
+      }
+    }
+  },
+  "failure": null,
+  "assignedStudentId": "a444feaf-961b-4a1e-926d-013a8bfe9163"
+}

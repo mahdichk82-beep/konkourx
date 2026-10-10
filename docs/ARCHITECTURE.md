@@ -1,7 +1,9 @@
 # Konkourix Architecture
 
 **Status:** Current architecture baseline
-**Last synchronized:** 2026-09-17
+**Last synchronized:** 2026-10-02
+
+This document defines technical architecture within its domain. [PRODUCT_MAP.md](PRODUCT_MAP.md) defines product behavior, [ROADMAP.md](ROADMAP.md) defines sequencing, and [PROJECT_STATE.md](PROJECT_STATE.md) defines implemented reality. Architecture must not override them.
 
 ## Architecture Style
 
@@ -77,7 +79,7 @@ Student-created personal learning tasks remain allowed and visible to authorized
 - External exams are provider-owned; Konkourix stores performance reports only.
 - Internal online exams are future Konkourix-owned delivery flows built on a moderated Question Bank, Exam Builder, timed delivery, and answer evaluation.
 
-Every future question has a many-to-many relationship with canonical curriculum nodes. Question submission and approval are separate: a teacher may submit, but educational, solution, copyright, and curriculum-link review is required before an approved version enters the bank. Primary-node and ancestor-inheritance rules remain deliberately unresolved.
+Every future question has a many-to-many relationship with canonical Curriculum nodes. Question submission and approval are separate: a user may submit, but educational, solution, copyright, and Curriculum-link review is required before an approved version enters the bank. A Primary Curriculum Link is optional for display/grouping; ancestor storage/derivation and other lower-level linkage mechanics remain implementation design concerns governed by [PRODUCT_MAP.md](PRODUCT_MAP.md).
 
 ### Versioned Planning Boundary
 
@@ -150,7 +152,7 @@ These gaps are documented to prevent current storage from being mistaken for the
 
 Use the documentation set by concern:
 
-- [PRODUCT_VISION.md](PRODUCT_VISION.md): product identity and priority
+- [PRODUCT_MAP.md](PRODUCT_MAP.md): canonical product identity and behavior
 - [DOMAIN_MAP.md](DOMAIN_MAP.md): domain meaning and invariants
 - [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md): product-architecture decision history
 - [DECISIONS.md](DECISIONS.md): technical ADR history

@@ -1,17 +1,17 @@
 # Konkourix Target UX Architecture
 
-**Status:** Approved-architecture UX design; not implemented
-**Last synchronized:** 2026-09-17
+**Status:** SUPPORTING / HISTORICAL TARGET UX ARCHITECTURE
+**Last synchronized:** 2026-10-02
 **Target baseline:** M19 plus approved future domain architecture
 **Scope:** Student Web, Counselor Web, and future role-scoped administration experiences
 
-This document defines the target information architecture, navigation, workflows, state behavior, and experience guardrails for Konkourix. It is not a component specification, visual token file, frontend implementation plan, API contract, or authorization mechanism.
+This document preserves detailed target information-architecture and workflow context. It is not a product-definition source, roadmap, component specification, visual-token file, frontend implementation plan, API contract, or authorization mechanism. [PRODUCT_MAP.md](PRODUCT_MAP.md) governs product behavior, [ROADMAP.md](ROADMAP.md) governs sequencing, and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) governs visual rules. Conflicting historical UX details are superseded.
 
 ## Sources of Truth
 
-This design is constrained by:
+This historical design was informed by:
 
-- [PRODUCT_VISION.md](PRODUCT_VISION.md) and [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md);
+- [PRODUCT_MAP.md](PRODUCT_MAP.md), with [PRODUCT_VISION.md](PRODUCT_VISION.md) and [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md) retained as historical context;
 - [UX_PRINCIPLES.md](UX_PRINCIPLES.md);
 - [DOMAIN_MAP.md](DOMAIN_MAP.md);
 - ADR-024 through ADR-032 in [DECISIONS.md](DECISIONS.md);

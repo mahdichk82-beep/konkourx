@@ -1,18 +1,19 @@
 # Konkourix API Migration Plan
 
-**Status:** Target execution blueprint; documentation only
-**Last synchronized:** 2026-09-17
+**Status:** LEGACY / SUPPORTING TARGET BLUEPRINT; REVALIDATION REQUIRED
+**Last synchronized:** 2026-10-02
 **Current baseline:** M19 (`76bc4d7`)
 **Contract baseline:** `/api/v1`, standard success/error envelope, server-owned authentication and authorization
 
-This document maps the implemented M19 HTTP API to the approved target domains. It does not change an API contract, reserve final URI names, or authorize implementation. Proposed target paths describe required resource and command boundaries and must receive contract review before coding.
+This document preserves an M19-era API migration proposal. It does not define product behavior or current sequencing. [PRODUCT_MAP.md](PRODUCT_MAP.md) and [ROADMAP.md](ROADMAP.md) govern, and every proposal here requires revalidation against them before use. It does not change an API contract, reserve final URI names, or authorize implementation.
 
 ## Sources of Truth
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [DOMAIN_MAP.md](DOMAIN_MAP.md)
 - [TARGET_DATABASE_DESIGN.md](database/TARGET_DATABASE_DESIGN.md)
-- [ROADMAP_V2.md](ROADMAP_V2.md)
+- [PRODUCT_MAP.md](PRODUCT_MAP.md)
+- [ROADMAP.md](ROADMAP.md)
 - [UI_MIGRATION_PLAN.md](UI_MIGRATION_PLAN.md)
 - [API.md](API.md)
 - [PROJECT_STATE.md](PROJECT_STATE.md)

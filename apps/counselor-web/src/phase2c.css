@@ -83,6 +83,18 @@
 .counselor-workspace-links__grid i { color: var(--text-muted); font-style: normal; }
 .workspace-link__index { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 7px; color: var(--action-primary-emphasis); background: var(--selection-bg); font-family: Inter, Arial, sans-serif; font-size: 0.66rem; font-weight: 850; }
 
+.students-page > .section-heading { padding: 1rem 1.1rem; align-items: center; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface-raised); }
+.students-count { border-radius: 7px; background: var(--selection-bg); font-weight: 800; }
+.students-grid { gap: 0.75rem; }
+.student-card { border-radius: 12px; }
+.student-card::before { content: ''; width: 3px; position: absolute; inset: 0 0 0 auto; border-radius: 0 12px 12px 0; background: linear-gradient(180deg, var(--action-primary), var(--brand-secondary)); opacity: 0; transition: opacity 150ms ease; }
+.student-card:hover::before { opacity: 1; }
+
+.planning-shell-toolbar, .planner-workspace-shell { border-radius: 13px; }
+.planning-shell-toolbar { border-inline-start: 4px solid var(--action-primary); }
+.planner-workspace-shell { background: var(--bg-surface-raised); }
+.planner-placeholder-grid { opacity: 0.58; filter: saturate(0.75); }
+
 .brand-signature { position: relative; z-index: 2; margin-top: 2rem; }
 .brand-signature .brand-tagline { margin: 0; color: var(--brand-on-dark-soft); font-weight: 750; }
 .brand-secondary-line { margin: 0.35rem 0 0; color: var(--brand-on-dark-cyan); font-size: 0.75rem; line-height: 1.8; }
@@ -103,7 +115,7 @@
 :root[data-theme='dark'] .attention-panel { background: linear-gradient(160deg, var(--bg-surface-raised), var(--bg-surface)); }
 :root[data-theme='dark'] .work-queue-card { background: var(--bg-subtle); }
 :root[data-theme='dark'] .planning-entry-card { background: linear-gradient(150deg, var(--viz-planning-card-start), var(--viz-planning-card-mid) 62%, var(--viz-planning-card-end)); }
-:root[data-theme='dark'] .counselor-workspace-links { background: var(--bg-surface); }
+:root[data-theme='dark'] .counselor-workspace-links, :root[data-theme='dark'] .students-page > .section-heading { background: var(--bg-surface); }
 :root[data-theme='dark'] .nav-link--active { border-color: var(--border-strong); background: linear-gradient(90deg, var(--legacy-nav-active-start), var(--legacy-nav-active-end)); }
 
 @media (max-width: 1120px) {
@@ -147,6 +159,8 @@
   .attention-panel__footer { align-items: stretch; flex-direction: column; }
   .operations-stack { grid-template-columns: 1fr; }
   .work-queue-card, .planning-entry-card, .counselor-workspace-links { border-radius: 10px; }
+  .students-page > .section-heading { align-items: flex-start; flex-direction: column; }
+  .students-count { align-self: stretch; text-align: center; }
   .auth-layout--counselor .brand-panel { width: 100%; min-width: 0; min-height: 300px; padding-inline: 1.25rem; overflow: hidden; }
   .auth-layout--counselor .login-panel { width: 100%; min-width: 0; overflow: hidden; }
   .auth-layout--counselor .login-card { width: 100%; min-width: 0; max-width: 100%; }
@@ -157,5 +171,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .counselor-workspace-links__grid button { transition: none; }
+  .counselor-workspace-links__grid button, .student-card::before { transition: none; }
 }

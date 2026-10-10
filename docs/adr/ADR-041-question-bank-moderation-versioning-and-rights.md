@@ -1,14 +1,14 @@
 # ADR-041: Question Bank Moderation, Versioning, Curriculum Classification, and Rights
 
-**Status:** Accepted target architecture; not implemented
-**Decision date:** 2026-09-17
+**Status:** Accepted target architecture; Primary Link requirement superseded by Product Map; not implemented
+**Decision date:** 2026-09-17; supersession synchronized 2026-10-02
 **Related decisions:** ADR-025, ADR-028, ADR-033, ADR-039
 
 ## Context
 
 The Question Bank will supply governed items for targeted practice and Internal Online Exams. Questions may come from original authors, commissioned contributors, licensed sources, or externally referenced materials. Educational correctness, answer and solution validity, curriculum classification, attribution, and legal rights all affect whether an item may be published.
 
-Question content and curriculum can evolve independently. An exam result must remain reproducible against the exact content and classifications used when an exam was assembled. The earlier Question Bank direction accepted many-to-many curriculum linkage but left the primary-node, atomic-node, ancestor, and linkage-version rules unresolved.
+Question content and Curriculum can evolve independently. An exam result must remain reproducible against the exact content and classifications used when an exam was assembled. The canonical Product Map now closes cardinality as many-to-many and permits an optional Primary Curriculum Link. Ancestor storage/derivation and linkage-version mechanics remain implementation design concerns.
 
 ## Decision
 
@@ -31,7 +31,7 @@ Publication requires:
 - curriculum classification review;
 - required audit and provenance records.
 
-Each Question Version has one or more explicit many-to-many links to published canonical curriculum nodes. Every link pins the curriculum version/node pair. Exactly one link is designated `primary` for default search, reporting, and exam composition. The primary link must be the most specific defensible node present in the authoritative curriculum source; there is no universal requirement that every subject expose or use a Micro Topic/Atomic Concept. Other links are secondary assessed concepts unless a later approved role vocabulary says otherwise.
+Each Question Version has one or more explicit many-to-many links to published canonical Curriculum nodes. Every link pins the applicable Curriculum reference. At most one optional link may be designated `primary` for display/grouping. Every link remains semantically valid, and there is no universal requirement that every subject expose or use a Micro Topic/Atomic Concept. Detailed link roles require later scoped design consistent with [PRODUCT_MAP.md](../PRODUCT_MAP.md).
 
 Ancestor classification is derived from the pinned curriculum version and is not stored as independent authoritative tagging. A curriculum-link correction creates a new Question Version; published version links are never edited in place. Internal Exam Versions pin exact published Question Versions.
 

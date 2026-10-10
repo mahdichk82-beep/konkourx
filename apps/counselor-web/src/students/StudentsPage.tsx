@@ -18,6 +18,8 @@ const statusLabel = (status: CounselorStudent['status']) => {
   return 'غیرفعال'
 }
 
+const avatarLabel = (name: string | null) => name?.trim().slice(0, 1) || 'د'
+
 const errorMessage = (error: unknown) => {
   if (error instanceof AuthApiError && error.status === 403) {
     return 'حساب شما اجازه مشاهده فهرست دانش‌آموزان را ندارد.'
@@ -129,7 +131,7 @@ export function StudentsPage({ navigate }: StudentsPageProps) {
         {students.map((student) => (
           <Card className="student-card" key={student.id}>
             <div className="student-card__heading">
-              <span className="student-avatar" aria-hidden="true">د</span>
+              <span className="student-avatar" aria-hidden="true">{avatarLabel(student.displayName)}</span>
               <div>
                 <h3>{student.displayName ?? 'نام نمایشی ثبت نشده'}</h3>
                 <p>کد پرونده: {student.id.slice(0, 8)}</p>
@@ -142,8 +144,8 @@ export function StudentsPage({ navigate }: StudentsPageProps) {
               <div><dt>پایه تحصیلی</dt><dd>{student.educationLevel ?? 'ثبت نشده'}</dd></div>
               <div><dt>مدرسه</dt><dd>{student.schoolName ?? 'ثبت نشده'}</dd></div>
             </dl>
-            <Button onClick={() => navigate(`/students/${student.id}`)} variant="secondary">
-              مشاهده پروفایل
+            <Button className="student-card__action" onClick={() => navigate(`/students/${student.id}`)} variant="secondary">
+              مشاهده پرونده <span aria-hidden="true">←</span>
             </Button>
           </Card>
         ))}

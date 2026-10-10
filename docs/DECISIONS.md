@@ -250,7 +250,7 @@ This lightweight decision log records architectural constraints established by t
 
 **Architecture policy:** The current implementation remains a modular monolith with separate Student Web and Counselor Web applications, one Fastify API, PostgreSQL, and Prisma. Domain boundaries are logical and enforceable without becoming microservices. Later extraction requires evidence. The curriculum statement in this ADR is refined and superseded by ADR-024; the remainder stays accepted.
 
-**Documentation policy:** [PRODUCT_VISION.md](PRODUCT_VISION.md), [DOMAIN_MAP.md](DOMAIN_MAP.md), [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md), [UX_PRINCIPLES.md](UX_PRINCIPLES.md), [FUTURE_EXPANSION.md](FUTURE_EXPANSION.md), and [ROADMAP.md](ROADMAP.md) define the synchronized product baseline. Earlier decisions are preserved; where their assumptions conflict, this accepted decision marks the old framing as superseded rather than deleting history.
+**Documentation policy (superseded 2026-10-02):** [PRODUCT_MAP.md](PRODUCT_MAP.md) now defines intended product behavior, [ROADMAP.md](ROADMAP.md) defines sequencing, [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) defines visual rules, and [PROJECT_STATE.md](PROJECT_STATE.md) defines implemented reality. `PRODUCT_VISION.md`, `DOMAIN_MAP.md`, `PRODUCT_DECISIONS.md`, `UX_PRINCIPLES.md`, and `FUTURE_EXPANSION.md` are supporting or historical and cannot override the canonical documents.
 
 **Status:** Accepted
 
@@ -312,7 +312,7 @@ This lightweight decision log records architectural constraints established by t
 
 **Decision:** Questions have stable logical identities and immutable approved versions. Submissions record author/source attribution, contributor provenance, and copyright/license metadata. Educational, answer/solution, copyright, and curriculum-link review precede publication. Submission never implies approval, and withdrawal does not corrupt delivered exam history.
 
-**Curriculum policy:** Question and Canonical Curriculum Node have an explicit many-to-many relationship. Every published question has reviewed canonical links precise enough for search, practice, exam construction, and later analysis. Whether a primary node is required, whether an atomic node is mandatory, whether ancestors are stored or derived, and whether link roles exist remain explicitly unresolved.
+**Curriculum policy:** Question and Canonical Curriculum Node have an explicit many-to-many relationship. Every published question has reviewed canonical links precise enough for search, practice, exam construction, and later analysis. The 2026-10-02 Product Map decision makes a Primary Curriculum Link optional for display/grouping. Ancestor storage/derivation, detailed link roles, and linkage revision mechanics remain implementation design concerns.
 
 **Specification:** [QUESTION_BANK_ARCHITECTURE.md](QUESTION_BANK_ARCHITECTURE.md)
 

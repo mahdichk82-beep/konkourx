@@ -1,11 +1,11 @@
 # Konkourix Read-Only UI Audit
 
-**Status:** Current implementation audit; documentation only
+**Status:** HISTORICAL IMPLEMENTATION AUDIT SNAPSHOT; documentation only
 **Audit date:** 2026-09-17
 **Implementation baseline:** M19 (`76bc4d7`) plus the current working tree
-**Compared against:** [UX_ARCHITECTURE.md](UX_ARCHITECTURE.md) and [PRODUCT_VISION.md](PRODUCT_VISION.md)
+**Compared against at the time:** [UX_ARCHITECTURE.md](UX_ARCHITECTURE.md) and [PRODUCT_VISION.md](PRODUCT_VISION.md)
 
-This report statically audits `apps/student-web` and `apps/counselor-web`. It does not modify or execute either application. Findings are based on route composition, page/component source, forms, CSS, and responsive rules. Runtime visual regression, real-device testing, assistive-technology testing, performance measurement, and browser compatibility testing were not performed.
+This report preserves a 2026-09-17 static audit and is not current implementation authority. [PROJECT_STATE.md](PROJECT_STATE.md) records current repository state; [PRODUCT_MAP.md](PRODUCT_MAP.md), [ROADMAP.md](ROADMAP.md), and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) govern future behavior, sequence, and visuals. The audit did not modify or execute either application.
 
 ## Classification
 
@@ -384,4 +384,4 @@ The following current UX concepts must not guide the target architecture:
 
 ## Implementation Sequence Implication
 
-UI replacement must follow [ROADMAP_V2.md](ROADMAP_V2.md): Curriculum before Progress, Progress before Planning, Planning before Practice, Practice before Question Bank, Question Bank before Exams, and Exams before Analytics. The existing M19 surfaces remain compatibility UI until the corresponding target domain, migration, API, authorization, state recovery, accessibility, and exit criteria are complete.
+Any UI replacement must follow the current [ROADMAP.md](ROADMAP.md) and [PRODUCT_MAP.md](PRODUCT_MAP.md). The historical critical path recorded by Roadmap V2 no longer governs sequencing. Existing surfaces remain compatibility UI until the corresponding approved milestone and its domain, API, authorization, state-recovery, accessibility, and acceptance criteria are complete.

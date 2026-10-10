@@ -1,7 +1,9 @@
 # Konkourix Product Vision
 
-**Status:** Current product baseline
-**Last synchronized:** 2026-09-17
+**Status:** LEGACY / SUPERSEDED PRODUCT-VISION SNAPSHOT
+**Last synchronized:** 2026-10-02
+
+[PRODUCT_MAP.md](PRODUCT_MAP.md) now defines the canonical product. This file is retained as historical context only and must not be used as a parallel product source of truth. Its narrower exam-preparation framing and any conflicting future-capability statements are superseded by the Product Map. [ROADMAP.md](ROADMAP.md) governs current sequencing.
 
 Konkourix is a specialized exam-preparation ecosystem. Its purpose is to help students carry out and improve exam preparation while giving counselors an efficient way to plan, monitor, and guide that work.
 

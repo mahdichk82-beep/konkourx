@@ -1,18 +1,19 @@
 # Konkourix Backend Domain Migration Plan
 
-**Status:** Target execution blueprint; documentation only
-**Last synchronized:** 2026-09-17
+**Status:** LEGACY / SUPPORTING TARGET BLUEPRINT; REVALIDATION REQUIRED
+**Last synchronized:** 2026-10-02
 **Current baseline:** M19 (`76bc4d7`)
 **Architecture style:** Modular monolith; one Fastify deployable, one PostgreSQL database, Prisma persistence
 
-This plan evolves the current backend into explicit bounded domains without introducing microservices or rewriting verified foundations. It defines ownership, dependency order, persistence evolution, compatibility, and risk controls. It does not modify code, Prisma, schema, migrations, APIs, or tests.
+This plan preserves an M19-era backend migration proposal. It does not define product behavior or current sequencing. [PRODUCT_MAP.md](PRODUCT_MAP.md) and [ROADMAP.md](ROADMAP.md) govern, and every proposal here requires revalidation against them before use. It does not modify code, Prisma, schema, migrations, APIs, or tests.
 
 ## Sources of Truth
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [DOMAIN_MAP.md](DOMAIN_MAP.md)
 - [TARGET_DATABASE_DESIGN.md](database/TARGET_DATABASE_DESIGN.md)
-- [ROADMAP_V2.md](ROADMAP_V2.md)
+- [PRODUCT_MAP.md](PRODUCT_MAP.md)
+- [ROADMAP.md](ROADMAP.md)
 - [UI_MIGRATION_PLAN.md](UI_MIGRATION_PLAN.md)
 - [API_MIGRATION_PLAN.md](API_MIGRATION_PLAN.md)
 - [API.md](API.md)
@@ -302,4 +303,4 @@ A bounded-domain phase is complete only when:
 - contract, unit, integration, database, authorization, concurrency, migration, resilience, and end-to-end tests pass;
 - legacy writers are disabled only where target writers and rollback are proven;
 - source ownership, version/provenance, and audit remain observable;
-- the corresponding [ROADMAP_V2.md](ROADMAP_V2.md) phase exit criteria and product/domain-owner sign-off are satisfied.
+- the corresponding canonical [ROADMAP.md](ROADMAP.md) milestone and product/domain-owner sign-off are satisfied.

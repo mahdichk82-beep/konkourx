@@ -1,13 +1,13 @@
 # Konkourix Implementation Roadmap V2
 
-**Status:** Approved future implementation sequence; no implementation authorized by this document
-**Last synchronized:** 2026-09-17
+**Status:** LEGACY / SUPERSEDED IMPLEMENTATION ROADMAP
+**Last synchronized:** 2026-10-02
 **Implementation baseline:** M19 (`76bc4d7`)
 **Planning model:** Dependency-gated; no dates or effort commitments
 
-This roadmap replaces the future implementation sequence in [ROADMAP.md](ROADMAP.md). The older file remains historical context; where the two differ, this document governs future ordering. Creating this roadmap does not authorize code, schema, migration, API, frontend, deployment, or data changes.
+This file preserves the 2026-09-17 dependency-gated architecture plan as historical context. It no longer governs ordering. [PRODUCT_MAP.md](PRODUCT_MAP.md) defines the current product, and [ROADMAP.md](ROADMAP.md) defines the current implementation sequence. Historical phase gates here do not reopen decisions closed by the Product Map and do not authorize code, schema, migration, API, frontend, deployment, or data changes.
 
-## Sources of Truth
+## Historical Inputs
 
 - [PRODUCT_VISION.md](PRODUCT_VISION.md)
 - [DOMAIN_MAP.md](DOMAIN_MAP.md)

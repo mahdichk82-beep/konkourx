@@ -33,11 +33,13 @@ test('counselor shell keeps the right-side and accessible mobile navigation cont
   assert.match(shellStyles, /inset: 0 0 0 auto/)
 })
 
-test('counselor login exposes the branded identity', () => {
+test('counselor login and planning shell expose honest branded states', () => {
   const loginSource = readFileSync(new URL('../../pages/LoginPage.tsx', import.meta.url), 'utf8')
+  const planningSource = readFileSync(new URL('../../pages/PlanningShellPage.tsx', import.meta.url), 'utf8')
   assert.match(loginSource, /from '@konkourx\/brand'/)
   assert.match(loginSource, /<BrandLogo context="dark" \/>/)
   assert.doesNotMatch(loginSource, /konkour<span>X<\/span>/)
   assert.match(loginSource, /جایی که موفقیت مهندسی می‌شود/)
   assert.match(loginSource, /آموزش مفهومی؛ مشاوره تخصصی؛ برنامه‌ریزی هدفمند/)
+  assert.match(planningSource, /برنامه‌ریز تعاملی هنوز فعال نشده است/)
 })

@@ -1,0 +1,150 @@
+{
+  "generatedAt": "2026-10-04T17:33:09.416Z",
+  "screenshots": [
+    {
+      "role": "student",
+      "theme": "light",
+      "width": 1440,
+      "route": "/curriculum",
+      "filename": "student-light-1440-catalog-system-font.png",
+      "path": "C:\\konkourx\\artifacts\\final-visual-polish\\student-light-1440-catalog-system-font.png",
+      "diagnostics": {
+        "filename": "student-light-1440-catalog-system-font.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "light",
+        "direction": "rtl",
+        "bodyFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "bodyFontWeight": "400",
+        "bodyLineHeight": "27.2px",
+        "browserFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "browserFontWeight": "400",
+        "pageTitleWeight": "700",
+        "contextLabel": null,
+        "rawUuidVisible": false,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "role": "student",
+      "theme": "dark",
+      "width": 1440,
+      "route": "/curriculum",
+      "filename": "student-dark-1440-catalog-system-font.png",
+      "path": "C:\\konkourx\\artifacts\\final-visual-polish\\student-dark-1440-catalog-system-font.png",
+      "diagnostics": {
+        "filename": "student-dark-1440-catalog-system-font.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "dark",
+        "direction": "rtl",
+        "bodyFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "bodyFontWeight": "400",
+        "bodyLineHeight": "27.2px",
+        "browserFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "browserFontWeight": "400",
+        "pageTitleWeight": "700",
+        "contextLabel": null,
+        "rawUuidVisible": false,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "role": "student",
+      "theme": "light",
+      "width": 390,
+      "route": "/curriculum",
+      "filename": "student-light-390-catalog-system-font.png",
+      "path": "C:\\konkourx\\artifacts\\final-visual-polish\\student-light-390-catalog-system-font.png",
+      "diagnostics": {
+        "filename": "student-light-390-catalog-system-font.png",
+        "route": "/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "light",
+        "direction": "rtl",
+        "bodyFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "bodyFontWeight": "400",
+        "bodyLineHeight": "27.2px",
+        "browserFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "browserFontWeight": "400",
+        "pageTitleWeight": "700",
+        "contextLabel": null,
+        "rawUuidVisible": false,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "role": "counselor",
+      "theme": "light",
+      "width": 1440,
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "filename": "counselor-light-1440-unnamed-student-system-font.png",
+      "path": "C:\\konkourx\\artifacts\\final-visual-polish\\counselor-light-1440-unnamed-student-system-font.png",
+      "diagnostics": {
+        "filename": "counselor-light-1440-unnamed-student-system-font.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "light",
+        "direction": "rtl",
+        "bodyFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "bodyFontWeight": "400",
+        "bodyLineHeight": "27.2px",
+        "browserFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "browserFontWeight": "400",
+        "pageTitleWeight": "700",
+        "contextLabel": "دانش‌آموز بدون نام",
+        "rawUuidVisible": false,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "role": "counselor",
+      "theme": "dark",
+      "width": 390,
+      "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+      "filename": "counselor-dark-390-unnamed-student-system-font.png",
+      "path": "C:\\konkourx\\artifacts\\final-visual-polish\\counselor-dark-390-unnamed-student-system-font.png",
+      "diagnostics": {
+        "filename": "counselor-dark-390-unnamed-student-system-font.png",
+        "route": "/students/a444feaf-961b-4a1e-926d-013a8bfe9163/curriculum",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "dark",
+        "direction": "rtl",
+        "bodyFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "bodyFontWeight": "400",
+        "bodyLineHeight": "27.2px",
+        "browserFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Tahoma, Arial, sans-serif",
+        "browserFontWeight": "400",
+        "pageTitleWeight": "700",
+        "contextLabel": "دانش‌آموز بدون نام",
+        "rawUuidVisible": false,
+        "horizontalOverflow": false
+      }
+    }
+  ],
+  "dataSafety": {
+    "originalTrack": null,
+    "restoration": {
+      "expected": null,
+      "actual": null,
+      "exact": true
+    }
+  },
+  "failure": null,
+  "assignedStudentId": "a444feaf-961b-4a1e-926d-013a8bfe9163"
+}
