@@ -326,6 +326,12 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                 {presentation.indicatorLabel && (
                   <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
                 )}
+                {task.deadlineMisses.length > 0 && (
+                  <div aria-label="سابقه موعدهای انجام‌نشده" className="task-deadline-history">
+                    <strong>سابقه موعدهای انجام‌نشده:</strong>{' '}
+                    {task.deadlineMisses.map((miss) => formatScheduledFor(miss.scheduledFor)).join('، ')}
+                  </div>
+                )}
                 {task.description && <p className="counselor-task__description">{task.description}</p>}
                 <p className="counselor-task__content-type">نوع کار: {task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</p>
                 <div className="counselor-task__meta">

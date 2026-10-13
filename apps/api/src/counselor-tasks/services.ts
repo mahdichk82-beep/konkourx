@@ -65,7 +65,13 @@ const page = <T extends { id: string }>(
   }
 }
 
-const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...task }: DailyTaskRecord): CounselorTaskView => ({
+const toTaskView = ({
+  createdByUserId: _createdByUserId,
+  curriculumTargets,
+  deadlineEligibilityStartedAt: _deadlineEligibilityStartedAt,
+  deadlineMisses,
+  ...task
+}: DailyTaskRecord): CounselorTaskView => ({
   ...task,
   actualSolvedTestCount: task.actualSolvedTestCount ?? 0,
   startMinuteOfDay: task.startMinuteOfDay ?? null,
@@ -73,6 +79,11 @@ const toTaskView = ({ createdByUserId: _createdByUserId, curriculumTargets, ...t
   miniBoxSpan: deriveMiniBoxSpan(task),
   partialAt: task.partialAt ?? null,
   curriculum: curriculumCoverage(curriculumTargets),
+  deadlineMisses: (deadlineMisses ?? []).map(({
+    dailyTaskId: _dailyTaskId,
+    id: _id,
+    ...miss
+  }) => miss),
 })
 
 const toVisibleTaskView = ({
@@ -81,6 +92,8 @@ const toVisibleTaskView = ({
   hasValidAssessmentAttempt,
   recordedMinutes,
   studySessionCount,
+  deadlineEligibilityStartedAt: _deadlineEligibilityStartedAt,
+  deadlineMisses,
   curriculumTargets,
   ...task
 }: import('./types.js').CounselorVisibleTaskRecord): CounselorVisibleTaskView => ({
@@ -91,6 +104,11 @@ const toVisibleTaskView = ({
   miniBoxSpan: deriveMiniBoxSpan(task),
   partialAt: task.partialAt ?? null,
   curriculum: curriculumCoverage(curriculumTargets),
+  deadlineMisses: (deadlineMisses ?? []).map(({
+    dailyTaskId: _dailyTaskId,
+    id: _id,
+    ...miss
+  }) => miss),
   completedStudySessionCount,
   hasActiveStudySession,
   hasValidAssessmentAttempt,

@@ -61,6 +61,7 @@ export const ModelName = {
   Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
+  DailyTaskDeadlineMiss: 'DailyTaskDeadlineMiss',
   DailyTaskCurriculumTarget: 'DailyTaskCurriculumTarget',
   DailyTaskCurriculumItem: 'DailyTaskCurriculumItem',
   StudySession: 'StudySession',
@@ -227,6 +228,7 @@ export const DailyTaskScalarFieldEnum = {
   estimatedMinutes: 'estimatedMinutes',
   plannedTestCount: 'plannedTestCount',
   actualSolvedTestCount: 'actualSolvedTestCount',
+  deadlineEligibilityStartedAt: 'deadlineEligibilityStartedAt',
   status: 'status',
   completedAt: 'completedAt',
   partialAt: 'partialAt',
@@ -237,6 +239,17 @@ export const DailyTaskScalarFieldEnum = {
 } as const
 
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
+
+
+export const DailyTaskDeadlineMissScalarFieldEnum = {
+  id: 'id',
+  dailyTaskId: 'dailyTaskId',
+  scheduledFor: 'scheduledFor',
+  deadlineAt: 'deadlineAt',
+  recordedAt: 'recordedAt'
+} as const
+
+export type DailyTaskDeadlineMissScalarFieldEnum = (typeof DailyTaskDeadlineMissScalarFieldEnum)[keyof typeof DailyTaskDeadlineMissScalarFieldEnum]
 
 
 export const DailyTaskCurriculumTargetScalarFieldEnum = {

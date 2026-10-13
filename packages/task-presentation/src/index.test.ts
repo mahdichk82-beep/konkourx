@@ -152,6 +152,41 @@ test('authoritative rescheduling changes the derived classification', () => {
   assert.equal(classifyTaskPresentation({ ...task, scheduledFor: '2026-10-10' }, '2026-10-09').status, 'PENDING')
 })
 
+test('durable missed days remain separate and visible after a pending task is rescheduled', () => {
+  const presentation = classifyTaskPresentation({
+    completedAt: null,
+    deadlineMisses: [{
+      deadlineAt: '2026-10-01T20:30:00.000Z',
+      recordedAt: '2026-10-01T20:35:00.000Z',
+      scheduledFor: '2026-10-01',
+    }],
+    scheduledFor: '2026-10-12',
+    status: 'PENDING',
+  }, '2026-10-09')
+
+  assert.equal(presentation.status, 'PENDING')
+  assert.equal(presentation.isOverdue, false)
+  assert.equal(presentation.missedDeadlineCount, 1)
+  assert.equal(presentation.indicatorLabel, 'دارای سابقه انجام‌نشده')
+})
+
+test('historical partial keeps its lifecycle meaning alongside durable missed evidence', () => {
+  const presentation = classifyTaskPresentation({
+    completedAt: null,
+    deadlineMisses: [{
+      deadlineAt: '2026-10-01T20:30:00.000Z',
+      recordedAt: '2026-10-01T20:35:00.000Z',
+      scheduledFor: '2026-10-01',
+    }],
+    scheduledFor: '2026-10-01',
+    status: 'PARTIAL',
+  }, '2026-10-09')
+
+  assert.equal(presentation.status, 'PARTIAL')
+  assert.equal(presentation.missedDeadlineCount, 1)
+  assert.equal(presentation.indicatorLabel, 'دارای سابقه انجام‌نشده')
+})
+
 test('invalid schedule or completion values fail safely to lifecycle presentation', () => {
   assert.equal(classifyTaskPresentation({
     completedAt: null,

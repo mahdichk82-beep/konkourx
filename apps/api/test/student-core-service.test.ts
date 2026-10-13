@@ -406,6 +406,47 @@ test('student task provenance is server-assigned, immutable, and creator-safe in
   assert.equal(store.tasks[0]?.source, 'PERSONAL')
 })
 
+test('student task views expose immutable deadline evidence but hide eligibility bookkeeping', async () => {
+  const store = createStore()
+  const services = createStudentCoreServices(store, () => timestamp)
+  const created = await services.tasks.create(student, {
+    title: 'Historical task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+  })
+  const record = store.tasks[0] as DailyTaskRecord & {
+    deadlineEligibilityStartedAt: Date
+    deadlineMisses: Array<{
+      deadlineAt: Date
+      id: string
+      recordedAt: Date
+      scheduledFor: Date
+    }>
+  }
+  record.deadlineEligibilityStartedAt = timestamp
+  record.deadlineMisses = [{
+    deadlineAt: new Date('2026-09-03T20:30:00.000Z'),
+    id: 'deadline-miss-1',
+    recordedAt: new Date('2026-09-03T20:35:00.000Z'),
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+  }]
+
+  const view = await services.tasks.get(student, created.id)
+
+  assert.deepEqual(view.deadlineMisses, [{
+    deadlineAt: new Date('2026-09-03T20:30:00.000Z'),
+    recordedAt: new Date('2026-09-03T20:35:00.000Z'),
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+  }])
+  assert.equal('deadlineEligibilityStartedAt' in view, false)
+  assert.equal('id' in view.deadlineMisses[0]!, false)
+})
+
 test('student reschedules only an unexecuted owned personal task without changing provenance', async () => {
   const store = createStore()
   const services = createStudentCoreServices(store, () => timestamp)

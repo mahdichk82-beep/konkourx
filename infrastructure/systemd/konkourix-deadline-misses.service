@@ -1,0 +1,10 @@
+[Unit]
+Description=Konkourix missed Task deadline reconciliation
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=konkourix
+WorkingDirectory=/opt/konkourix/current
+ExecStart=/usr/bin/docker compose --env-file /opt/konkourix/config/production.env -f /opt/konkourix/current/docker-compose.yml run --rm --no-deps api node dist/scripts/reconcile-task-deadline-misses.js

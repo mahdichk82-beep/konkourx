@@ -30,6 +30,15 @@ test('detail is one selected surface with progressive secondary disclosures', ()
   assert.match(detailSource, /tabIndex=\{-1\}/)
 })
 
+test('Student task detail renders durable missed scheduled days without replacing lifecycle status', () => {
+  const detailSource = planningSource('./TodayTaskDetail.tsx')
+
+  assert.match(detailSource, /task\.deadlineMisses\.length > 0/)
+  assert.match(detailSource, /task\.deadlineMisses\.map/)
+  assert.match(detailSource, /سابقه موعدهای انجام‌نشده/)
+  assert.match(detailSource, /classifyTaskPresentation\(task, todayKey\)/)
+})
+
 test('active result entry loads only the associated task when it is absent from loaded pages', () => {
   const pageSource = planningSource('../pages/TodayPlanningPage.tsx')
   assert.match(pageSource, /openTaskResult\(activeSession\.dailyTaskId\)/)

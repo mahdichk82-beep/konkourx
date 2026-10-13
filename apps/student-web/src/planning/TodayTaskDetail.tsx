@@ -74,6 +74,22 @@ export function TodayTaskDetail({
         )}
       </div>
       {presentation.indicatorLabel && <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>}
+      {task.deadlineMisses.length > 0 && (
+        <section aria-label="سابقه موعدهای انجام‌نشده" className="task-deadline-history">
+          <strong>سابقه موعدهای انجام‌نشده</strong>
+          <ul>
+            {task.deadlineMisses.map((miss) => (
+              <li key={miss.scheduledFor}>
+                {new Date(`${miss.scheduledFor.slice(0, 10)}T00:00:00`).toLocaleDateString('fa-IR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {action !== 'VIEW_DETAILS' && (
         <Button
           aria-label={`${actionLabels[action]} برای ${task.title}`}

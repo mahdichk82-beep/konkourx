@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Konkourix missed Task deadline reconciliation every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+RandomizedDelaySec=15s
+Unit=konkourix-deadline-misses.service
+
+[Install]
+WantedBy=timers.target

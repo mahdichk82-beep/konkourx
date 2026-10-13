@@ -7,6 +7,11 @@ export type TaskPresentationStatus =
 
 export type TaskPresentationInput = {
   completedAt: string | null
+  deadlineMisses?: readonly {
+    deadlineAt: string
+    recordedAt: string
+    scheduledFor: string
+  }[]
   scheduledFor: string
   status: TaskLifecycleStatus
 }
@@ -15,6 +20,7 @@ export type TaskPresentation = {
   indicatorLabel?: string
   isOverdue: boolean
   label: string
+  missedDeadlineCount?: number
   status: TaskPresentationStatus
 }
 
@@ -128,15 +134,29 @@ export const classifyTaskPresentation = (
 ): TaskPresentation => {
   const scheduledKey = isoDateKey(task.scheduledFor)
   const validTodayKey = isoDateKey(todayKey)
+  const missedDeadlineCount = task.deadlineMisses?.length ?? 0
+  const durableMissPresentation = missedDeadlineCount > 0
+    ? {
+        indicatorLabel: 'دارای سابقه انجام‌نشده',
+        missedDeadlineCount,
+      }
+    : {}
 
   if (task.status === 'PENDING' && scheduledKey && validTodayKey && scheduledKey < validTodayKey) {
-    return { isOverdue: true, label: 'انجام‌نشده', status: 'MISSED' }
+    return {
+      ...durableMissPresentation,
+      isOverdue: true,
+      label: 'انجام‌نشده',
+      status: 'MISSED',
+    }
   }
 
   if (task.status === 'PARTIAL') {
     const isOverdue = Boolean(scheduledKey && validTodayKey && scheduledKey < validTodayKey)
     return {
-      ...(isOverdue ? { indicatorLabel: 'از موعد گذشته' } : {}),
+      ...(missedDeadlineCount > 0
+        ? durableMissPresentation
+        : isOverdue ? { indicatorLabel: 'از موعد گذشته' } : {}),
       isOverdue,
       label: lifecycleLabels.PARTIAL,
       status: 'PARTIAL',
@@ -148,6 +168,7 @@ export const classifyTaskPresentation = (
     const completedKey = tehranDateKey(completedDate)
     if (completedKey && completedKey > scheduledKey) {
       return {
+        ...durableMissPresentation,
         isOverdue: false,
         label: 'انجام‌شده با تأخیر',
         status: 'COMPLETED_LATE',
@@ -156,6 +177,7 @@ export const classifyTaskPresentation = (
   }
 
   return {
+    ...durableMissPresentation,
     isOverdue: false,
     label: lifecycleLabels[task.status],
     status: task.status,

@@ -33,3 +33,11 @@ test('Curriculum replacement client is typed to the narrower API response', () =
   const source = readFileSync(new URL('./student-tasks-client.ts', import.meta.url), 'utf8')
   assert.match(source, /replaceCurriculumSelection\([\s\S]*?\): Promise<CounselorTask>/)
 })
+
+test('Counselor task cards render authorized durable missed scheduled days separately', () => {
+  const source = readFileSync(new URL('./StudentTaskList.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /task\.deadlineMisses\.length > 0/)
+  assert.match(source, /task\.deadlineMisses\.map/)
+  assert.match(source, /سابقه موعدهای انجام‌نشده/)
+})

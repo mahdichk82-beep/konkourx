@@ -181,6 +181,8 @@
 .today-task-detail__header p:last-child { margin: 0; color: var(--text-muted); font-size: 0.8rem; }
 .today-task-detail__facts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .today-task-detail__facts span { padding: 0.35rem 0.55rem; border-radius: 8px; color: var(--text-muted); background: var(--bg-subtle); font-size: 0.72rem; }
+.task-deadline-history { margin: 0; padding: 0.55rem 0.7rem; border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-muted); background: var(--bg-subtle); font-size: 0.78rem; }
+.task-deadline-history ul { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin: 0.35rem 0 0; padding-inline-start: 1.2rem; }
 .today-task-detail__primary { justify-self: start; }
 .today-task-detail > details { border-top: 1px solid var(--border-default); }
 .today-task-detail > details > summary { padding: 0.85rem 0; color: var(--text-primary); font-size: 0.85rem; font-weight: 800; cursor: pointer; }

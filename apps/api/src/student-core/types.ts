@@ -20,6 +20,16 @@ export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
+export type DailyTaskDeadlineMissRecord = {
+  id: string
+  dailyTaskId?: string
+  scheduledFor: Date
+  deadlineAt: Date
+  recordedAt: Date
+}
+
+export type DailyTaskDeadlineMissView = Omit<DailyTaskDeadlineMissRecord, 'dailyTaskId' | 'id'>
+
 export type StudySubjectRecord = {
   id: string
   studentProfileId: string
@@ -69,6 +79,8 @@ export type DailyTaskRecord = {
   estimatedMinutes: number | null
   plannedTestCount: number
   actualSolvedTestCount?: number
+  deadlineEligibilityStartedAt?: Date
+  deadlineMisses?: DailyTaskDeadlineMissRecord[]
   status: DailyTaskStatus
   completedAt: Date | null
   partialAt?: Date | null
@@ -81,7 +93,12 @@ export type DailyTaskRecord = {
 
 export type DailyTaskView = Omit<
   DailyTaskRecord,
-  'createdByUserId' | 'curriculumTargets' | 'startMinuteOfDay' | 'endMinuteOfDay'
+  | 'createdByUserId'
+  | 'curriculumTargets'
+  | 'deadlineEligibilityStartedAt'
+  | 'deadlineMisses'
+  | 'startMinuteOfDay'
+  | 'endMinuteOfDay'
 > & {
   actualSolvedTestCount: number
   partialAt: Date | null
@@ -89,6 +106,7 @@ export type DailyTaskView = Omit<
   endMinuteOfDay: number | null
   miniBoxSpan: number | null
   curriculum: TaskCurriculumCoverage
+  deadlineMisses: DailyTaskDeadlineMissView[]
 }
 
 export type StudentTaskCreateInput = {

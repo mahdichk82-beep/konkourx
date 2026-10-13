@@ -137,6 +137,14 @@ The migration runner must receive `DATABASE_URL` through the protected server se
 
 If migration review, backup evidence, execution, or post-migration status fails, stop the release and do not start or route the new application version. Never use `migrate reset`, edit applied migration history, or improvise a reverse migration in production.
 
+## Missed-deadline reconciliation scheduler
+
+Missed Task deadlines are reconciled by the bounded one-shot API command `node dist/scripts/reconcile-task-deadline-misses.js`. It processes at most 100 candidates per batch and 1,000 candidates per invocation, uses database time and the `Asia/Tehran` timezone, and is safe to retry or overlap.
+
+The reviewed systemd units are stored in `infrastructure/systemd/konkourix-deadline-misses.service` and `infrastructure/systemd/konkourix-deadline-misses.timer`. After the additive migration is applied, every API instance runs compatible mutation code, the `konkourix` service account can run the exact Compose command, and one manual command invocation succeeds, an operator may install the units under `/etc/systemd/system`, run `systemd-analyze verify` against both files, reload systemd, and enable the timer. Verify `systemctl list-timers konkourix-deadline-misses.timer` and inspect the service journal after its first run.
+
+Do not enable the timer before schema and application rollout. Repository validation does not activate or prove a production timer; installation, permissions, first execution, monitoring, and alerting remain deployment operations on the target Ubuntu host.
+
 ## Update contract
 
 For a future update:

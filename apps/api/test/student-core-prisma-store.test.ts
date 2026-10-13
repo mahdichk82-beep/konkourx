@@ -8,6 +8,9 @@ const curriculumInclude = {
     orderBy: { position: 'asc' },
     include: { items: { orderBy: { position: 'asc' } } },
   },
+  deadlineMisses: {
+    orderBy: { scheduledFor: 'asc' },
+  },
 }
 
 test('Prisma plan and task queries skip cursor rows and fetch one lookahead row', async () => {
@@ -159,6 +162,7 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
     createdAt: new Date('2026-09-03T00:00:00.000Z'),
     createdByUserId: 'student-user-1',
     description: null,
+    deadlineEligibilityStartedAt: new Date('2026-09-03T00:00:00.000Z'),
     estimatedMinutes: 30,
     id: 'task-1',
     scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
@@ -172,7 +176,12 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
     updatedAt: new Date('2026-09-03T00:00:00.000Z'),
   }
   const transaction = {
-    async $queryRawUnsafe() { return [{ id: 'student-profile-1' }] },
+    async $queryRawUnsafe(sql: string) {
+      return sql.includes('FOR UPDATE')
+        ? [{ id: 'student-profile-1' }]
+        : [{ effectiveAt: new Date('2026-09-03T10:00:00.000Z') }]
+    },
+    async $executeRawUnsafe() { return 0 },
     dailyTask: {
       async findFirst(query: unknown) {
         findQueries.push(query)
@@ -204,7 +213,12 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
     { include: curriculumInclude, where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
   ])
   assert.deepEqual(updateQueries, [{
-    data: { scheduledFor, startMinuteOfDay: 480, endMinuteOfDay: 540 },
+    data: {
+      scheduledFor,
+      startMinuteOfDay: 480,
+      endMinuteOfDay: 540,
+      deadlineEligibilityStartedAt: new Date('2026-09-03T10:00:00.000Z'),
+    },
     where: {
       id: 'task-1',
       source: 'PERSONAL',
@@ -223,6 +237,7 @@ test('Prisma terminal task mutation locks the student and excludes active but no
     createdAt: new Date('2026-09-03T00:00:00.000Z'),
     createdByUserId: 'student-user-1',
     description: null,
+    deadlineEligibilityStartedAt: new Date('2026-09-03T00:00:00.000Z'),
     estimatedMinutes: 30,
     id: 'task-1',
     plannedTestCount: 0,
@@ -240,17 +255,32 @@ test('Prisma terminal task mutation locks the student and excludes active but no
   }
   let findCount = 0
   const transaction = {
-    async $queryRawUnsafe(sql: string, profileId: string) {
-      calls.push('lock')
-      assert.equal(sql, 'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE')
-      assert.equal(profileId, 'student-profile-1')
-      return [{ id: profileId }]
+    async $queryRawUnsafe(sql: string, profileId?: string) {
+      if (sql.includes('FOR UPDATE')) {
+        calls.push('lock')
+        assert.equal(sql, 'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE')
+        assert.equal(profileId, 'student-profile-1')
+        return [{ id: profileId }]
+      }
+      calls.push('clock')
+      return [{ effectiveAt: task.completedAt }]
+    },
+    async $executeRawUnsafe() {
+      calls.push('miss')
+      return 0
     },
     dailyTask: {
       async findFirst() {
         findCount += 1
         calls.push('find')
-        return findCount === 1 ? { id: task.id } : task
+        return findCount === 1
+          ? {
+              deadlineEligibilityStartedAt: task.deadlineEligibilityStartedAt,
+              id: task.id,
+              scheduledFor: task.scheduledFor,
+              status: 'PENDING',
+            }
+          : task
       },
       async updateMany(query: { where: unknown }) {
         calls.push('update')
@@ -275,7 +305,7 @@ test('Prisma terminal task mutation locks the student and excludes active but no
     { completedAt: task.completedAt, status: 'COMPLETED' },
   )
 
-  assert.deepEqual(calls, ['lock', 'find', 'update', 'find'])
+  assert.deepEqual(calls, ['lock', 'clock', 'find', 'miss', 'update', 'find'])
   assert.deepEqual(result, { ok: true, value: task })
 })
 

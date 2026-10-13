@@ -142,6 +142,7 @@
 .counselor-task__description { margin: 0.7rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; white-space: pre-wrap; }
 .counselor-task__meta { margin-top: 0.7rem; display: flex; flex-wrap: wrap; gap: 0.45rem; color: var(--text-muted); font-size: 0.78rem; }
 .counselor-task__meta span { padding: 0.25rem 0.5rem; border-radius: 8px; background: var(--bg-surface); }
+.task-deadline-history { margin-top: 0.55rem; padding: 0.45rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-muted); background: var(--bg-surface); font-size: 0.78rem; overflow-wrap: anywhere; }
 .counselor-task__schedule { margin-top: 0.8rem; display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem; }
 .counselor-task__schedule label { display: grid; gap: 0.4rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; }
 .counselor-task__schedule input, .counselor-task__schedule select { padding: 0.65rem 0.75rem; border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); direction: ltr; }

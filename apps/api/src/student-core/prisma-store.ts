@@ -1,6 +1,10 @@
 import type { PrismaClient } from '../generated/prisma/client.js'
 import type { StudentCoreStore } from './store.js'
 import { assertStudentTrackAtWrite } from '../task-domain/validation.js'
+import {
+  captureDeadlineEffectiveAt,
+  recordEligibleDeadlineMiss,
+} from '../task-deadline-misses/prisma.js'
 import type {
   DailyTaskStatus,
   StudyPlanStatus,
@@ -14,7 +18,23 @@ const curriculumInclude = {
     orderBy: { position: 'asc' as const },
     include: { items: { orderBy: { position: 'asc' as const } } },
   },
+  deadlineMisses: {
+    orderBy: { scheduledFor: 'asc' as const },
+  },
 }
+
+const sameScheduledDay = (left: Date, right: Date): boolean =>
+  left.getTime() === right.getTime()
+
+const terminalUpdateAt = <T extends Record<string, unknown>>(
+  input: T,
+  effectiveAt: Date,
+): T => ({
+  ...input,
+  completedAt: input.status === 'COMPLETED' ? effectiveAt : null,
+  partialAt: input.status === 'PARTIAL' ? effectiveAt : null,
+  skippedAt: input.status === 'SKIPPED' ? effectiveAt : null,
+})
 
 export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreStore => ({
   async findStudentProfileByUserId(userId) {
@@ -194,6 +214,31 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
   },
 
   async updateTask(studentProfileId, id, input) {
+    if (input.status === 'PENDING') {
+      return prisma.$transaction(async (transaction) => {
+        await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+        const effectiveAt = await captureDeadlineEffectiveAt(transaction)
+        const current = await transaction.dailyTask.findFirst({
+          select: { id: true, status: true },
+          where: { id, studentProfileId },
+        })
+        if (!current) return null
+        const result = await transaction.dailyTask.updateMany({
+          data: {
+            ...input,
+            ...(current.status === 'PENDING'
+              ? {}
+              : { deadlineEligibilityStartedAt: effectiveAt }),
+          },
+          where: { id, studentProfileId },
+        })
+        if (result.count !== 1) return null
+        return transaction.dailyTask.findFirst({
+          include: curriculumInclude,
+          where: { id, studentProfileId },
+        })
+      })
+    }
     const result = await prisma.dailyTask.updateMany({
       data: input,
       where: { id, studentProfileId },
@@ -205,14 +250,22 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
   async updateTerminalTask(studentProfileId, id, input) {
     return prisma.$transaction(async (transaction) => {
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const effectiveAt = await captureDeadlineEffectiveAt(transaction)
       const current = await transaction.dailyTask.findFirst({
-        select: { id: true },
+        select: {
+          deadlineEligibilityStartedAt: true,
+          id: true,
+          scheduledFor: true,
+          status: true,
+        },
         where: { id, studentProfileId },
       })
       if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
 
+      await recordEligibleDeadlineMiss(transaction, current, effectiveAt)
+
       const updated = await transaction.dailyTask.updateMany({
-        data: input,
+        data: terminalUpdateAt(input, effectiveAt),
         where: {
           id,
           studentProfileId,
@@ -282,6 +335,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
   async reschedulePersonalTask(studentProfileId, id, schedule) {
     return prisma.$transaction(async (transaction) => {
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const effectiveAt = await captureDeadlineEffectiveAt(transaction)
       const current = await transaction.dailyTask.findFirst({
         where: { id, studentProfileId },
       })
@@ -290,8 +344,17 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
         return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
       }
 
+      await recordEligibleDeadlineMiss(transaction, current, effectiveAt)
+      const scheduledDayChanged = schedule.scheduledFor !== undefined
+        && !sameScheduledDay(schedule.scheduledFor, current.scheduledFor)
+
       const updated = await transaction.dailyTask.updateMany({
-        data: schedule,
+        data: {
+          ...schedule,
+          ...(current.status === 'PENDING' && scheduledDayChanged
+            ? { deadlineEligibilityStartedAt: effectiveAt }
+            : {}),
+        },
         where: {
           id,
           source: 'PERSONAL',

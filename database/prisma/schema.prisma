@@ -266,8 +266,9 @@ model DailyTask {
   endMinuteOfDay   Int?                 @db.SmallInt
   estimatedMinutes Int?
   plannedTestCount Int                  @default(0)
-  actualSolvedTestCount Int             @default(0)
-  status           DailyTaskStatus      @default(PENDING)
+  actualSolvedTestCount          Int             @default(0)
+  deadlineEligibilityStartedAt   DateTime        @default(dbgenerated("statement_timestamp()")) @db.Timestamptz(3)
+  status                         DailyTaskStatus @default(PENDING)
   completedAt      DateTime?
   partialAt        DateTime?
   skipReason       DailyTaskSkipReason?
@@ -284,14 +285,30 @@ model DailyTask {
   assessmentAttempts AssessmentAttempt[]
   curriculumTargets  DailyTaskCurriculumTarget[]
   curriculumItems    DailyTaskCurriculumItem[]
+  deadlineMisses     DailyTaskDeadlineMiss[]
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
+  @@index([status, scheduledFor])
   @@index([createdByUserId])
   @@index([studyPlanId])
   @@index([subjectId])
   @@index([topicId])
   @@map("daily_tasks")
+}
+
+model DailyTaskDeadlineMiss {
+  id           String   @id @default(uuid()) @db.Uuid
+  dailyTaskId  String   @db.Uuid
+  scheduledFor DateTime @db.Date
+  deadlineAt   DateTime @db.Timestamptz(3)
+  recordedAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  dailyTask DailyTask @relation(fields: [dailyTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dailyTaskId, scheduledFor])
+  @@index([dailyTaskId, deadlineAt])
+  @@map("daily_task_deadline_misses")
 }
 
 model DailyTaskCurriculumTarget {

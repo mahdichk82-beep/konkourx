@@ -84,7 +84,12 @@ export type CreateCounselorTaskBatchView = {
 
 export type CreateCounselorTaskRecordInput = Omit<
   DailyTaskRecord,
-  'id' | 'createdAt' | 'updatedAt' | 'curriculumTargets'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'curriculumTargets'
+  | 'deadlineEligibilityStartedAt'
+  | 'deadlineMisses'
 >
 
 export type CounselorTaskCreatePlan = {

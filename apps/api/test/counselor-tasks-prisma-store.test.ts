@@ -150,6 +150,15 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
         orderBy: { position: 'asc' },
         include: { items: { orderBy: { position: 'asc' } } },
       },
+      deadlineMisses: {
+        orderBy: { scheduledFor: 'asc' },
+        select: {
+          deadlineAt: true,
+          id: true,
+          recordedAt: true,
+          scheduledFor: true,
+        },
+      },
     },
     skip: undefined,
     take: 26,
@@ -546,6 +555,7 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
     createdAt: timestamp,
     createdByUserId: ids.counselor,
     description: null,
+    deadlineEligibilityStartedAt: new Date('2026-09-11T00:00:00.000Z'),
     estimatedMinutes: 30,
     id: ids.task,
     scheduledFor: timestamp,
@@ -559,7 +569,12 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
     updatedAt: timestamp,
   }
   const transaction = {
-    async $queryRawUnsafe() { return [{ id: ids.student }] },
+    async $queryRawUnsafe(sql: string) {
+      return sql.includes('FOR UPDATE')
+        ? [{ id: ids.student }]
+        : [{ effectiveAt: new Date('2026-09-11T10:00:00.000Z') }]
+    },
+    async $executeRawUnsafe() { return 0 },
     studentProfile: {
       async findFirst(query: unknown) {
         profileQueries.push(query)
@@ -612,12 +627,18 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
           orderBy: { position: 'asc' },
           include: { items: { orderBy: { position: 'asc' } } },
         },
+        deadlineMisses: { orderBy: { scheduledFor: 'asc' } },
       },
       where: { id: ids.task, studentProfileId: ids.student },
     },
   ])
   assert.deepEqual(taskUpdateQueries, [{
-    data: { scheduledFor, startMinuteOfDay: 945, endMinuteOfDay: 1020 },
+    data: {
+      scheduledFor,
+      startMinuteOfDay: 945,
+      endMinuteOfDay: 1020,
+      deadlineEligibilityStartedAt: new Date('2026-09-11T10:00:00.000Z'),
+    },
     where: {
       id: ids.task,
       source: 'COUNSELOR',

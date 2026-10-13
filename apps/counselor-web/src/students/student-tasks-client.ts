@@ -17,6 +17,12 @@ export type CounselorTaskTopic = {
 
 export type CounselorTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
+export type CounselorTaskDeadlineMiss = {
+  deadlineAt: string
+  recordedAt: string
+  scheduledFor: string
+}
+
 export type CounselorTask = {
   actualSolvedTestCount: number
   contentType: 'STUDY' | 'GENERAL' | null
@@ -29,6 +35,7 @@ export type CounselorTask = {
     totalItemCount: number
   }
   description: string | null
+  deadlineMisses: CounselorTaskDeadlineMiss[]
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   id: string

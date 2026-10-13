@@ -12,6 +12,12 @@ export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'PARTIAL' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
+export type DailyTaskDeadlineMiss = {
+  deadlineAt: string
+  recordedAt: string
+  scheduledFor: string
+}
+
 export type StudySubject = {
   archivedAt: string | null
   id: string
@@ -43,6 +49,7 @@ export type DailyTask = {
     totalItemCount: number
   }
   description: string | null
+  deadlineMisses: DailyTaskDeadlineMiss[]
   endMinuteOfDay: number | null
   estimatedMinutes: number | null
   id: string

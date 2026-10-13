@@ -407,6 +407,7 @@ export const ModelName = {
   Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
+  DailyTaskDeadlineMiss: 'DailyTaskDeadlineMiss',
   DailyTaskCurriculumTarget: 'DailyTaskCurriculumTarget',
   DailyTaskCurriculumItem: 'DailyTaskCurriculumItem',
   StudySession: 'StudySession',
@@ -428,7 +429,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "personProfile" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "dailyTaskCurriculumTarget" | "dailyTaskCurriculumItem" | "studySession" | "studySessionPause" | "assessmentAttempt" | "studentGoal"
+    modelProps: "user" | "personProfile" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "dailyTaskDeadlineMiss" | "dailyTaskCurriculumTarget" | "dailyTaskCurriculumItem" | "studySession" | "studySessionPause" | "assessmentAttempt" | "studentGoal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1172,6 +1173,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DailyTaskDeadlineMiss: {
+      payload: Prisma.$DailyTaskDeadlineMissPayload<ExtArgs>
+      fields: Prisma.DailyTaskDeadlineMissFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DailyTaskDeadlineMissFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DailyTaskDeadlineMissFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        findFirst: {
+          args: Prisma.DailyTaskDeadlineMissFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DailyTaskDeadlineMissFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        findMany: {
+          args: Prisma.DailyTaskDeadlineMissFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>[]
+        }
+        create: {
+          args: Prisma.DailyTaskDeadlineMissCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        createMany: {
+          args: Prisma.DailyTaskDeadlineMissCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DailyTaskDeadlineMissCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>[]
+        }
+        delete: {
+          args: Prisma.DailyTaskDeadlineMissDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        update: {
+          args: Prisma.DailyTaskDeadlineMissUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        deleteMany: {
+          args: Prisma.DailyTaskDeadlineMissDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DailyTaskDeadlineMissUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DailyTaskDeadlineMissUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>[]
+        }
+        upsert: {
+          args: Prisma.DailyTaskDeadlineMissUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyTaskDeadlineMissPayload>
+        }
+        aggregate: {
+          args: Prisma.DailyTaskDeadlineMissAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDailyTaskDeadlineMiss>
+        }
+        groupBy: {
+          args: Prisma.DailyTaskDeadlineMissGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskDeadlineMissGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DailyTaskDeadlineMissCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyTaskDeadlineMissCountAggregateOutputType> | number
+        }
+      }
+    }
     DailyTaskCurriculumTarget: {
       payload: Prisma.$DailyTaskCurriculumTargetPayload<ExtArgs>
       fields: Prisma.DailyTaskCurriculumTargetFieldRefs
@@ -1797,6 +1872,7 @@ export const DailyTaskScalarFieldEnum = {
   estimatedMinutes: 'estimatedMinutes',
   plannedTestCount: 'plannedTestCount',
   actualSolvedTestCount: 'actualSolvedTestCount',
+  deadlineEligibilityStartedAt: 'deadlineEligibilityStartedAt',
   status: 'status',
   completedAt: 'completedAt',
   partialAt: 'partialAt',
@@ -1807,6 +1883,17 @@ export const DailyTaskScalarFieldEnum = {
 } as const
 
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
+
+
+export const DailyTaskDeadlineMissScalarFieldEnum = {
+  id: 'id',
+  dailyTaskId: 'dailyTaskId',
+  scheduledFor: 'scheduledFor',
+  deadlineAt: 'deadlineAt',
+  recordedAt: 'recordedAt'
+} as const
+
+export type DailyTaskDeadlineMissScalarFieldEnum = (typeof DailyTaskDeadlineMissScalarFieldEnum)[keyof typeof DailyTaskDeadlineMissScalarFieldEnum]
 
 
 export const DailyTaskCurriculumTargetScalarFieldEnum = {
@@ -2328,6 +2415,7 @@ export type GlobalOmitConfig = {
   topic?: Prisma.TopicOmit
   studyPlan?: Prisma.StudyPlanOmit
   dailyTask?: Prisma.DailyTaskOmit
+  dailyTaskDeadlineMiss?: Prisma.DailyTaskDeadlineMissOmit
   dailyTaskCurriculumTarget?: Prisma.DailyTaskCurriculumTargetOmit
   dailyTaskCurriculumItem?: Prisma.DailyTaskCurriculumItemOmit
   studySession?: Prisma.StudySessionOmit
