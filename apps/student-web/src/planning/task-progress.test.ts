@@ -10,7 +10,6 @@ import {
   shouldApplyOverdueLoadMoreResponse,
   studySessionPanelMode,
   shouldShowOverdueGroup,
-  toggleExpandedTask,
 } from './task-progress.ts'
 
 test('solved-test progress is a cumulative nonnegative integer payload', () => {
@@ -123,21 +122,14 @@ test('GENERAL hides StudySession controls while nullable history remains read-on
   assert.equal(studySessionPanelMode(null), 'READ_ONLY')
 })
 
-test('accordion keeps at most one task expanded and permits closing it', () => {
-  assert.equal(toggleExpandedTask(null, 'task-1'), 'task-1')
-  assert.equal(toggleExpandedTask('task-1', 'task-2'), 'task-2')
-  assert.equal(toggleExpandedTask('task-2', 'task-2'), null)
-})
-
 test('Today wires bounded overdue continuation, optimistic progress, and STUDY-only execution', () => {
   const page = readFileSync(new URL('../pages/TodayPlanningPage.tsx', import.meta.url), 'utf8')
   const client = readFileSync(new URL('./planning-client.ts', import.meta.url), 'utf8')
+  const resultFlow = readFileSync(new URL('./TaskResultFlow.tsx', import.meta.url), 'utf8')
   assert.match(page, /overdueBefore: todayKey/)
   assert.match(page, /shouldApplyOverdueLoadMoreResponse\(requestKey, overdueQueryKeyRef\.current\)/)
-  assert.match(page, /prepareSolvedTestProgress\([\s\S]*task\.updatedAt/)
-  assert.match(page, /sessionPanelMode !== 'HIDDEN' && \(\s*<TaskExecutionPanel/)
-  assert.match(page, /readOnly=\{sessionPanelMode === 'READ_ONLY'\}/)
-  assert.match(page, /aria-expanded=\{isExpanded\}/)
-  assert.match(page, /inert=\{isExpanded \? undefined : true\}/)
+  assert.match(resultFlow, /recordSolvedTests: planningClient\.recordTaskProgress\.bind\(planningClient\)/)
+  assert.match(page, /selectedSessionPanelMode !== 'HIDDEN' \? \(\s*<TaskExecutionPanel/)
+  assert.match(page, /readOnly=\{selectedSessionPanelMode === 'READ_ONLY' \|\| selectedTask\.status !== 'PENDING'\}/)
   assert.match(client, /daily-tasks\/\$\{encodeURIComponent\(id\)\}\/progress/)
 })

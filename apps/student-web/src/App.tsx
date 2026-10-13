@@ -11,7 +11,11 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { SubjectTopicsPage } from './pages/SubjectTopicsPage'
 import { TodayPlanningPage } from './pages/TodayPlanningPage'
 import { WeeklyPlanningPage } from './pages/WeeklyPlanningPage'
-import { useBrowserRouter } from './routing/useBrowserRouter'
+import {
+  useBrowserRouter,
+  type BrowserNavigate,
+  type BrowserNavigationBlocker,
+} from './routing/useBrowserRouter'
 import { useTheme } from './theme/useTheme'
 import { StudentCurriculumPage } from './curriculum/StudentCurriculumPage'
 import { StudentProfilePage } from './profile/StudentProfilePage'
@@ -22,6 +26,7 @@ import {
 } from './planning/StudyTimerContext'
 import { useStudyTimer, useStudyTimerElapsed } from './planning/useStudyTimer'
 import { formatElapsedStudyTime } from './planning/task-execution'
+import { planningTaskIdForPath, planningTaskPath } from './planning/today-workspace'
 import './App.css'
 import './phase2c.css'
 
@@ -48,7 +53,7 @@ const routeMeta: Record<string, { description: string; title: string }> = {
   '/profile/security': { title: 'امنیت و حساب', description: 'رمز عبور و نشست‌های ورود' },
 }
 
-function ActiveStudyTimerIndicator({ navigate }: { navigate(path: string): void }) {
+function ActiveStudyTimerIndicator({ navigate }: { navigate: BrowserNavigate }) {
   const { activeSession } = useStudyTimer()
   if (!activeSession) return null
   return <ActiveStudyTimerIndicatorContent navigate={navigate} session={activeSession} />
@@ -58,16 +63,16 @@ function ActiveStudyTimerIndicatorContent({
   navigate,
   session,
 }: {
-  navigate(path: string): void
+  navigate: BrowserNavigate
   session: NonNullable<ReturnType<typeof useStudyTimer>['activeSession']>
 }) {
   const elapsedMs = useStudyTimerElapsed(session)
   const stateLabel = session.timerState === 'PAUSED' ? 'مکث مطالعه' : 'مطالعه فعال'
   return (
     <button
-      aria-label={`${stateLabel}، ${formatElapsedStudyTime(elapsedMs)}؛ رفتن به برنامه امروز`}
+      aria-label={`${stateLabel}، ${formatElapsedStudyTime(elapsedMs)}؛ رفتن به کار فعال`}
       className={`active-study-indicator active-study-indicator--${session.timerState.toLowerCase()}`}
-      onClick={() => navigate('/planning')}
+      onClick={() => navigate(session.dailyTaskId ? planningTaskPath(session.dailyTaskId) : '/planning')}
       type="button"
     >
       <span aria-hidden="true" className="active-study-indicator__dot" />
@@ -77,12 +82,23 @@ function ActiveStudyTimerIndicatorContent({
   )
 }
 
-function AuthenticatedStudentWorkspace({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
+function AuthenticatedStudentWorkspace({
+  navigate,
+  path,
+  setNavigationBlocker,
+}: {
+  navigate: BrowserNavigate
+  path: string
+  setNavigationBlocker(blocker: BrowserNavigationBlocker | null): () => void
+}) {
   const { logout, user } = useAuth()
   const { setTheme, theme } = useTheme()
   const personProfile = usePersonProfile()
   const effectivePath = path === '/settings' ? '/profile/settings' : path
-  const meta = routeMeta[effectivePath] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل دانش‌آموز تعریف نشده است.' }
+  const planningTaskId = planningTaskIdForPath(path)
+  const meta = planningTaskId
+    ? { title: 'جزئیات کار', description: 'مرور و اجرای کار انتخاب‌شده در فضای برنامه‌ریزی' }
+    : routeMeta[effectivePath] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل دانش‌آموز تعریف نشده است.' }
 
   useEffect(() => {
     if (path === '/settings') navigate('/profile/settings', true)
@@ -100,7 +116,13 @@ function AuthenticatedStudentWorkspace({ navigate, path }: { navigate(path: stri
 
   let content
   if (path === '/') content = <DashboardPage navigate={navigate} user={user} />
-  else if (path === '/planning') content = <TodayPlanningPage navigate={navigate} />
+  else if (path === '/planning' || planningTaskId) content = (
+    <TodayPlanningPage
+      navigate={navigate}
+      setNavigationBlocker={setNavigationBlocker}
+      taskId={planningTaskId}
+    />
+  )
   else if (path === '/planning/weekly') content = <WeeklyPlanningPage navigate={navigate} />
   else if (path === '/study') content = <SubjectTopicsPage />
   else if (path === '/curriculum') content = <StudentCurriculumPage />
@@ -128,25 +150,41 @@ function AuthenticatedStudentWorkspace({ navigate, path }: { navigate(path: stri
   )
 }
 
-function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
+function AuthenticatedStudentApp({
+  navigate,
+  path,
+  setNavigationBlocker,
+}: {
+  navigate: BrowserNavigate
+  path: string
+  setNavigationBlocker(blocker: BrowserNavigationBlocker | null): () => void
+}) {
   const { user } = useAuth()
   if (!user) return null
   return (
     <StudyTimerProvider>
-      <AuthenticatedStudentWorkspace navigate={navigate} path={path} />
+      <AuthenticatedStudentWorkspace
+        navigate={navigate}
+        path={path}
+        setNavigationBlocker={setNavigationBlocker}
+      />
     </StudyTimerProvider>
   )
 }
 
 function App() {
-  const { navigate, path } = useBrowserRouter()
+  const { navigate, path, setNavigationBlocker } = useBrowserRouter()
   const completeLogin = useCallback(() => navigate('/', true), [navigate])
 
   if (path === '/login') return <LoginPage onSuccess={completeLogin} />
 
   return (
     <ProtectedRoute navigate={navigate}>
-      <AuthenticatedStudentApp navigate={navigate} path={path} />
+      <AuthenticatedStudentApp
+        navigate={navigate}
+        path={path}
+        setNavigationBlocker={setNavigationBlocker}
+      />
     </ProtectedRoute>
   )
 }

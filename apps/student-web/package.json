@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/planning/weekly-movement.test.ts src/planning/task-execution.test.ts src/planning/study-timer.test.ts src/planning/planning-curriculum.test.ts src/planning/task-content.test.ts src/planning/task-scheduling.test.ts src/planning/task-progress.test.ts src/assessments/assessment-attempts.test.ts src/components/layout/shell-state.test.ts src/curriculum/curriculum-client.test.ts src/curriculum/curriculum-page.test.ts src/profile/profile-client.test.ts src/profile/profile-state.test.ts src/profile/profile-ui.test.ts"
+    "test": "node --test src/planning/weekly-movement.test.ts src/planning/task-execution.test.ts src/planning/study-timer.test.ts src/planning/planning-curriculum.test.ts src/planning/task-content.test.ts src/planning/task-scheduling.test.ts src/planning/task-progress.test.ts src/planning/task-result-flow.test.ts src/planning/today-workspace.test.ts src/planning/today-workspace-ui.test.ts src/assessments/assessment-attempts.test.ts src/components/layout/shell-state.test.ts src/curriculum/curriculum-client.test.ts src/curriculum/curriculum-page.test.ts src/profile/profile-client.test.ts src/profile/profile-state.test.ts src/profile/profile-ui.test.ts"
   },
   "dependencies": {
     "@konkourx/brand": "workspace:*",

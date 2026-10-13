@@ -101,8 +101,3 @@ export const studySessionPanelMode = (
   if (contentType === 'STUDY') return 'INTERACTIVE'
   return contentType === null ? 'READ_ONLY' : 'HIDDEN'
 }
-
-export const toggleExpandedTask = (
-  currentTaskId: string | null,
-  taskId: string,
-): string | null => currentTaskId === taskId ? null : taskId

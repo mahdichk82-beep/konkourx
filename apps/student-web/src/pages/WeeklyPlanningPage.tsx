@@ -27,6 +27,7 @@ import {
   type MovementLockReason,
 } from '../planning/weekly-movement'
 import { useTehranTodayKey } from '../planning/useTehranTodayKey'
+import { planningTaskPath } from '../planning/today-workspace'
 
 type WeeklyPlanningPageProps = {
   navigate(path: string): void
@@ -67,6 +68,15 @@ const weekFormatter = new Intl.DateTimeFormat('fa-IR', {
   month: 'long',
   year: 'numeric',
 })
+
+const initialWeekStart = (): Date => {
+  const planningWeekStart = window.history.state?.planningWeekStart
+  if (typeof planningWeekStart === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(planningWeekStart)) {
+    const restored = new Date(`${planningWeekStart}T12:00:00`)
+    if (!Number.isNaN(restored.getTime())) return restored
+  }
+  return saturdayWeekStart(new Date())
+}
 
 const errorMessage = (error: unknown): string => {
   if (error instanceof AuthApiError && error.code === 'TASK_DATE_RANGE_INVALID') {
@@ -149,7 +159,7 @@ const loadExecutionChecks = async (
 
 export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
   const todayKey = useTehranTodayKey()
-  const [weekStart, setWeekStart] = useState(() => saturdayWeekStart(new Date()))
+  const [weekStart, setWeekStart] = useState(initialWeekStart)
   const [tasks, setTasks] = useState<DailyTask[]>([])
   const [subjects, setSubjects] = useState<StudySubject[]>([])
   const [topics, setTopics] = useState<StudyTopic[]>([])
@@ -412,40 +422,52 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                           }}
                           onDragStart={(event) => handleDragStart(event, task)}
                         >
-                          <div className="weekly-task__heading">
-                            <h3>{task.title}</h3>
-                            <span className={`task-presentation-badge--${presentationClass}`}>
-                              {presentation.label}
-                            </span>
-                          </div>
-                          {presentation.indicatorLabel && (
-                            <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
-                          )}
-                          {task.curriculum.totalItemCount > 0 && (
-                            <p className="task-curriculum-progress">
-                              {formatCurriculumProgress(
-                                task.curriculum.completedItemCount,
-                                task.curriculum.totalItemCount,
-                              )}
-                            </p>
-                          )}
-                          {(task.subjectId || task.topicId) && (
-                            <p>
-                              {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}
-                              {task.topicId ? ` · ${topicNames.get(task.topicId) ?? 'مبحث ثبت‌شده'}` : ''}
-                            </p>
-                          )}
-                          <div className="weekly-task__meta">
-                            {task.estimatedMinutes !== null && <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>}
-                            {task.plannedTestCount > 0 && <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>}
-                            {task.contentType === 'STUDY' && <span>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</span>}
-                            {task.status === 'SKIPPED' && task.skipReason && (
-                              <span>دلیل: {skipReasonLabels[task.skipReason]}</span>
+                          <button
+                            className="weekly-task__open"
+                            onClick={() => {
+                              window.history.replaceState({
+                                ...window.history.state,
+                                planningWeekStart: from,
+                              }, '')
+                              navigate(planningTaskPath(task.id))
+                            }}
+                            type="button"
+                          >
+                            <div className="weekly-task__heading">
+                              <h3>{task.title}</h3>
+                              <span className={`task-presentation-badge--${presentationClass}`}>
+                                {presentation.label}
+                              </span>
+                            </div>
+                            {presentation.indicatorLabel && (
+                              <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
                             )}
-                            {taskLockReason
-                              ? <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>
-                              : <span>قابل جابه‌جایی</span>}
-                          </div>
+                            {task.curriculum.totalItemCount > 0 && (
+                              <p className="task-curriculum-progress">
+                                {formatCurriculumProgress(
+                                  task.curriculum.completedItemCount,
+                                  task.curriculum.totalItemCount,
+                                )}
+                              </p>
+                            )}
+                            {(task.subjectId || task.topicId) && (
+                              <p>
+                                {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}
+                                {task.topicId ? ` · ${topicNames.get(task.topicId) ?? 'مبحث ثبت‌شده'}` : ''}
+                              </p>
+                            )}
+                            <div className="weekly-task__meta">
+                              {task.estimatedMinutes !== null && <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>}
+                              {task.plannedTestCount > 0 && <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>}
+                              {task.contentType === 'STUDY' && <span>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</span>}
+                              {task.status === 'SKIPPED' && task.skipReason && (
+                                <span>دلیل: {skipReasonLabels[task.skipReason]}</span>
+                              )}
+                              {taskLockReason
+                                ? <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>
+                                : <span>قابل جابه‌جایی</span>}
+                            </div>
+                          </button>
                           {isEligible && (
                             <Button
                               aria-pressed={isSelected}

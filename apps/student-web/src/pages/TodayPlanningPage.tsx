@@ -1,8 +1,6 @@
 import type { FormEvent } from 'react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import {
-  classifyTaskPresentation,
-  formatCurriculumProgress,
   summarizeTaskPresentations,
 } from '@konkourx/task-presentation'
 import '@konkourx/task-presentation/styles.css'
@@ -16,6 +14,11 @@ import {
 } from '@konkourx/curriculum-browser'
 import '@konkourx/curriculum-browser/styles.css'
 import { AuthApiError, authClient } from '../auth/auth-client'
+import type {
+  BrowserNavigate,
+  BrowserNavigationAttempt,
+  BrowserNavigationBlocker,
+} from '../routing/useBrowserRouter'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
@@ -30,6 +33,8 @@ import {
   type StudySubject,
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
+import { TaskResultFlow } from '../planning/TaskResultFlow'
+import { TodayTaskWorkspace } from '../planning/TodayTaskWorkspace'
 import { useStudyTimer, useStudyTimerElapsed } from '../planning/useStudyTimer'
 import { finalStudySessionElapsedMs } from '../planning/study-timer'
 import { useTehranTodayKey } from '../planning/useTehranTodayKey'
@@ -38,7 +43,6 @@ import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
 import {
   createScheduleDraft,
   formatJalaliDate,
-  formatTaskSchedule,
   prepareTaskSchedule,
   scheduleDraftFromTask,
   scheduleHasChanged,
@@ -53,24 +57,22 @@ import {
   switchExecutionChoices,
 } from '../planning/task-execution'
 import {
-  canToggleCurriculumExecutionItems,
-  curriculumExecutionItems,
-  taskCompletionState,
   taskOutcomeErrorCodeMessage,
-  type CurriculumExecutionItem,
 } from '../planning/task-completion'
 import {
-  canRecordSolvedTestProgress,
   overdueLoadRequestKey,
-  progressDraftForTask,
-  prepareSolvedTestProgress,
-  settleSolvedTestProgressDraft,
   shouldApplyOverdueLoadMoreResponse,
   shouldShowOverdueGroup,
   studySessionPanelMode,
-  toggleExpandedTask,
-  type SolvedTestProgressDraft,
 } from '../planning/task-progress'
+import {
+  createLatestTaskRouteLoader,
+  detailNavigationReducer,
+  initialDetailNavigationState,
+  planningTaskIdForPath,
+  planningTaskPath,
+  type TodayTaskAction,
+} from '../planning/today-workspace'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
 
@@ -171,7 +173,7 @@ function ActiveStudyExecutionCard({
   activeTaskTitle,
   busy,
   onCancel,
-  onFinish,
+  onResult,
   onPause,
   onResume,
 }: {
@@ -179,7 +181,7 @@ function ActiveStudyExecutionCard({
   activeTaskTitle: string | null
   busy: boolean
   onCancel(): void
-  onFinish(): Promise<void>
+  onResult(): Promise<void>
   onPause(): Promise<void>
   onResume(): Promise<void>
 }) {
@@ -201,8 +203,8 @@ function ActiveStudyExecutionCard({
         >
           {busy ? 'در حال همگام‌سازی…' : isPaused ? 'ادامه مطالعه' : 'مکث'}
         </Button>
-        <Button disabled={busy} onClick={() => void onFinish()} variant="secondary">
-          {busy ? 'در حال ثبت…' : 'پایان مطالعه فعال'}
+        <Button disabled={busy} onClick={() => void onResult()} variant="secondary">
+          {busy ? 'در حال ثبت…' : 'پایان و ثبت نتیجه'}
         </Button>
         <Button disabled={busy} onClick={onCancel} variant="ghost">
           لغو این بازه
@@ -243,7 +245,15 @@ function FinishedStudyExecutionCard({
   )
 }
 
-export function TodayPlanningPage({ navigate }: { navigate(path: string): void }) {
+export function TodayPlanningPage({
+  navigate,
+  setNavigationBlocker,
+  taskId,
+}: {
+  navigate: BrowserNavigate
+  setNavigationBlocker(blocker: BrowserNavigationBlocker | null): () => void
+  taskId: string | null
+}) {
   const studyTimer = useStudyTimer()
   const todayKey = useTehranTodayKey()
   const today = new Date()
@@ -297,10 +307,30 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [taskCurriculum, setTaskCurriculum] = useState<PlanningCurriculumValue>(() => createEmptyPlanningCurriculumValue())
   const [taskStudyHistory, setTaskStudyHistory] = useState<Record<string, 'LOADING' | 'NONE' | 'PRESENT' | 'ERROR'>>({})
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
-  const [updatingExecutionTaskIds, setUpdatingExecutionTaskIds] = useState<Set<string>>(new Set())
-  const [savingProgressTaskIds, setSavingProgressTaskIds] = useState<Set<string>>(new Set())
-  const [progressDrafts, setProgressDrafts] = useState<Record<string, SolvedTestProgressDraft>>({})
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
+  const [detailNavigation, dispatchDetailNavigation] = useReducer(
+    detailNavigationReducer,
+    initialDetailNavigationState,
+  )
+  const [selectedExternalTask, setSelectedExternalTask] = useState<DailyTask | null>(null)
+  const [routeTaskLoad, setRouteTaskLoad] = useState<{
+    error: string | null
+    status: 'LOADING' | 'READY'
+    taskId: string
+  } | null>(null)
+  const [routeTaskRetryKey, setRouteTaskRetryKey] = useState(0)
+  const [resultTaskId, setResultTaskId] = useState<string | null>(null)
+  const [dirtyResultTaskId, setDirtyResultTaskId] = useState<string | null>(null)
+  const [uncertainResultTaskId, setUncertainResultTaskId] = useState<string | null>(null)
+  const [pendingDetailNavigation, setPendingDetailNavigation] = useState<
+    { showResult?: boolean; taskId: string; type: 'OPEN' } | { type: 'CLOSE' } | null
+  >(null)
+  const [pendingRouteNavigation, setPendingRouteNavigation] = useState<
+    BrowserNavigationAttempt | null
+  >(null)
+  const allowNextNavigationRef = useRef(false)
+  const routeTaskLoaderRef = useRef(createLatestTaskRouteLoader())
+  const detailHeadingRef = useRef<HTMLHeadingElement>(null)
+  const listSurfaceRef = useRef<HTMLDivElement>(null)
 
   const activeSession = studyTimer.activeSession
   const activeTaskTitle = studyTimer.activeTaskTitle
@@ -326,6 +356,64 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   useLayoutEffect(() => {
     overdueQueryKeyRef.current = overdueQueryKey
   }, [overdueQueryKey])
+
+  useEffect(() => {
+    if (detailNavigation.selectedTaskId) {
+      detailHeadingRef.current?.focus()
+      return
+    }
+    if (!detailNavigation.returnFocusTaskId) return
+    const taskControl = document.querySelector<HTMLElement>(
+      `[data-task-focus-id="${CSS.escape(detailNavigation.returnFocusTaskId)}"]`,
+    )
+    if (taskControl) taskControl.focus()
+    else listSurfaceRef.current?.focus()
+  }, [detailNavigation.returnFocusTaskId, detailNavigation.selectedTaskId])
+
+  useEffect(() => {
+    const loader = routeTaskLoaderRef.current
+    if (!taskId) {
+      loader.invalidate()
+      setRouteTaskLoad(null)
+      setSelectedExternalTask(null)
+      setResultTaskId(null)
+      dispatchDetailNavigation({ type: 'CLOSE' })
+      return
+    }
+
+    setRouteTaskLoad({ error: null, status: 'LOADING', taskId })
+    setSelectedExternalTask((current) => current?.id === taskId ? current : null)
+    void loader.load(taskId, () => planningClient.getTask(taskId)).then((result) => {
+      if (result.status === 'STALE') return
+      setSelectedExternalTask(result.value)
+      setRouteTaskLoad({ error: null, status: 'READY', taskId: result.taskId })
+      setResultTaskId((current) => current === taskId ? current : null)
+      dispatchDetailNavigation({ taskId: result.taskId, type: 'OPEN' })
+    }).catch((error: unknown) => {
+      setSelectedExternalTask(null)
+      setRouteTaskLoad({ error: planningErrorMessage(error), status: 'READY', taskId })
+    })
+
+    return () => loader.invalidate()
+  }, [routeTaskRetryKey, taskId])
+
+  useEffect(() => setNavigationBlocker((attempt) => {
+    if (allowNextNavigationRef.current) {
+      allowNextNavigationRef.current = false
+      return false
+    }
+    const nextTaskId = planningTaskIdForPath(attempt.nextPath)
+    if (nextTaskId === taskId || (!dirtyResultTaskId && !uncertainResultTaskId)) return false
+    setPendingRouteNavigation(attempt)
+    return true
+  }), [dirtyResultTaskId, setNavigationBlocker, taskId, uncertainResultTaskId])
+
+  useEffect(() => {
+    if (!dirtyResultTaskId && !uncertainResultTaskId) return
+    const protectDraft = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', protectDraft)
+    return () => window.removeEventListener('beforeunload', protectDraft)
+  }, [dirtyResultTaskId, uncertainResultTaskId])
 
   const refreshSubjects = useCallback(async () => {
     setSubjectError(null)
@@ -420,7 +508,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   useEffect(() => {
     let active = true
-    const editableTaskIds = mergeTasks([...overdueTasks, ...tasks]).filter((task) => (
+    const editableTaskIds = mergeTasks([
+      ...overdueTasks,
+      ...tasks,
+      ...(selectedExternalTask ? [selectedExternalTask] : []),
+    ]).filter((task) => (
       task.contentType === 'STUDY'
       && task.source === 'PERSONAL'
       && task.status === 'PENDING'
@@ -439,9 +531,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       })
     }
     return () => { active = false }
-  }, [tasks, overdueTasks, executionRevision])
+  }, [tasks, overdueTasks, selectedExternalTask, executionRevision])
 
-  const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
+  const subjectNames = new Map(subjects.map((subject) => [subject.id, subject.name]))
   const summary = summarizeTaskPresentations(tasks, todayKey)
 
   const taskMatchesFilters = (task: DailyTask): boolean =>
@@ -453,6 +545,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     task.status === 'PENDING' && task.scheduledFor.slice(0, 10) < todayKey
 
   const replaceTaskFromServer = (updated: DailyTask) => {
+    setSelectedExternalTask((current) => (
+      current?.id === updated.id || taskId === updated.id
+        ? updated
+        : current
+    ))
     setTasks((current) => {
       if (!taskMatchesFilters(updated)) {
         return current.filter((item) => item.id !== updated.id)
@@ -479,9 +576,68 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       if (error instanceof AuthApiError && error.code === 'TASK_NOT_FOUND') {
         setTasks((current) => current.filter((item) => item.id !== taskId))
         setOverdueTasks((current) => current.filter((item) => item.id !== taskId))
+        setSelectedExternalTask((current) => current?.id === taskId ? null : current)
       }
       return null
     }
+  }
+
+  const selectedTask = taskId
+    && routeTaskLoad?.status === 'READY'
+    && !routeTaskLoad.error
+    && routeTaskLoad.taskId === taskId
+    && detailNavigation.selectedTaskId === taskId
+    && selectedExternalTask?.id === taskId
+      ? selectedExternalTask
+      : null
+
+  const completeDetailNavigation = (
+    navigation: { showResult?: boolean; taskId: string; type: 'OPEN' } | { type: 'CLOSE' },
+  ) => {
+    setActionError(null)
+    setResultTaskId(navigation.type === 'OPEN' && navigation.showResult ? navigation.taskId : null)
+    if (navigation.type === 'OPEN') {
+      navigate(planningTaskPath(navigation.taskId), false, { preserveScroll: true })
+    } else {
+      navigate('/planning', false, { preserveScroll: true })
+    }
+  }
+
+  const requestDetailNavigation = (
+    navigation: { showResult?: boolean; taskId: string; type: 'OPEN' } | { type: 'CLOSE' },
+  ) => {
+    const destinationTaskId = navigation.type === 'OPEN' ? navigation.taskId : null
+    if (
+      (uncertainResultTaskId && uncertainResultTaskId !== destinationTaskId)
+      || (dirtyResultTaskId && dirtyResultTaskId !== destinationTaskId)
+    ) {
+      setPendingDetailNavigation(navigation)
+      return
+    }
+    completeDetailNavigation(navigation)
+  }
+
+  const openTaskDetail = (taskId: string) => {
+    requestDetailNavigation({ taskId, type: 'OPEN' })
+  }
+
+  const openTaskResult = (taskId: string) => {
+    if (
+      (uncertainResultTaskId && uncertainResultTaskId !== taskId)
+      || (dirtyResultTaskId && dirtyResultTaskId !== taskId)
+    ) {
+      setPendingDetailNavigation({ showResult: true, taskId, type: 'OPEN' })
+      return
+    }
+    completeDetailNavigation({ showResult: true, taskId, type: 'OPEN' })
+  }
+
+  const openActiveTaskDetail = async () => {
+    if (!activeSession?.dailyTaskId) {
+      setActionError('کار مرتبط با مطالعه فعال در دسترس نیست.')
+      return
+    }
+    openTaskResult(activeSession.dailyTaskId)
   }
 
   const handleLoadMore = async () => {
@@ -536,52 +692,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
-  const handleProgressUpdate = async (task: DailyTask) => {
-    const draft = progressDraftForTask(
-      progressDrafts[task.id],
-      task.actualSolvedTestCount,
-      task.updatedAt,
-    )
-    const prepared = prepareSolvedTestProgress(
-      draft.count,
-      draft.expectedUpdatedAt,
-    )
-    if (!prepared.ok) {
-      setActionError(prepared.message)
-      return
-    }
-    setActionError(null)
-    setSavingProgressTaskIds((current) => new Set(current).add(task.id))
-    try {
-      const updated = await planningClient.recordTaskProgress(task.id, prepared.value)
-      replaceTaskFromServer(updated)
-      setProgressDrafts((current) => ({
-        ...current,
-        [task.id]: settleSolvedTestProgressDraft(current[task.id], draft, {
-          actualSolvedTestCount: updated.actualSolvedTestCount,
-          kind: 'SAVED',
-          updatedAt: updated.updatedAt,
-        }),
-      }))
-    } catch (error) {
-      setActionError(planningErrorMessage(error))
-      const reconciled = await reconcileTaskFromServer(task.id)
-      setProgressDrafts((current) => ({
-        ...current,
-        [task.id]: settleSolvedTestProgressDraft(current[task.id], draft, {
-          kind: 'FAILED',
-          ...(reconciled ? { reconciledUpdatedAt: reconciled.updatedAt } : {}),
-        }),
-      }))
-    } finally {
-      setSavingProgressTaskIds((current) => {
-        const next = new Set(current)
-        next.delete(task.id)
-        return next
-      })
-    }
-  }
-
   const handleStatusUpdate = async (
     task: DailyTask,
     status: DailyTaskStatus,
@@ -603,42 +713,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       await reconcileTaskFromServer(task.id)
     } finally {
       setUpdatingTaskIds((current) => {
-        const next = new Set(current)
-        next.delete(task.id)
-        return next
-      })
-    }
-  }
-
-  const handleCurriculumItemToggle = async (
-    task: DailyTask,
-    item: CurriculumExecutionItem,
-    completed: boolean,
-  ) => {
-    if (!canToggleCurriculumExecutionItems({
-      contentType: task.contentType,
-      source: task.source,
-      status: task.status,
-      totalItemCount: task.curriculum.totalItemCount,
-    })
-      || updatingCurriculumTaskIds.has(task.id)
-      || updatingExecutionTaskIds.has(task.id)
-    ) return
-
-    setActionError(null)
-    setUpdatingExecutionTaskIds((current) => new Set(current).add(task.id))
-    try {
-      const updated = await planningClient.toggleTaskCurriculumItem(
-        task.id,
-        item.id,
-        completed,
-      )
-      replaceTaskFromServer(updated)
-    } catch (error) {
-      setActionError(planningErrorMessage(error))
-      await reconcileTaskFromServer(task.id)
-    } finally {
-      setUpdatingExecutionTaskIds((current) => {
         const next = new Set(current)
         next.delete(task.id)
         return next
@@ -670,6 +744,20 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       }
       throw error
     }
+  }
+
+  const handleWorkspaceAction = (task: DailyTask, action: TodayTaskAction) => {
+    if (action === 'START_STUDY' || action === 'SWITCH_STUDY') {
+      void handleExecutionStart(task.id, task.title).catch((error: unknown) => {
+        setExecutionError(planningErrorMessage(error))
+      })
+      return
+    }
+    if (action === 'RECORD_RESULT' || action === 'FINISH_AND_RECORD') {
+      openTaskResult(task.id)
+      return
+    }
+    openTaskDetail(task.id)
   }
 
   const handleExecutionFinish = async (
@@ -858,7 +946,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         (curriculumSelection) => planningClient.replaceTaskCurriculumSelection(task.id, curriculumSelection),
       )
       if (result.kind === 'REPLACED') {
-        setTasks((current) => current.map((item) => item.id === result.value.id ? result.value : item))
+        replaceTaskFromServer(result.value)
       } else if (result.kind === 'READ_ONLY') {
         setActionError('مباحث این کار در حال حاضر فقط قابل مشاهده هستند.')
       }
@@ -887,6 +975,149 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     overdueTasks.length,
     overdueNextCursor,
   )
+
+  const selectedScheduleDraft = selectedTask ? scheduleDrafts[selectedTask.id] ?? {
+    ...scheduleDraftFromTask(selectedTask.startMinuteOfDay, selectedTask.endMinuteOfDay),
+    scheduledFor: selectedTask.scheduledFor.slice(0, 10),
+  } : null
+  const selectedSessionPanelMode = selectedTask
+    ? studySessionPanelMode(selectedTask.contentType)
+    : 'HIDDEN'
+  const selectedIsUpdating = selectedTask ? updatingTaskIds.has(selectedTask.id) : false
+  const selectedIsUpdatingCurriculum = selectedTask
+    ? updatingCurriculumTaskIds.has(selectedTask.id)
+    : false
+
+  const detailSections = selectedTask ? {
+    historyContent: selectedSessionPanelMode !== 'HIDDEN' ? (
+      <TaskExecutionPanel
+        executionRevision={executionRevision}
+        key={selectedTask.id}
+        readOnly={selectedSessionPanelMode === 'READ_ONLY' || selectedTask.status !== 'PENDING'}
+        taskId={selectedTask.id}
+      />
+    ) : undefined,
+    planContent: (
+      <div className="today-task-detail__section-stack">
+        {selectedTask.description && <p>{selectedTask.description}</p>}
+        {(selectedTask.contentType === 'STUDY' || selectedTask.curriculum.targets.length > 0) && (
+          <PlanningCurriculumField
+            audience="student"
+            client={curriculumClient}
+            disabled={!canReplacePlanningCurriculum(curriculumEditContext(selectedTask))
+              || selectedIsUpdatingCurriculum}
+            disabledReason={selectedTask.contentType === null
+              ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
+              : selectedTask.source !== 'PERSONAL'
+                ? 'مباحث کار تعیین‌شده توسط مشاور فقط خواندنی است.'
+                : selectedTask.status !== 'PENDING'
+                  || selectedTask.curriculum.completedItemCount > 0
+                  || activeSession?.dailyTaskId === selectedTask.id
+                  || taskStudyHistory[selectedTask.id] === 'PRESENT'
+                  ? 'به‌دلیل شروع یا نهایی‌شدن کار، مباحث فقط خواندنی هستند.'
+                  : taskStudyHistory[selectedTask.id] === 'LOADING'
+                    ? 'در حال بررسی سابقه مطالعه…'
+                    : taskStudyHistory[selectedTask.id] === 'ERROR'
+                      ? 'سابقه مطالعه قابل بررسی نیست؛ ویرایش مباحث موقتاً غیرفعال است.'
+                      : selectedIsUpdatingCurriculum
+                        ? 'در حال ثبت مباحث…'
+                        : undefined}
+            minimumOne={selectedTask.contentType === 'STUDY'}
+            onChange={(draft) => void handleCurriculumSelectionChange(selectedTask, draft)}
+            value={planningCurriculumValueFromSnapshots(selectedTask.curriculum.targets)}
+          />
+        )}
+      </div>
+    ),
+    resultContent: resultTaskId === selectedTask.id ? (
+      <TaskResultFlow
+        activeSession={activeSession}
+        finishSession={handleExecutionFinish}
+        key={selectedTask.id}
+        onDirtyChange={(dirty) => setDirtyResultTaskId(dirty ? selectedTask.id : null)}
+        onMutationUncertaintyChange={(uncertain) => {
+          setUncertainResultTaskId(uncertain ? selectedTask.id : null)
+        }}
+        onRequestClose={() => {
+          setDirtyResultTaskId(null)
+          setUncertainResultTaskId(null)
+          allowNextNavigationRef.current = true
+          completeDetailNavigation({ type: 'CLOSE' })
+        }}
+        onSessionReconcile={restoreActiveExecution}
+        onTaskChanged={replaceTaskFromServer}
+        task={selectedTask}
+      />
+    ) : undefined,
+    scheduleContent: selectedTask.source === 'PERSONAL'
+      && selectedTask.status === 'PENDING'
+      && selectedScheduleDraft ? (
+      <form className="task-schedule" onSubmit={(event) => {
+        event.preventDefault()
+        void handleScheduleUpdate(selectedTask)
+      }}>
+        <label htmlFor={`task-schedule-${selectedTask.id}`}>
+          تغییر تاریخ
+          <input
+            id={`task-schedule-${selectedTask.id}`}
+            onChange={(event) => setScheduleDrafts((current) => ({
+              ...current,
+              [selectedTask.id]: { ...selectedScheduleDraft, scheduledFor: event.target.value },
+            }))}
+            type="date"
+            value={selectedScheduleDraft.scheduledFor}
+          />
+          <small>تاریخ شمسی: {formatJalaliDate(selectedScheduleDraft.scheduledFor)}</small>
+        </label>
+        <TaskScheduleFields
+          disabled={reschedulingTaskIds.has(selectedTask.id)}
+          idPrefix={`student-task-${selectedTask.id}-schedule`}
+          onChange={(value) => setScheduleDrafts((current) => ({
+            ...current,
+            [selectedTask.id]: { ...value, scheduledFor: selectedScheduleDraft.scheduledFor },
+          }))}
+          value={selectedScheduleDraft}
+        />
+        <Button disabled={reschedulingTaskIds.has(selectedTask.id)} type="submit" variant="secondary">
+          {reschedulingTaskIds.has(selectedTask.id) ? 'در حال ثبت…' : 'ثبت زمان‌بندی'}
+        </Button>
+      </form>
+    ) : undefined,
+    secondaryActionContent: selectedTask.status === 'PENDING' ? (
+      <div className="task-actions" aria-label={`اقدام‌های ${selectedTask.title}`}>
+        <label className="task-skip-reason" htmlFor={`task-skip-reason-${selectedTask.id}`}>
+          دلیل رد کردن (اختیاری)
+          <select
+            disabled={selectedIsUpdating || selectedIsUpdatingCurriculum}
+            id={`task-skip-reason-${selectedTask.id}`}
+            onChange={(event) => setSkipReasonDrafts((current) => ({
+              ...current,
+              [selectedTask.id]: event.target.value as DailyTaskSkipReason | '',
+            }))}
+            value={skipReasonDrafts[selectedTask.id] ?? ''}
+          >
+            <option value="">بدون ثبت دلیل</option>
+            {Object.entries(skipReasonLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>
+        <Button
+          disabled={selectedIsUpdating || selectedIsUpdatingCurriculum}
+          onClick={() => void handleStatusUpdate(
+            selectedTask,
+            'SKIPPED',
+            skipReasonDrafts[selectedTask.id] || null,
+          )}
+          variant="ghost"
+        >
+          رد کردن
+        </Button>
+      </div>
+    ) : selectedTask.status === 'SKIPPED' && selectedTask.skipReason ? (
+      <p>دلیل رد کردن: {skipReasonLabels[selectedTask.skipReason]}</p>
+    ) : undefined,
+  } : undefined
 
   return (
     <div className="page-stack planning-page">
@@ -932,13 +1163,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             setSwitchTarget(null)
             setExecutionError(null)
           }}
-          onFinish={async () => {
-            try {
-              await handleExecutionFinish(activeSession.id, {})
-            } catch (error) {
-              setExecutionError(planningErrorMessage(error))
-            }
-          }}
+          onResult={openActiveTaskDetail}
           onPause={async () => {
             setExecutionError(null)
             try {
@@ -1106,24 +1331,6 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         </Card>
       )}
 
-      <section aria-labelledby="today-summary-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="today-summary-title">خلاصه کارهای بارگذاری‌شده</h2>
-            <p>{numberFormatter.format(tasks.length)} کار مطابق فیلتر فعلی</p>
-          </div>
-        </div>
-        <div className="summary-grid planning-summary">
-          {(['PENDING', 'COMPLETED', 'SKIPPED'] as DailyTaskStatus[]).map((status) => (
-            <Card className={`summary-card summary-card--${status.toLowerCase()}`} key={status}>
-              <span>{statusLabels[status]}</span>
-              <strong>{numberFormatter.format(summary[status])}</strong>
-              <small>در صفحه‌های بارگذاری‌شده</small>
-            </Card>
-          ))}
-        </div>
-      </section>
-
       <Card className="planning-list-card">
         <div className="planning-toolbar">
           <div>
@@ -1141,6 +1348,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                 <option value="ALL">همه وضعیت‌ها</option>
                 <option value="PENDING">در انتظار انجام</option>
                 <option value="COMPLETED">انجام‌شده</option>
+                <option value="PARTIAL">بخشی انجام‌شده</option>
                 <option value="SKIPPED">ردشده</option>
               </select>
             </label>
@@ -1174,21 +1382,73 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         {isLoadingOverdue && (
           <p className="task-group__loading" role="status">در حال دریافت کارهای عقب‌افتاده…</p>
         )}
+        {(pendingDetailNavigation || pendingRouteNavigation) && (
+          <div aria-labelledby="discard-navigation-title" className="task-result-flow__confirm" role="alertdialog">
+            <p id="discard-navigation-title">
+              {uncertainResultTaskId
+                ? 'نتیجه یکی از درخواست‌ها هنوز از سرور مشخص نشده است. پیش از خروج، وضعیت سرور را در همین بخش بررسی کنید تا هیچ جهش تکراری انجام نشود.'
+                : 'اطلاعات ذخیره‌شده حفظ می‌شوند؛ اما تغییرات محلی ذخیره‌نشده با خروج از ثبت نتیجه از دست می‌روند.'}
+            </p>
+            <div>
+              <Button autoFocus onClick={() => {
+                setPendingDetailNavigation(null)
+                setPendingRouteNavigation(null)
+                window.requestAnimationFrame(() => detailHeadingRef.current?.focus())
+              }} variant="secondary">بازگشت و حفظ تغییرات</Button>
+              {!uncertainResultTaskId && (
+                <Button onClick={() => {
+                  const navigation = pendingDetailNavigation
+                  const routeNavigation = pendingRouteNavigation
+                  setDirtyResultTaskId(null)
+                  setPendingDetailNavigation(null)
+                  setPendingRouteNavigation(null)
+                  if (routeNavigation) routeNavigation.proceed()
+                  else if (navigation) {
+                    allowNextNavigationRef.current = true
+                    completeDetailNavigation(navigation)
+                  }
+                }} variant="ghost">کنار گذاشتن تغییرات ذخیره‌نشده</Button>
+              )}
+            </div>
+          </div>
+        )}
 
-        {isInitialLoading ? (
+        {taskId && (
+          !routeTaskLoad
+          || routeTaskLoad.taskId !== taskId
+          || routeTaskLoad.status === 'LOADING'
+        ) ? (
+          <ContentState
+            description="جزئیات همان کار، مستقل از روز برنامه‌ریزی‌شده، در حال دریافت است."
+            kind="loading"
+            title="در حال دریافت کار"
+          />
+        ) : taskId && routeTaskLoad?.error ? (
+          <ContentState
+            action={(
+              <div className="task-actions">
+                <Button onClick={() => setRouteTaskRetryKey((current) => current + 1)}>تلاش دوباره</Button>
+                <Button onClick={() => navigate('/planning')} variant="secondary">بازگشت به برنامه امروز</Button>
+              </div>
+            )}
+            description={routeTaskLoad.error}
+            kind="error"
+            title="این کار در دسترس نیست"
+          />
+        ) : isInitialLoading && !taskId ? (
           <ContentState
             description="کارهای امروز از فضای امن شما دریافت می‌شوند."
             kind="loading"
             title="در حال دریافت برنامه امروز"
           />
-        ) : listError && tasks.length === 0 ? (
+        ) : listError && tasks.length === 0 && !taskId ? (
           <ContentState
             action={<Button onClick={() => setRefreshKey((current) => current + 1)}>تلاش دوباره</Button>}
             description={listError}
             kind="error"
             title="برنامه امروز دریافت نشد"
           />
-        ) : tasks.length === 0 && !showOverdueGroup && !isLoadingOverdue ? (
+        ) : tasks.length === 0 && !showOverdueGroup && !isLoadingOverdue && !taskId ? (
           <ContentState
             action={<Button onClick={() => setIsCreateOpen(true)}>ساخت اولین کار امروز</Button>}
             description="برای فیلتر فعلی کاری وجود ندارد. می‌توانید یک کار شخصی برای امروز بسازید."
@@ -1196,353 +1456,33 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
             title="فهرست امروز خالی است"
           />
         ) : (
-          <div className="task-groups">
-            {([
-              ...(showOverdueGroup ? [{ id: 'overdue', items: overdueTasks, title: 'ادامه کارهای عقب‌افتاده' }] : []),
-              ...(tasks.length > 0 ? [{ id: 'today', items: tasks, title: 'کارهای امروز' }] : []),
-            ] as const).map((group) => (
-              <section className="task-group" key={group.id}>
-                <div className="task-group__heading">
-                  <h3>{group.title}</h3>
-                  <span>{numberFormatter.format(group.items.length)} کار</span>
-                </div>
-                <div className="task-list">
-            {group.items.map((task) => {
-              const subject = task.subjectId ? subjectById.get(task.subjectId) : undefined
-              const isUpdating = updatingTaskIds.has(task.id)
-              const isUpdatingCurriculum = updatingCurriculumTaskIds.has(task.id)
-              const isUpdatingExecution = updatingExecutionTaskIds.has(task.id)
-              const taskCurriculumValue = planningCurriculumValueFromSnapshots(task.curriculum.targets)
-              const executionItems = curriculumExecutionItems(task.curriculum.targets)
-              const completionState = taskCompletionState(task.curriculum)
-              const scheduleDraft = scheduleDrafts[task.id] ?? {
-                ...scheduleDraftFromTask(task.startMinuteOfDay, task.endMinuteOfDay),
-                scheduledFor: task.scheduledFor.slice(0, 10),
-              }
-              const canToggleExecutionItems = canToggleCurriculumExecutionItems({
-                contentType: task.contentType,
-                source: task.source,
-                status: task.status,
-                totalItemCount: task.curriculum.totalItemCount,
-              })
-              const presentation = classifyTaskPresentation(task, todayKey)
-              const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
-              const isExpanded = expandedTaskId === task.id
-              const sessionPanelMode = studySessionPanelMode(task.contentType)
-
-              return (
-                <article className={`task-item task-item--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
-                  <button
-                    aria-controls={`task-details-${task.id}`}
-                    aria-expanded={isExpanded}
-                    className="task-item__summary-toggle"
-                    onClick={() => setExpandedTaskId((current) => toggleExpandedTask(current, task.id))}
-                    type="button"
-                  >
-                    <span className="task-item__summary-main">
-                      <strong>{task.title}</strong>
-                      <span className="task-item__summary-meta">
-                        <span>{task.source === 'COUNSELOR' ? 'تعیین‌شده توسط مشاور' : 'کار شخصی'}</span>
-                        <span>{formatJalaliDate(task.scheduledFor.slice(0, 10))}</span>
-                        <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
-                        {task.contentType === 'STUDY' && (
-                          <span>{numberFormatter.format(task.actualSolvedTestCount)} تست حل‌شده</span>
-                        )}
-                        {task.curriculum.totalItemCount > 0 && (
-                          <span>{formatCurriculumProgress(task.curriculum.completedItemCount, task.curriculum.totalItemCount)}</span>
-                        )}
-                      </span>
-                    </span>
-                    <span className={`task-status task-status--${task.status.toLowerCase()} task-presentation-badge--${presentationClass}`}>
-                      {presentation.label}
-                    </span>
-                    <span aria-hidden="true" className="task-item__chevron">⌄</span>
-                  </button>
-                  <div
-                    aria-hidden={!isExpanded}
-                    className={`task-item__collapsible${isExpanded ? ' is-expanded' : ''}`}
-                    id={`task-details-${task.id}`}
-                    inert={isExpanded ? undefined : true}
-                  >
-                    <div className="task-item__collapsible-inner">
-                  <div className="task-item__main">
-                    <div className="task-item__heading">
-                      <h3>{task.title}</h3>
-                      <span className={`task-status task-status--${task.status.toLowerCase()} task-presentation-badge--${presentationClass}`}>
-                        {presentation.label}
-                      </span>
-                    </div>
-                    {presentation.indicatorLabel && (
-                      <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
-                    )}
-                    <div className="task-meta">
-                      <span>{task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</span>
-                      {task.subjectId ? <span>{subject?.name ?? 'درس نامشخص'}</span> : null}
-                      {task.source === 'COUNSELOR' && (
-                        <span className="task-source--counselor">تعیین‌شده توسط مشاور</span>
-                      )}
-                      <span>{formatJalaliDate(task.scheduledFor.slice(0, 10))}</span>
-                      <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
-                      {task.estimatedMinutes !== null && (
-                        <span>مدت تخمینی: {numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
-                      )}
-                      {task.plannedTestCount > 0 && (
-                        <span>{numberFormatter.format(task.plannedTestCount)} تست برنامه‌ریزی‌شده</span>
-                      )}
-                      {task.status === 'SKIPPED' && task.skipReason && (
-                        <span className="task-skip-reason-display">
-                          دلیل رد کردن: {skipReasonLabels[task.skipReason]}
-                        </span>
-                      )}
-                    </div>
-                    {task.description && <p className="task-description">{task.description}</p>}
-                    {task.curriculum.totalItemCount > 0 && (
-                      <p className="task-curriculum-progress">
-                        {formatCurriculumProgress(
-                          task.curriculum.completedItemCount,
-                          task.curriculum.totalItemCount,
-                        )}
-                      </p>
-                    )}
-                    {(task.contentType === 'STUDY' || task.curriculum.targets.length > 0) ? (
-                      <PlanningCurriculumField
-                        audience="student"
-                        client={curriculumClient}
-                        minimumOne={task.contentType === 'STUDY'}
-                        disabled={!canReplacePlanningCurriculum(curriculumEditContext(task))
-                          || updatingCurriculumTaskIds.has(task.id)}
-                        disabledReason={task.contentType === null
-                              ? 'این کار تاریخی است و مباحث آن فقط نمایش داده می‌شوند.'
-                            : task.source !== 'PERSONAL'
-                          ? 'مباحث کار تعیین‌شده توسط مشاور فقط خواندنی است.'
-                          : task.status !== 'PENDING' || task.curriculum.completedItemCount > 0 || activeSession?.dailyTaskId === task.id || taskStudyHistory[task.id] === 'PRESENT'
-                            ? 'به‌دلیل شروع یا نهایی‌شدن کار، مباحث فقط خواندنی هستند.'
-                            : taskStudyHistory[task.id] === 'LOADING'
-                              ? 'در حال بررسی سابقه مطالعه…'
-                            : taskStudyHistory[task.id] === 'ERROR'
-                              ? 'سابقه مطالعه قابل بررسی نیست؛ ویرایش مباحث موقتاً غیرفعال است.'
-                            : updatingCurriculumTaskIds.has(task.id)
-                              ? 'در حال ثبت مباحث…'
-                              : undefined}
-                        onChange={(draft) => void handleCurriculumSelectionChange(task, draft)}
-                        value={taskCurriculumValue}
-                      />
-                    ) : null}
-                    {canToggleExecutionItems && executionItems.length > 0 && (
-                      <fieldset
-                        aria-busy={isUpdatingExecution}
-                        className="task-curriculum-execution"
-                        disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
-                      >
-                        <legend>مباحث انجام‌شده</legend>
-                        <p>
-                          این فهرست میزان انجام محتوای کار را ثبت می‌کند و از زمان مطالعه مستقل است.
-                        </p>
-                        <ul>
-                          {executionItems.map((item) => (
-                            <li key={item.id}>
-                              <label htmlFor={`task-curriculum-item-${item.id}`}>
-                                <input
-                                  checked={item.completedAt !== null}
-                                  id={`task-curriculum-item-${item.id}`}
-                                  onChange={(event) => void handleCurriculumItemToggle(
-                                    task,
-                                    item,
-                                    event.currentTarget.checked,
-                                  )}
-                                  type="checkbox"
-                                />
-                                <span>
-                                  <strong>{item.labelSnapshot}</strong>
-                                  {item.pathSnapshot.length > 1 && (
-                                    <small>{item.pathSnapshot.slice(0, -1).join(' ← ')}</small>
-                                  )}
-                                </span>
-                              </label>
-                            </li>
-                          ))}
-                        </ul>
-                        {isUpdatingExecution && <small role="status">در حال ثبت تغییر مبحث…</small>}
-                      </fieldset>
-                    )}
-                    {task.source === 'PERSONAL' && (
-                      <form
-                        className="task-schedule"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          void handleScheduleUpdate(task)
-                        }}
-                      >
-                        <label htmlFor={`task-schedule-${task.id}`}>
-                          تغییر تاریخ
-                          <input
-                            id={`task-schedule-${task.id}`}
-                            onChange={(event) => setScheduleDrafts((current) => ({
-                              ...current,
-                              [task.id]: { ...scheduleDraft, scheduledFor: event.target.value },
-                            }))}
-                            type="date"
-                            value={scheduleDraft.scheduledFor}
-                          />
-                          <small>تاریخ شمسی: {formatJalaliDate(scheduleDraft.scheduledFor)}</small>
-                        </label>
-                        <TaskScheduleFields
-                          disabled={reschedulingTaskIds.has(task.id)}
-                          idPrefix={`student-task-${task.id}-schedule`}
-                          onChange={(value) => setScheduleDrafts((current) => ({
-                            ...current,
-                            [task.id]: { ...value, scheduledFor: scheduleDraft.scheduledFor },
-                          }))}
-                          value={scheduleDraft}
-                        />
-                        <Button
-                          disabled={
-                            reschedulingTaskIds.has(task.id)
-                            || (
-                              scheduleDraft.scheduledFor === task.scheduledFor.slice(0, 10)
-                              && !scheduleHasChanged(
-                                scheduleDraft,
-                                task.startMinuteOfDay,
-                                task.endMinuteOfDay,
-                              )
-                            )
-                          }
-                          type="submit"
-                          variant="secondary"
-                        >
-                          {reschedulingTaskIds.has(task.id) ? 'در حال ثبت…' : 'ثبت زمان‌بندی'}
-                        </Button>
-                      </form>
-                    )}
-                    {canRecordSolvedTestProgress(task.contentType, task.status) && (
-                      <form
-                        className="task-progress"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          void handleProgressUpdate(task)
-                        }}
-                      >
-                        <label htmlFor={`task-progress-${task.id}`}>
-                          تعداد تست حل‌شده
-                          <input
-                            id={`task-progress-${task.id}`}
-                            inputMode="numeric"
-                            min="0"
-                            onChange={(event) => setProgressDrafts((current) => ({
-                              ...current,
-                              [task.id]: {
-                                ...progressDraftForTask(
-                                  current[task.id],
-                                  task.actualSolvedTestCount,
-                                  task.updatedAt,
-                                ),
-                                count: event.target.value,
-                              },
-                            }))}
-                            step="1"
-                            type="number"
-                            value={progressDraftForTask(
-                              progressDrafts[task.id],
-                              task.actualSolvedTestCount,
-                              task.updatedAt,
-                            ).count}
-                          />
-                        </label>
-                        <Button
-                          disabled={savingProgressTaskIds.has(task.id)}
-                          type="submit"
-                          variant="secondary"
-                        >
-                          {savingProgressTaskIds.has(task.id) ? 'در حال ثبت…' : 'ثبت پیشرفت'}
-                        </Button>
-                        <small>این مقدار مجموع تست‌های حل‌شده برای همین کار است و نتیجه کار را تغییر نمی‌دهد.</small>
-                      </form>
-                    )}
-                    {sessionPanelMode !== 'HIDDEN' && (
-                      <TaskExecutionPanel
-                        activeSession={activeSession}
-                        executionReady={executionReady && !executionBusy}
-                        executionRevision={executionRevision}
-                        onFinish={handleExecutionFinish}
-                        onPause={studyTimer.pause}
-                        onResume={studyTimer.resume}
-                        onStart={handleExecutionStart}
-                        readOnly={sessionPanelMode === 'READ_ONLY'}
-                        taskId={task.id}
-                        taskStatus={task.status}
-                        taskTitle={task.title}
-                      />
-                    )}
-                  </div>
-                  {task.status === 'PENDING' && (
-                    <div className="task-actions" aria-label={`اقدام‌های ${task.title}`}>
-                      <div className="task-completion-action">
-                        <Button
-                          aria-describedby={!completionState.canComplete
-                            ? `task-completion-help-${task.id}`
-                            : undefined}
-                          disabled={isUpdating
-                            || isUpdatingCurriculum
-                            || isUpdatingExecution
-                            || !completionState.canComplete}
-                          onClick={() => void handleStatusUpdate(task, 'COMPLETED')}
-                        >
-                          {isUpdating ? 'در حال ثبت…' : 'انجام شد'}
-                        </Button>
-                        {!completionState.canComplete && (
-                          <small id={`task-completion-help-${task.id}`}>
-                            {completionState.explanation}
-                          </small>
-                        )}
-                      </div>
-                      <label className="task-skip-reason" htmlFor={`task-skip-reason-${task.id}`}>
-                        دلیل رد کردن (اختیاری)
-                        <select
-                          disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
-                          id={`task-skip-reason-${task.id}`}
-                          onChange={(event) => setSkipReasonDrafts((current) => ({
-                            ...current,
-                            [task.id]: event.target.value as DailyTaskSkipReason | '',
-                          }))}
-                          value={skipReasonDrafts[task.id] ?? ''}
-                        >
-                          <option value="">بدون ثبت دلیل</option>
-                          {Object.entries(skipReasonLabels).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <Button
-                        disabled={isUpdating || isUpdatingCurriculum || isUpdatingExecution}
-                        onClick={() => void handleStatusUpdate(
-                          task,
-                          'SKIPPED',
-                          skipReasonDrafts[task.id] || null,
-                        )}
-                        variant="ghost"
-                      >
-                        رد کردن
-                      </Button>
-                    </div>
-                  )}
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
-                </div>
-                {group.id === 'overdue' && overdueNextCursor && (
-                  <div className="load-more">
-                    <Button disabled={isLoadingMoreOverdue} onClick={() => void handleLoadMoreOverdue()} variant="secondary">
-                      {isLoadingMoreOverdue ? 'در حال دریافت…' : 'نمایش کارهای عقب‌افتاده بیشتر'}
-                    </Button>
-                  </div>
-                )}
-              </section>
+          <TodayTaskWorkspace
+            activeSession={activeSession}
+            detailHeadingRef={detailHeadingRef}
+            detailSections={detailSections}
+            isLoadingMoreOverdue={isLoadingMoreOverdue}
+            listSurfaceRef={listSurfaceRef}
+            numberFormatter={numberFormatter}
+            onAction={handleWorkspaceAction}
+            onCloseDetail={() => requestDetailNavigation({ type: 'CLOSE' })}
+            onLoadMoreOverdue={() => void handleLoadMoreOverdue()}
+            onSelectTask={openTaskDetail}
+            overdueNextCursor={overdueNextCursor}
+            overdueTasks={showOverdueGroup ? overdueTasks : []}
+            selectedTask={selectedTask}
+            subjectNames={subjectNames}
+            todayKey={todayKey}
+            todayTasks={tasks}
+          />
+        )}
+        {!isInitialLoading && tasks.length > 0 && (
+          <div aria-label="خلاصه کارهای بارگذاری‌شده" className="planning-loaded-summary">
+            <span>{numberFormatter.format(tasks.length)} کار مطابق فیلتر</span>
+            {(['PENDING', 'COMPLETED', 'PARTIAL', 'SKIPPED'] as DailyTaskStatus[]).map((status) => (
+              <span key={status}>{statusLabels[status]}: <strong>{numberFormatter.format(summary[status])}</strong></span>
             ))}
           </div>
         )}
-
         {nextCursor && !isInitialLoading && tasks.length > 0 && (
           <div className="load-more">
             <Button disabled={isLoadingMore} onClick={() => void handleLoadMore()} variant="secondary">
