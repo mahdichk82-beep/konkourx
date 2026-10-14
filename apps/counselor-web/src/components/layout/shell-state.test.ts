@@ -33,7 +33,8 @@ test('counselor shell keeps the right-side and accessible mobile navigation cont
   assert.match(shellStyles, /inset: 0 0 0 auto/)
 })
 
-test('counselor login and planning shell expose honest branded states', () => {
+test('counselor login remains branded and planning exposes the operational workspace', () => {
+  const appSource = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8')
   const loginSource = readFileSync(new URL('../../pages/LoginPage.tsx', import.meta.url), 'utf8')
   const planningSource = readFileSync(new URL('../../pages/PlanningShellPage.tsx', import.meta.url), 'utf8')
   assert.match(loginSource, /from '@konkourx\/brand'/)
@@ -41,5 +42,10 @@ test('counselor login and planning shell expose honest branded states', () => {
   assert.doesNotMatch(loginSource, /konkour<span>X<\/span>/)
   assert.match(loginSource, /جایی که موفقیت مهندسی می‌شود/)
   assert.match(loginSource, /آموزش مفهومی؛ مشاوره تخصصی؛ برنامه‌ریزی هدفمند/)
-  assert.match(planningSource, /برنامه‌ریز تعاملی هنوز فعال نشده است/)
+  assert.match(planningSource, /loadAllStudents/)
+  assert.match(planningSource, /<PlanningTimeline/)
+  assert.match(planningSource, /<PlanningTaskRail/)
+  assert.match(planningSource, /<UnifiedTaskComposer/)
+  assert.doesNotMatch(planningSource, /برنامه‌ریز تعاملی هنوز فعال نشده است/)
+  assert.match(appSource, /currentPath=\{planningRoute \? '\/planning' : studentId \? '\/students' : path\}/)
 })

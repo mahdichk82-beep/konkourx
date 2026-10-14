@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { TriStateCurriculumPicker } from './TriStateCurriculumPicker.tsx';
 import {
@@ -91,6 +92,38 @@ export function PlanningCurriculumField({
         path: snapshot.pathSnapshot,
       }));
 
+  const pickerModal = open && draftInitial ? createPortal(
+    <div className="planning-curriculum-modal" role="presentation">
+      <div aria-hidden="true" className="planning-curriculum-modal__backdrop" />
+      <section
+        aria-label="انتخاب مباحث درسی"
+        aria-modal="true"
+        className="planning-curriculum-modal__panel"
+        ref={panelRef}
+        role="dialog"
+      >
+        <div className="planning-curriculum-modal__body">
+          <TriStateCurriculumPicker
+            audience={audience}
+            client={client}
+            contextLabel={contextLabel}
+            initialValue={draftInitial}
+            minimumOne={minimumOne}
+            onCancel={() => setOpen(false)}
+            onConfirm={(next) => {
+              onChange(next);
+              setOpen(false);
+            }}
+            replacementNotice={replacingHistorical
+              ? 'با تأیید، مباحث جدید جایگزین همه مباحث ذخیره‌شده قبلی می‌شوند.'
+              : undefined}
+          />
+        </div>
+      </section>
+    </div>,
+    document.body,
+  ) : null;
+
   return (
     <section className="planning-curriculum-field" aria-label="مباحث درسی">
       <div className="planning-curriculum-field__heading">
@@ -129,36 +162,7 @@ export function PlanningCurriculumField({
         </div>
       ) : null}
 
-      {open && draftInitial ? (
-        <div className="planning-curriculum-modal" role="presentation">
-          <div aria-hidden="true" className="planning-curriculum-modal__backdrop" />
-          <section
-            aria-label="انتخاب مباحث درسی"
-            aria-modal="true"
-            className="planning-curriculum-modal__panel"
-            ref={panelRef}
-            role="dialog"
-          >
-            <div className="planning-curriculum-modal__body">
-              <TriStateCurriculumPicker
-                audience={audience}
-                client={client}
-                contextLabel={contextLabel}
-                initialValue={draftInitial}
-                minimumOne={minimumOne}
-                onCancel={() => setOpen(false)}
-                onConfirm={(next) => {
-                  onChange(next);
-                  setOpen(false);
-                }}
-                replacementNotice={replacingHistorical
-                  ? 'با تأیید، مباحث جدید جایگزین همه مباحث ذخیره‌شده قبلی می‌شوند.'
-                  : undefined}
-              />
-            </div>
-          </section>
-        </div>
-      ) : null}
+      {pickerModal}
     </section>
   );
 }

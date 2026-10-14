@@ -54,7 +54,7 @@ These foundations must be reused. They must not be re-planned as greenfield syst
 
 The repository does **not** thereby contain the full Product Map. In particular, complete Admin, Business/Payments, School, Public Web/SEO/CMS, Question Bank, Practice, internal Exam delivery, full Communication/Tickets, Learning Content, or Classroom products are not implemented merely because their architecture is specified.
 
-Current Curriculum runtime and scheduling contracts enable later work; they do not implement full progress, mastery, Question Bank, reporting, or Counselor planner experiences. `AssessmentAttempt` is a completed-result foundation, not the future Question Bank/Exam engine.
+Current Curriculum runtime and scheduling contracts enable later work; they do not implement full progress, mastery, Question Bank, reporting, or the broader Counselor operational suite. The currently authorized Counselor Planning UX milestone implements only the shared planning workspace, non-mutating timeline with the approved Composer-prefill interval selection, and same-Student unified composer described below. `AssessmentAttempt` is a completed-result foundation, not the future Question Bank/Exam engine.
 
 ## Immediate Worktree Reality
 
@@ -67,11 +67,15 @@ The working tree intentionally contains unrelated uncommitted Student and Counse
 - Student and Counselor dashboard presentation changes;
 - Counselor Student-list presentation changes;
 - shell-state helpers and focused tests;
-- a Counselor `PlanningShellPage` that honestly exposes planner readiness and 24×4 context without claiming interactive planning;
+- an operational Counselor `PlanningShellPage` shared by global and selected-Student routes, with a non-mutating timeline, the approved Composer-prefill interval selection, and a same-Student unified composer;
 - Profile Center and Student-track UX that is technically implemented but still lacks Product Owner Visual PASS; and
 - supporting CSS, tokens, Light/Dark, RTL, and responsive changes.
 
 This work is neither discarded nor treated as accepted merely because it exists. The v1 Picker-to-Planning checkpoint is separately committed at `34a6af2e1932c1f171957a83f3d30023f5b07208`; its current Picker interaction is implemented compatibility behavior, not the final Product Owner-approved UX.
+
+### CURRENT CHECKPOINT — Counselor Planning Workspace + Unified Task Composer
+
+The Principal Architect explicitly authorized this focused milestone on 2026-10-10. Its implemented boundary is one shared workspace at `/planning` and `/students/:studentId/planning`, an hourly/optional-quarter-hour presentation of existing scheduling truth, separate VOLUMETRIC presentation, and one-or-many same-Student creation through the existing atomic Batch API. On 2026-10-12, the Product Owner explicitly authorized one corrective scope exception: click/touch/keyboard selection of a same-day, 15-minute-aligned TIMED interval may prefill and open the existing Composer. The timeline still performs no persistence itself, and this exception does not authorize drag/drop, resize, automatic movement, direct Task mutation, new scheduling policy, Student Today redesign, cross-Student assignment, new analytics, new persistence, or changes to authorization/lifecycle semantics. Technical completion does not imply Product Owner Visual PASS.
 
 ## Resolved Architecture Gate
 
@@ -115,7 +119,7 @@ Separate the browse-only `/curriculum` experience from the authorized `STUDY` Ta
 | 2. Picker-to-Planning checkpoint closeout | DONE / STABILIZED | Current v1 integration committed at `34a6af2`; its Picker UX is not final and no recursive `SUBTREE` behavior was added |
 | 3. Browser / Picker split | NEXT / PLANNED | Keep `/curriculum` browse-only and implement the authorized tri-state recursive Study Task Picker under an explicit milestone |
 | 4. Curriculum navigation cleanup | PLANNED | Remove `/study` from primary navigation and keep one `مباحث درسی` destination while preserving legacy data/history |
-| 5. Read-only 24×4 Daily Timeline | PLANNED | Display existing timed Tasks at 15-minute resolution; show untimed Tasks separately; no drag/drop, resize, edit, create, or move interaction |
+| 5. Counselor Planning Workspace + Timeline Composer entry | CURRENT CHECKPOINT | Shared global/Student-context workspace and same-Student composer; display existing timed Tasks at exact 15-minute resolution, show untimed Tasks separately, and allow the explicitly authorized click/touch/keyboard TIMED interval selection to prefill the existing Composer; no drag/drop, resize, direct mutation, or move interaction |
 | 6. Profile Center redesign | PLANNED | Preserve the approved information architecture and obtain Product Owner Visual PASS |
 | 7. Account & Security expansion | PLANNED | Add verified email/phone management, verification/change, recovery/reset, and session/device management after Profile visual closeout |
 | 8. Cross-Student Group Assignment | PLANNED | Create independent per-Student Task lifecycles through a bounded atomic command with per-Student Study-track validation |
@@ -131,7 +135,7 @@ Each row is a separate milestone or Decision Gate. Listing it here does not auth
 | 1. Foundation / Recovery / Canonicalization | DONE / STABILIZED | Preserve verified runtime, Curriculum, planning, scheduling, migration, and security foundations |
 | 2. Visual / Shell Convergence | CURRENT CHECKPOINT | Stabilize the existing uncommitted Student/Counselor visual work |
 | 3. Account / Access + Student Operational Core | PLANNED | Complete shared access primitives, then the real Student daily loop |
-| 4. Counselor Workspace Core | PLANNED | Build operational Counselor work over shared Student/Planning truth |
+| 4. Counselor Workspace Core | CURRENT CHECKPOINT | The focused planning workspace/composer milestone is implemented over shared Student/Planning truth; the broader Counselor phase remains planned |
 | 5. Admin / Business Foundation | PLANNED | Establish permission-driven operations and commercial configuration primitives |
 | 6. Communication / Notifications / Tickets | PLANNED | Add shared private conversation, attention, and formal support engines |
 | 7. Question Bank / Practice / Exam | PLANNED | Build the central Question source, then learning Practice, then formal Exam |

@@ -18,6 +18,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
 import { createCounselorCurriculumClient } from '../curriculum/curriculum-client'
+import { loadPlanningTasks } from '../planning/planning-data'
 import { TaskScheduleFields } from './TaskScheduleFields'
 import {
   studentTasksClient,
@@ -33,7 +34,13 @@ import {
   scheduleHasChanged,
   type TaskScheduleDraft,
 } from './task-scheduling'
-import { mergeVisibleTask } from './task-view'
+import {
+  filterStudentWorkspaceTasks,
+  mergeVisibleTask,
+  studentTaskDateRange,
+  type StudentTaskRangeMode,
+  type StudentTaskWorkspaceTab,
+} from './task-view'
 import { useTehranTodayKey } from './useTehranTodayKey'
 
 type StudentTaskListProps = {
@@ -126,6 +133,13 @@ const curriculumError = (error: unknown) => {
   return 'ویرایش مباحث ممکن نشد. دوباره تلاش کنید.'
 }
 
+const taskWorkspaceTabs: StudentTaskWorkspaceTab[] = [
+  'TODAY',
+  'COMPLETED',
+  'UNFINISHED',
+  'PARTIAL',
+]
+
 export function StudentTaskList({ refreshKey, studentId, studentLabel }: StudentTaskListProps) {
   const todayKey = useTehranTodayKey()
   const curriculumClient = useMemo(() => createCounselorCurriculumClient(
@@ -133,29 +147,36 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
     authClient.authorizedRequest.bind(authClient),
   ), [studentId])
   const [tasks, setTasks] = useState<CounselorVisibleTask[]>([])
-  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
+  const [activeTab, setActiveTab] = useState<StudentTaskWorkspaceTab>('TODAY')
+  const [rangeMode, setRangeMode] = useState<StudentTaskRangeMode>('DAY')
+  const [selectedDateKey, setSelectedDateKey] = useState(todayKey)
   const [scheduleDrafts, setScheduleDrafts] = useState<
     Record<string, TaskScheduleDraft & { scheduledFor: string }>
   >({})
   const [schedulingTaskId, setSchedulingTaskId] = useState<string | null>(null)
   const [scheduleActionError, setScheduleActionError] = useState<string | null>(null)
   const [updatingCurriculumTaskIds, setUpdatingCurriculumTaskIds] = useState<Set<string>>(new Set())
+  const range = useMemo(
+    () => studentTaskDateRange(selectedDateKey, rangeMode),
+    [rangeMode, selectedDateKey],
+  )
+  const visibleTasks = useMemo(() => filterStudentWorkspaceTasks(tasks, {
+    ...range,
+    tab: activeTab,
+  }), [activeTab, range, tasks])
 
   useEffect(() => {
     let active = true
-    studentTasksClient.listTasks(studentId).then((page) => {
+    loadPlanningTasks((cursor) => studentTasksClient.listTasks(studentId, cursor, range)).then((items) => {
       if (!active) return
-      setTasks(page.items)
-      setNextCursor(page.nextCursor)
+      setTasks(items)
       setError(null)
     }).catch((loadError: unknown) => {
       if (!active) return
       setTasks([])
-      setNextCursor(null)
       setError(listError(loadError))
     }).finally(() => {
       if (active) setLoading(false)
@@ -163,7 +184,7 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
     return () => {
       active = false
     }
-  }, [refreshKey, retryKey, studentId])
+  }, [range, refreshKey, retryKey, studentId])
 
   const retry = () => {
     setLoading(true)
@@ -171,21 +192,28 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
     setRetryKey((value) => value + 1)
   }
 
-  const loadMore = async () => {
-    if (!nextCursor || loadingMore) return
-    setLoadingMore(true)
+  const selectRangeMode = (mode: StudentTaskRangeMode) => {
+    if (activeTab === 'TODAY' && mode === 'WEEK') return
+    if (mode === rangeMode) return
+    setLoading(true)
     setError(null)
-    try {
-      const page = await studentTasksClient.listTasks(studentId, nextCursor)
-      setTasks((current) => {
-        const knownIds = new Set(current.map(({ id }) => id))
-        return [...current, ...page.items.filter(({ id }) => !knownIds.has(id))]
-      })
-      setNextCursor(page.nextCursor)
-    } catch (loadError) {
-      setError(listError(loadError))
-    } finally {
-      setLoadingMore(false)
+    setRangeMode(mode)
+  }
+
+  const selectDate = (dateKey: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return
+    if (dateKey === selectedDateKey) return
+    setLoading(true)
+    setError(null)
+    setSelectedDateKey(dateKey)
+  }
+
+  const selectTab = (tab: StudentTaskWorkspaceTab) => {
+    setActiveTab(tab)
+    if (tab === 'TODAY' && rangeMode === 'WEEK') {
+      setLoading(true)
+      setError(null)
+      setRangeMode('DAY')
     }
   }
 
@@ -275,11 +303,52 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
     hasValidAssessmentAttempt: task.hasValidAssessmentAttempt,
   })
 
+  const tabLabels: Record<StudentTaskWorkspaceTab, string> = {
+    COMPLETED: 'انجام‌شده‌ها',
+    PARTIAL: 'نیمه‌کاره‌ها',
+    TODAY: 'برنامه امروز',
+    UNFINISHED: 'انجام‌نشده‌ها',
+  }
+
   return (
-    <Card className="student-task-list-card" title="وظایف و وضعیت اجرا">
-      <p className="student-task-card__intro">
-        وظایف دانش‌آموز در این بخش نمایش داده می‌شوند. فقط زمان‌بندی کارهای تعیین‌شده توسط مشاور و فاقد سابقه مطالعه قابل تغییر است.
-      </p>
+    <Card className="student-task-list-card" title="فضای وظایف دانش‌آموز">
+      <div className="student-task-workspace__toolbar">
+        <div className="student-task-tabs" role="tablist" aria-label="نمای وظایف دانش‌آموز">
+          {taskWorkspaceTabs.map((tab) => (
+            <button
+              aria-selected={activeTab === tab}
+              className={activeTab === tab ? 'is-selected' : ''}
+              key={tab}
+              onClick={() => selectTab(tab)}
+              role="tab"
+              type="button"
+            >
+              {tabLabels[tab]}
+            </button>
+          ))}
+        </div>
+        <div className="student-task-range" aria-label="فیلتر تاریخ برنامه">
+          <div className="student-task-range__modes" role="group" aria-label="بازه نمایش">
+            <button aria-pressed={rangeMode === 'DAY'} className={rangeMode === 'DAY' ? 'is-selected' : ''} onClick={() => selectRangeMode('DAY')} type="button">روز</button>
+            <button aria-pressed={rangeMode === 'WEEK'} className={rangeMode === 'WEEK' ? 'is-selected' : ''} disabled={activeTab === 'TODAY'} onClick={() => selectRangeMode('WEEK')} title={activeTab === 'TODAY' ? 'برنامه امروز همیشه بر پایه یک روز نمایش داده می‌شود.' : undefined} type="button">هفته</button>
+          </div>
+          <label>
+            <span>تاریخ مبنا</span>
+            <input onChange={(event) => selectDate(event.target.value)} type="date" value={selectedDateKey} />
+          </label>
+          <Button onClick={() => selectDate(todayKey)} variant="ghost">امروز</Button>
+        </div>
+      </div>
+      <div className="student-task-range__note">
+        <span>مبنای فیلتر: تاریخ برنامه‌ریزی‌شده</span>
+        <span>{rangeMode === 'DAY' ? formatScheduledFor(range.from) : `${formatScheduledFor(range.from)} تا ${formatScheduledFor(range.to)}`}</span>
+      </div>
+      <div className="student-task-metrics" aria-label="خلاصه واقعی وظایف بازه">
+        <span><strong>{tasks.length.toLocaleString('fa-IR')}</strong> کل</span>
+        <span><strong>{filterStudentWorkspaceTasks(tasks, { ...range, tab: 'COMPLETED' }).length.toLocaleString('fa-IR')}</strong> انجام‌شده</span>
+        <span><strong>{filterStudentWorkspaceTasks(tasks, { ...range, tab: 'UNFINISHED' }).length.toLocaleString('fa-IR')}</strong> انجام‌نشده</span>
+        <span><strong>{filterStudentWorkspaceTasks(tasks, { ...range, tab: 'PARTIAL' }).length.toLocaleString('fa-IR')}</strong> نیمه‌کاره</span>
+      </div>
 
       {scheduleActionError && <p className="form-error" role="alert">{scheduleActionError}</p>}
 
@@ -296,16 +365,15 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
           kind="error"
           title="وظایف در دسترس نیستند"
         />
-      ) : tasks.length === 0 ? (
+      ) : visibleTasks.length === 0 ? (
         <ContentState
-          description="هنوز وظیفه‌ای در برنامه این دانش‌آموز ثبت نشده است."
+          description="در این نما و بازه، وظیفه‌ای با داده واقعی پیدا نشد."
           kind="empty"
-          title="فهرست وظایف خالی است"
+          title="این نما خالی است"
         />
       ) : (
-        <>
-          <div className="counselor-task-list">
-            {tasks.map((task) => {
+        <div className="counselor-task-list">
+            {visibleTasks.map((task) => {
               const presentation = classifyTaskPresentation(task, todayKey)
               const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
               const scheduleDraft = scheduleDrafts[task.id] ?? {
@@ -332,13 +400,18 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                     {task.deadlineMisses.map((miss) => formatScheduledFor(miss.scheduledFor)).join('، ')}
                   </div>
                 )}
-                {task.description && <p className="counselor-task__description">{task.description}</p>}
-                <p className="counselor-task__content-type">نوع کار: {task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</p>
-                <div className="counselor-task__meta">
+                <div className="counselor-task__summary">
                   <span>{formatScheduledFor(task.scheduledFor)}</span>
                   <span>{formatTaskSchedule(task.startMinuteOfDay, task.endMinuteOfDay)}</span>
                   <span>{sourceLabels[task.source]}</span>
                   <span>{completionLabel(task, presentation)}</span>
+                </div>
+                <details className="counselor-task__details">
+                  <summary>جزئیات، شواهد و ویرایش</summary>
+                  <div className="counselor-task__details-content">
+                  {task.description && <p className="counselor-task__description">{task.description}</p>}
+                  <p className="counselor-task__content-type">نوع کار: {task.contentType === 'STUDY' ? 'درسی' : task.contentType === 'GENERAL' ? 'عمومی' : 'ثبت تاریخی'}</p>
+                  <div className="counselor-task__meta">
                   <span>
                     {task.completedStudySessionCount > 0
                       ? `${task.recordedMinutes.toLocaleString('fa-IR')} دقیقه مطالعه ثبت‌شده در ${task.completedStudySessionCount.toLocaleString('fa-IR')} جلسه پایان‌یافته`
@@ -443,20 +516,12 @@ export function StudentTaskList({ refreshKey, studentId, studentLabel }: Student
                     )}
                   </form>
                 )}
+                  </div>
+                </details>
               </article>
               )
             })}
           </div>
-
-          {error && <p className="form-error" role="alert">{error}</p>}
-          {nextCursor && (
-            <div className="student-task-list__actions">
-              <Button disabled={loadingMore} onClick={() => void loadMore()} variant="secondary">
-                {loadingMore ? 'در حال دریافت…' : 'نمایش وظایف بیشتر'}
-              </Button>
-            </div>
-          )}
-        </>
       )}
     </Card>
   )

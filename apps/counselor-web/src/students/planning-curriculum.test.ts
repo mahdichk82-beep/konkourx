@@ -49,6 +49,16 @@ test('single, batch, and edit flows use the selected Student-bound Picker', () =
   }
 });
 
+test('Unified Composer keeps the official selectable Picker bound to each task draft', () => {
+  const source = readFileSync(new URL('../planning/UnifiedTaskComposer.tsx', import.meta.url), 'utf8')
+  assert.match(source, /PlanningCurriculumField/)
+  assert.match(source, /createCounselorCurriculumClient/)
+  assert.match(source, /client=\{curriculumClient\}/)
+  assert.match(source, /value=\{task\.curriculum\}/)
+  assert.match(source, /onChange=\{\(value\) => updateTask\(task\.id, 'curriculum', value\)\}/)
+  assert.match(source, /contentType === 'STUDY'/)
+})
+
 test('Counselor canonical writes send explicit content type without legacy links', () => {
   const single = readFileSync(new URL('./StudentTaskForm.tsx', import.meta.url), 'utf8')
   const batch = readFileSync(new URL('./batch-task-form.ts', import.meta.url), 'utf8')

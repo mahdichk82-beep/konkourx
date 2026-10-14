@@ -16,6 +16,7 @@ import { CounselorCurriculumPage } from './curriculum/CounselorCurriculumPage'
 import { CounselorProfilePage } from './profile/CounselorProfilePage'
 import { profileSectionForPath } from './profile/profile-state'
 import { usePersonProfile } from './profile/usePersonProfile'
+import { planningRouteForPath } from './planning/planning-data'
 import './App.css'
 import './phase2c.css'
 
@@ -29,7 +30,7 @@ const navigation: NavigationItem[] = [
 const routeMeta: Record<string, { description: string; title: string }> = {
   '/': { title: 'داشبورد', description: 'نمای کلی فضای کاری و دانش‌آموزان' },
   '/students': { title: 'دانش‌آموزان', description: 'فهرست دانش‌آموزان تخصیص‌یافته به حساب مشاور' },
-  '/planning': { title: 'برنامه‌ریزی', description: 'ساختار آینده برای بررسی برنامه‌های دانش‌آموزان' },
+  '/planning': { title: 'برنامه‌ریزی', description: 'برنامه روزانه و هفتگی دانش‌آموزان تخصیص‌یافته' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور گزارش‌های مشاوره' },
   '/profile': { title: 'پروفایل من', description: 'مدیریت اطلاعات شخصی و حساب مشاور' },
   '/profile/professional': { title: 'اطلاعات حرفه‌ای', description: 'اطلاعات داخلی تخصص و معرفی مشاور' },
@@ -43,12 +44,16 @@ function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, 
   const personProfile = usePersonProfile()
   const effectivePath = path === '/settings' ? '/profile/settings' : path
   const studentDetailMatch = path.match(/^\/students\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i)
+  const planningRoute = planningRouteForPath(path)
+  const studentPlanningId = planningRoute?.kind === 'STUDENT' ? planningRoute.studentId : null
   const studentCurriculumMatch = path.match(/^\/students\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/curriculum$/i)
-  const studentId = studentDetailMatch?.[1] ?? studentCurriculumMatch?.[1] ?? null
-  const meta = studentCurriculumMatch
+  const studentId = studentDetailMatch?.[1] ?? studentPlanningId ?? studentCurriculumMatch?.[1] ?? null
+  const meta = studentPlanningId
+    ? { title: 'برنامه‌ریزی دانش‌آموز', description: 'برنامه روزانه و هفتگی در زمینه پرونده دانش‌آموز' }
+    : studentCurriculumMatch
     ? { title: 'مباحث درسی دانش‌آموز', description: 'مرور و انتخاب از برنامهٔ درسی رسمی بر پایهٔ رشتهٔ ثبت‌شدهٔ دانش‌آموز' }
     : studentId
-    ? { title: 'پروفایل دانش‌آموز', description: 'اطلاعات پایه و ایجاد وظیفه برای دانش‌آموز تخصیص‌یافته' }
+    ? { title: 'فضای دانش‌آموز', description: 'خلاصه پرونده، برنامه و وضعیت اجرای وظایف دانش‌آموز تخصیص‌یافته' }
     : routeMeta[effectivePath] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل مشاور تعریف نشده است.' }
 
   useEffect(() => {
@@ -66,15 +71,16 @@ function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, 
   let content
   if (path === '/') content = <DashboardPage navigate={navigate} user={user} />
   else if (path === '/students') content = <StudentsPage navigate={navigate} />
+  else if (studentPlanningId) content = <PlanningShellPage initialStudentId={studentPlanningId} key={studentPlanningId} navigate={navigate} />
   else if (studentCurriculumMatch && studentId) content = <CounselorCurriculumPage key={studentId} navigate={navigate} studentId={studentId} />
   else if (studentId) content = <StudentDetailPage key={studentId} navigate={navigate} studentId={studentId} />
-  else if (path === '/planning') content = <PlanningShellPage />
+  else if (planningRoute?.kind === 'GLOBAL') content = <PlanningShellPage navigate={navigate} />
   else if (profileSectionForPath(effectivePath) !== null) content = <CounselorProfilePage navigate={navigate} onPersonProfileSaved={personProfile.save} onRetryPersonProfile={personProfile.load} onThemeChange={setTheme} path={effectivePath} personProfile={personProfile.profile} personProfileError={personProfile.error} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
   else content = <ContentState kind="error" title="صفحه پیدا نشد" description="نشانی واردشده در پنل مشاور وجود ندارد." action={<Button onClick={() => navigate('/')}>بازگشت به داشبورد</Button>} />
 
   return (
-    <AppShell currentPath={studentId ? '/students' : path} navigation={navigation} navigate={navigate} onLogout={signOut} onThemeChange={setTheme} pageDescription={meta.description} pageTitle={meta.title} personProfile={personProfile.profile} theme={theme} user={user}>
+    <AppShell currentPath={planningRoute ? '/planning' : studentId ? '/students' : path} navigation={navigation} navigate={navigate} onLogout={signOut} onThemeChange={setTheme} pageDescription={meta.description} pageTitle={meta.title} personProfile={personProfile.profile} theme={theme} user={user}>
       {content}
     </AppShell>
   )

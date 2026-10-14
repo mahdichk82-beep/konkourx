@@ -3340,6 +3340,8 @@ Practice remains learning-oriented and Exam remains assessment-oriented. Student
 
 The Counselor should be able to inspect Student progress against canonical Curriculum, including covered, partial, untouched, recently studied, incomplete-related-Task, and available assessment-evidence states. No Counselor-only Curriculum taxonomy or invented nodes are permitted.
 
+**APPROVED FUTURE STATE — پیشرفت تحصیلی:** Subject-level performance belongs in this future Student Workspace area. Study-session counts, actual recorded Study minutes, solved-test totals, completed Task counts, and Curriculum Progress remain separately labeled facts with distinct definitions; they must not be collapsed into a fabricated combined metric. This direction does not authorize implementation or change Roadmap sequencing.
+
 #### 3.2.22 Planned Does Not Equal Covered
 
 A Curriculum area does not become covered merely because the Counselor planned it. Coverage depends on real Student execution and history, consistently with Sections 2.2 and 2.5.

@@ -10,17 +10,14 @@ const studentLabelModule = await import('./student-display-label.ts').catch(() =
 test('Counselor route is nested under the selected assigned Student', () => {
   assert.match(app, /students\\\/.*curriculum/);
   assert.match(app, /CounselorCurriculumPage/);
-  assert.match(detail, /`\/students\/\$\{student\.id\}\/curriculum`/);
+  assert.doesNotMatch(detail, /`\/students\/\$\{student\.id\}\/curriculum`/);
 });
 
-test('Counselor page binds shared browser to the selected Student and shows that context', () => {
-  assert.match(page, /createCounselorCurriculumClient\(studentId/);
+test('legacy Counselor Curriculum URL permission-checks the Student and returns to their workspace', () => {
   assert.match(page, /studentsClient\.get\(studentId\)/);
-  assert.match(page, /audience="counselor"/);
-  assert.match(page, /contextLabel=\{studentDisplayLabel\(student\)\}/);
-  assert.doesNotMatch(page, /contextLabel=\{[^}]*student\.id/);
-  assert.doesNotMatch(page, /curriculum\/tracks/);
-  assert.doesNotMatch(page, /track(Id)?\s*=/);
+  assert.match(page, /navigate\(`\/students\/\$\{result\.id\}`, true\)/);
+  assert.doesNotMatch(page, /CurriculumBrowser|PlanningCurriculumField/);
+  assert.doesNotMatch(page, /createCounselorCurriculumClient/);
 });
 
 test('Counselor Curriculum context never renders a raw UUID for an unnamed Student', () => {

@@ -7,8 +7,6 @@ import {
   studentsClient,
   type CounselorStudent,
 } from './students-client'
-import { StudentBatchTaskForm } from './StudentBatchTaskForm'
-import { StudentTaskForm } from './StudentTaskForm'
 import { StudentTaskList } from './StudentTaskList'
 import { StudentWeeklyPlanning } from './StudentWeeklyPlanning'
 
@@ -34,7 +32,6 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
   const [student, setStudent] = useState<CounselorStudent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [taskRefreshKey, setTaskRefreshKey] = useState(0)
 
   const load = async () => {
     setLoading(true)
@@ -93,52 +90,49 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
 
   return (
     <div className="page-stack student-detail">
-      <div className="student-detail__toolbar">
-        <Button onClick={() => navigate('/students')} variant="ghost">بازگشت به دانش‌آموزان</Button>
-        <Button onClick={() => navigate(`/students/${student.id}/curriculum`)} variant="secondary">انتخاب مبحث درسی</Button>
-      </div>
-      <Card className="student-profile-card">
-        <div className="student-profile-card__heading">
-          <span className="student-avatar student-avatar--large" aria-hidden="true">د</span>
-          <div>
-            <p className="eyebrow">پروفایل پایه دانش‌آموز</p>
-            <h2>{student.displayName ?? 'نام نمایشی ثبت نشده'}</h2>
-            <span className={`student-status student-status--${student.status.toLowerCase()}`}>
-              {statusLabel(student.status)}
-            </span>
+      <Card className="student-profile-card student-profile-card--compact">
+        <div className="student-profile-card__main">
+          <div className="student-profile-card__heading">
+            <span className="student-avatar" aria-hidden="true">{student.displayName?.trim().slice(0, 1) || 'د'}</span>
+            <div>
+              <p className="eyebrow">فضای دانش‌آموز</p>
+              <h2>{student.displayName?.trim() || 'نام نمایشی ثبت نشده'}</h2>
+              <div className="student-profile-card__summary">
+                <span className={`student-status student-status--${student.status.toLowerCase()}`}>
+                  حساب {statusLabel(student.status)}
+                </span>
+                <span>{student.educationLevel ?? 'پایه تحصیلی ثبت نشده'}</span>
+                <span>{student.schoolName ?? 'مدرسه ثبت نشده'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="student-detail__toolbar">
+            <Button onClick={() => navigate(`/students/${student.id}/planning`)}>برنامه‌ریزی دانش‌آموز</Button>
+            <Button onClick={() => navigate('/students')} variant="ghost">بازگشت به فهرست</Button>
           </div>
         </div>
-        <dl className="student-profile-facts">
-          <div><dt>کد پرونده</dt><dd>{student.id}</dd></div>
-          <div><dt>پایه تحصیلی</dt><dd>{student.educationLevel ?? 'ثبت نشده'}</dd></div>
-          <div><dt>مدرسه</dt><dd>{student.schoolName ?? 'ثبت نشده'}</dd></div>
-          <div><dt>وضعیت حساب</dt><dd>{statusLabel(student.status)}</dd></div>
-        </dl>
-        <p className="student-profile-card__note">
-          اطلاعات پایه پرونده و فهرست وظایف فقط خواندنی هستند. می‌توانید وضعیت اجرای برنامه دانش‌آموز را ببینید یا وظیفه جدیدی برای او ثبت کنید.
-        </p>
+        <details className="student-profile-card__details">
+          <summary>جزئیات پرونده</summary>
+          <dl className="student-profile-facts">
+            <div><dt>کد پرونده</dt><dd>{student.id}</dd></div>
+            <div><dt>پایه تحصیلی</dt><dd>{student.educationLevel ?? 'ثبت نشده'}</dd></div>
+            <div><dt>مدرسه</dt><dd>{student.schoolName ?? 'ثبت نشده'}</dd></div>
+            <div><dt>وضعیت حساب</dt><dd>{statusLabel(student.status)}</dd></div>
+          </dl>
+        </details>
       </Card>
-      <StudentWeeklyPlanning
-        refreshKey={taskRefreshKey}
-        studentId={student.id}
-      />
       <StudentTaskList
         key={student.id}
-        refreshKey={taskRefreshKey}
+        refreshKey={0}
         studentId={student.id}
         studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
       />
-      <StudentBatchTaskForm
-        key={student.id}
-        onTasksCreated={() => setTaskRefreshKey((value) => value + 1)}
-        studentId={student.id}
-        studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
-      />
-      <StudentTaskForm
-        onTaskCreated={() => setTaskRefreshKey((value) => value + 1)}
-        studentId={student.id}
-        studentLabel={student.displayName ?? 'دانش‌آموز بدون نام'}
-      />
+      <details className="student-overview-details">
+        <summary>نمای هفتگی فشرده</summary>
+        <div className="student-overview-details__content">
+          <StudentWeeklyPlanning refreshKey={0} studentId={student.id} />
+        </div>
+      </details>
     </div>
   )
 }

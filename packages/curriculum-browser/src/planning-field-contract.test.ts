@@ -20,6 +20,8 @@ test('browser picker mode is controlled without changing tree or search ownershi
 test('planning field owns an isolated tri-state modal draft flow', () => {
   assert.match(field, /<TriStateCurriculumPicker/);
   assert.doesNotMatch(field, /<CurriculumBrowser|mode="PICKER"/);
+  assert.match(field, /createPortal/);
+  assert.match(field, /document\.body/);
   assert.match(field, /role="dialog"/);
   assert.match(field, /contextLabel=\{contextLabel\}/);
   assert.match(field, /onCancel=\{\(\) => setOpen\(false\)\}/);
