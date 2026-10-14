@@ -11,6 +11,15 @@ test('Student shell exposes a real Curriculum destination', () => {
   assert.match(app, /StudentCurriculumPage/);
 });
 
+test('primary navigation omits legacy Study while its route remains compatible', () => {
+  const navigation = app.match(/const navigation:[\s\S]*?\n\]/)?.[0] ?? '';
+
+  assert.doesNotMatch(navigation, /path:\s*['"]\/study['"]/);
+  assert.match(navigation, /path:\s*['"]\/planning['"]/);
+  assert.match(navigation, /path:\s*['"]\/curriculum['"]/);
+  assert.match(app, /path === ['"]\/study['"]\) content = <SubjectTopicsPage/);
+});
+
 test('Student page binds the shared browser to authenticated Student Curriculum routes', () => {
   assert.match(page, /createStudentCurriculumClient/);
   assert.match(page, /authClient\.authorizedRequest\.bind\(authClient\)/);

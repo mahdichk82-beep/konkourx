@@ -33,8 +33,7 @@ import './phase2c.css'
 const navigation: NavigationItem[] = [
   { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
   { icon: 'planning', label: 'برنامه‌ریزی', mobileLabel: 'برنامه', path: '/planning' },
-  { icon: 'study', label: 'درس‌ها و مباحث', mobileLabel: 'درس‌ها', path: '/study' },
-  { icon: 'study', label: 'برنامهٔ درسی رسمی', mobileLabel: 'مباحث', path: '/curriculum' },
+  { icon: 'study', label: 'مباحث درسی', mobileLabel: 'مباحث', path: '/curriculum' },
   { icon: 'assessment', label: 'آزمون‌ها', mobileLabel: 'آزمون', path: '/assessments' },
   { icon: 'reports', label: 'گزارش‌ها', mobileLabel: 'گزارش', path: '/reports' },
 ]
@@ -44,7 +43,7 @@ const routeMeta: Record<string, { description: string; title: string }> = {
   '/planning': { title: 'برنامه امروز', description: 'ساخت و پیگیری کارهای شخصی امروز' },
   '/planning/weekly': { title: 'برنامه هفتگی', description: 'نمای هفت‌روزه کارهای برنامه‌ریزی‌شده' },
   '/study': { title: 'درس‌ها و مباحث', description: 'ساخت و مدیریت ساختار شخصی مطالعه' },
-  '/curriculum': { title: 'مباحث درسی', description: 'مرور و انتخاب از ساختار رسمی برنامهٔ درسی رشتهٔ شما' },
+  '/curriculum': { title: 'مباحث درسی', description: 'مرور ساختار رسمی برنامهٔ درسی رشتهٔ شما' },
   '/assessments': { title: 'آزمون‌ها', description: 'ثبت و مرور نتیجه خام آزمون‌های پایان‌یافته' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور روند و پیشرفت' },
   '/profile': { title: 'پروفایل من', description: 'مدیریت اطلاعات شخصی و حساب دانش‌آموزی' },

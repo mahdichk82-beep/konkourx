@@ -6,13 +6,23 @@ const component = readFileSync(new URL('./CurriculumBrowser.tsx', import.meta.ur
 const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 const viewModel = readFileSync(new URL('./view-model.ts', import.meta.url), 'utf8');
 
-test('tree UI is recursive, lazy, and exposes accessible expansion and selection state', () => {
+test('tree UI is recursive, lazy, and exposes accessible expansion state', () => {
   assert.match(component, /function TreeNode/);
   assert.match(component, /<TreeNode/);
   assert.match(component, /listChildren/);
   assert.match(component, /aria-expanded/);
-  assert.match(component, /aria-pressed/);
   assert.doesNotMatch(component, /<h1>/);
+});
+
+test('standalone browser is browse-only while preserving search and hierarchy navigation', () => {
+  assert.match(component, /<h2>مباحث درسی<\/h2>/);
+  assert.match(component, /client\.search/);
+  assert.match(component, /نمایش در ساختار/);
+  assert.match(component, /listChildren/);
+  assert.doesNotMatch(component, /type="checkbox"/);
+  assert.doesNotMatch(component, /aria-pressed/);
+  assert.doesNotMatch(component, /SelectionTray|selectedNodes|onSelectedNodesChange/);
+  assert.doesNotMatch(component, /شیوهٔ انتخاب|دامنهٔ پیش‌فرض|پاک‌کردن همه/);
 });
 
 test('GROUP items are rendered as non-selectable navigation wrappers', () => {

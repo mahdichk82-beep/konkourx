@@ -5,16 +5,12 @@ import test from 'node:test';
 const browser = readFileSync(new URL('./CurriculumBrowser.tsx', import.meta.url), 'utf8');
 const field = readFileSync(new URL('./PlanningCurriculumField.tsx', import.meta.url), 'utf8');
 
-test('browser picker mode is controlled without changing tree or search ownership', () => {
-  assert.match(browser, /selectedNodes\?/);
-  assert.match(browser, /onSelectedNodesChange\?/);
-  assert.match(browser, /mode\?: 'BROWSE' \| 'PICKER'/);
-  assert.match(browser, /mode === 'BROWSE'/);
+test('standalone browser and Task picker remain separate contracts', () => {
   assert.match(browser, /listChildren/);
   assert.match(browser, /client\.search/);
-  assert.match(browser, /toggleCheckboxSelection/);
-  assert.match(browser, /type="checkbox"/);
-  assert.match(browser, /!picker \? <fieldset/);
+  assert.doesNotMatch(browser, /selectedNodes|onSelectedNodesChange|toggleCheckboxSelection/);
+  assert.doesNotMatch(browser, /type="checkbox"|SelectionTray/);
+  assert.match(field, /<TriStateCurriculumPicker/);
 });
 
 test('planning field owns an isolated tri-state modal draft flow', () => {
