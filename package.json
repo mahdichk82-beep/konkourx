@@ -19,8 +19,9 @@
     "test": "pnpm --filter api test",
     "test:student": "pnpm --filter student-web test",
     "test:counselor": "pnpm --filter counselor-web test",
+    "test:packaging": "node --test test/frontend-docker-packaging.test.mjs",
     "typecheck": "pnpm --filter api typecheck",
-    "validate": "pnpm run test && pnpm run test:student && pnpm run test:counselor && pnpm run typecheck && pnpm run lint && pnpm run build:all && pnpm run db:validate",
+    "validate": "pnpm run test && pnpm run test:student && pnpm run test:counselor && pnpm run test:packaging && pnpm run typecheck && pnpm run lint && pnpm run build:all && pnpm run db:validate",
     "db:validate": "pnpm --filter api exec prisma validate --config ../../prisma.config.ts",
     "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts",
     "db:seed": "pnpm --filter api seed"
