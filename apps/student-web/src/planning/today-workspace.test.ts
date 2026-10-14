@@ -114,6 +114,23 @@ test('summaries distinguish exact time from date-only truth and keep numeric zer
   assert.equal(timed.context, 'زیست‌شناسی')
 })
 
+test('historical, current, and future ISO schedules retain their calendar day in Persian presentation', () => {
+  const scheduledValues = [
+    '2026-10-11T00:00:00.000Z',
+    '2026-10-12T00:00:00.000Z',
+    '2026-10-13T00:00:00.000Z',
+  ]
+  const labels = scheduledValues.map((scheduledFor) => (
+    taskSummaryModel(task({ scheduledFor }), null).schedule.label
+  ))
+
+  assert.equal(new Set(labels).size, 3)
+  for (const label of labels) {
+    assert.match(label, /۱۴۰۵/)
+    assert.doesNotMatch(label, /T00:00:00/)
+  }
+})
+
 test('active session matches only its dailyTaskId and requests an exact load when absent', () => {
   const active = activeSession('task-2')
   assert.equal(activeTaskMatch(active, [task()]), null)

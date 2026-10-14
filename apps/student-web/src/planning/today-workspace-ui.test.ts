@@ -22,6 +22,16 @@ test('compact rows expose one contextual primary action and no accordion payload
   assert.doesNotMatch(listSource, /TaskExecutionPanel|PlanningCurriculumField|task-item__collapsible/)
 })
 
+test('selected Today rows expose a visible state without changing URL-backed selection', () => {
+  const listSource = planningSource('./TodayTaskList.tsx')
+  const styles = planningSource('../App.css')
+  assert.match(listSource, /today-task-row__selection/)
+  assert.match(listSource, /selectedTaskId === task\.id/)
+  assert.match(listSource, /aria-current=/)
+  assert.match(styles, /\.today-task-row__selection/)
+  assert.match(styles, /\.today-task-row\.is-selected[^}]*box-shadow:/)
+})
+
 test('detail is one selected surface with progressive secondary disclosures', () => {
   const detailSource = planningSource('./TodayTaskDetail.tsx')
   assert.match(detailSource, /data-today-task-detail/)
@@ -121,6 +131,12 @@ test('Weekly task summaries navigate without sharing the reschedule handler', ()
   assert.match(weeklySource, /onClick=\{\(\) => void handleMove\(selectedTask\.id, day\.key\)\}/)
   assert.doesNotMatch(weeklySource, /weekly-task__open[\s\S]{0,300}handleMove/)
   assert.match(weeklySource, /planningWeekStart/)
+  assert.match(weeklySource, /buildCompactTaskSummary\(task, todayKey\)/)
+  assert.match(weeklySource, /summary\.presentation\.indicatorLabel/)
+  assert.match(weeklySource, /<progress/)
+  assert.match(weeklySource, /formatJalaliDate\(day\.key\)/)
+  assert.match(weeklySource, /calendarDateKey\(task\.scheduledFor\)/)
+  assert.doesNotMatch(weeklySource, /formatCurriculumProgress|subjectNames|topicNames/)
 })
 
 test('URL-backed detail closing restores list focus without forcing a scroll jump', () => {

@@ -56,6 +56,12 @@ test('schedule labels separate fixed time from estimated study duration and date
   assert.equal(formatTaskSchedule(null, null), 'حجمی (بدون ساعت ثابت)')
   assert.equal(formatTaskSchedule(495, 585), 'ساعت ثابت ۰۸:۱۵ تا ۰۹:۴۵')
   assert.match(formatJalaliDate('2026-10-09'), /۱۴۰۵/)
+  assert.equal(
+    formatJalaliDate('2026-10-09T00:00:00.000Z'),
+    formatJalaliDate('2026-10-09'),
+  )
+  assert.equal(formatJalaliDate('2026-02-29T00:00:00.000Z'), '2026-02-29T00:00:00.000Z')
+  assert.equal(formatJalaliDate('2026-10-09T23:30:00.000-07:00'), formatJalaliDate('2026-10-09'))
 })
 
 test('Student creation and editing use explicit schedule payloads and accessible schedule controls', () => {

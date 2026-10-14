@@ -97,6 +97,13 @@
 .today-empty__copy h3 { margin: 0 0 0.55rem; font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.65; }
 .today-empty__copy p { max-width: 640px; margin: 0 0 1.15rem; color: var(--text-muted); font-size: 0.84rem; line-height: 1.9; }
 .today-empty__copy .button { min-width: 190px; }
+.today-dashboard-summary { flex: 1; padding: clamp(1.5rem, 4vw, 3rem) 0; display: grid; align-content: center; justify-items: start; gap: 1.25rem; }
+.today-dashboard-summary__total { display: flex; align-items: baseline; gap: 0.75rem; }
+.today-dashboard-summary__total strong { color: var(--action-primary); font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1; }
+.today-dashboard-summary__total span { color: var(--text-muted); font-weight: var(--font-weight-label); }
+.today-dashboard-summary__statuses { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.today-dashboard-summary__statuses > span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.today-dashboard-summary > .button { min-width: 190px; }
 .today-panel__footer { padding-top: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.65rem 1.2rem; border-top: 1px solid var(--border-default); color: var(--text-muted); font-size: 0.72rem; }
 .today-panel__footer span { display: inline-flex; align-items: center; gap: 0.38rem; }
 .today-panel__footer i { width: 6px; height: 6px; border-radius: 50%; background: var(--action-primary); box-shadow: 0 0 0 3px var(--selection-bg); }
@@ -201,6 +208,7 @@
   .today-empty__visual::before { inset: 14px 14px auto auto; }
   .today-empty__visual::after { inset: auto auto -11px 0.35rem; font-size: 4.2rem; }
   .today-empty__copy .button { width: 100%; }
+  .today-dashboard-summary > .button { width: 100%; }
   .today-panel__footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .student-dashboard__aside { grid-template-columns: 1fr; }
   .now-card, .week-card { padding: 1rem; border-radius: 16px; }

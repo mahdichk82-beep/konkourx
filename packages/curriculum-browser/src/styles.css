@@ -1,6 +1,6 @@
 .curriculum-browser,
 .curriculum-browser * { box-sizing: border-box; }
-.curriculum-browser { color: var(--curriculum-text-primary); display: grid; font-family: inherit; font-weight: var(--font-weight-body, 400); gap: 1.25rem; line-height: 1.7; min-width: 0; padding: clamp(1rem, 3vw, 2.5rem); }
+.curriculum-browser { color: var(--curriculum-text-primary); display: grid; font-family: inherit; font-weight: var(--font-weight-body, 400); gap: 1rem; line-height: 1.7; min-width: 0; padding: clamp(.75rem, 2vw, 1.5rem); }
 .curriculum-browser button,
 .curriculum-browser input,
 .curriculum-browser select { font: inherit; }

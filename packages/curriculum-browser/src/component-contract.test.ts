@@ -54,3 +54,10 @@ test('layout has keyboard focus, RTL-safe wrapping, shared semantic theming, and
   assert.doesNotMatch(styles, /prefers-color-scheme:\s*dark/);
   assert.match(styles, /max-width:\s*600px/);
 });
+
+test('standalone browser keeps the search close to its heading without changing picker spacing', () => {
+  const browserRule = styles.match(/\.curriculum-browser\s*\{([^}]*)\}/)?.[1] ?? '';
+  assert.match(browserRule, /gap:\s*1rem/);
+  assert.match(browserRule, /padding:\s*clamp\(\.75rem,\s*2vw,\s*1\.5rem\)/);
+  assert.match(styles, /\.tri-state-picker\s*\{[^}]*gap:\s*\.75rem[^}]*padding:\s*1rem/s);
+});

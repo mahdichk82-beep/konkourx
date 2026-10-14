@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  classifyTaskPresentation,
-  formatCurriculumProgress,
+  buildCompactTaskSummary,
+  calendarDateKey,
   summarizeTaskPresentations,
 } from '@konkourx/task-presentation'
 import '@konkourx/task-presentation/styles.css'
@@ -11,9 +11,6 @@ import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
 import {
   studentTasksClient,
-  type CounselorTaskSkipReason,
-  type CounselorTaskSubject,
-  type CounselorTaskTopic,
   type CounselorVisibleTask,
 } from './student-tasks-client'
 import { addLocalDays, buildWeek, localDateKey, saturdayWeekStart } from './week'
@@ -22,13 +19,6 @@ import { useTehranTodayKey } from './useTehranTodayKey'
 type StudentWeeklyPlanningProps = {
   refreshKey: number
   studentId: string
-}
-
-const skipReasonLabels: Record<CounselorTaskSkipReason, string> = {
-  FORGOT: 'فراموش کرده',
-  NO_TIME: 'زمان کافی نداشته',
-  OTHER: 'دلیل دیگر',
-  TOO_DIFFICULT: 'بیش از حد دشوار بوده',
 }
 
 const weekFormatter = new Intl.DateTimeFormat('fa-IR', {
@@ -74,8 +64,6 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
   const todayKey = useTehranTodayKey()
   const [weekStart, setWeekStart] = useState(() => saturdayWeekStart(new Date()))
   const [tasks, setTasks] = useState<CounselorVisibleTask[]>([])
-  const [subjects, setSubjects] = useState<CounselorTaskSubject[]>([])
-  const [topics, setTopics] = useState<CounselorTaskTopic[]>([])
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
@@ -88,29 +76,13 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
   useEffect(() => {
     let active = true
 
-    Promise.all([
-      loadWeeklyTasks(studentId, from, to),
-      studentTasksClient.listSubjects(studentId),
-    ]).then(async ([taskItems, subjectItems]) => {
-      const availableSubjectIds = new Set(subjectItems.map((subject) => subject.id))
-      const subjectIds = [...new Set(
-        taskItems.flatMap((task) => task.subjectId && availableSubjectIds.has(task.subjectId)
-          ? [task.subjectId]
-          : []),
-      )]
-      const topicGroups = await Promise.all(
-        subjectIds.map((subjectId) => studentTasksClient.listTopics(studentId, subjectId)),
-      )
+    loadWeeklyTasks(studentId, from, to).then((taskItems) => {
       if (!active) return
       setTasks(taskItems)
-      setSubjects(subjectItems)
-      setTopics(topicGroups.flat())
       setError(null)
     }).catch((loadError: unknown) => {
       if (!active) return
       setTasks([])
-      setSubjects([])
-      setTopics([])
       setError(weeklyError(loadError))
     }).finally(() => {
       if (active) setLoadedKey(queryKey)
@@ -121,17 +93,12 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
     }
   }, [from, queryKey, studentId, to])
 
-  const subjectNames = useMemo(
-    () => new Map(subjects.map((subject) => [subject.id, subject.name])),
-    [subjects],
-  )
-  const topicNames = useMemo(
-    () => new Map(topics.map((topic) => [topic.id, topic.title])),
-    [topics],
-  )
   const tasksByDay = useMemo(() => {
     const grouped = new Map(days.map((day) => [day.key, [] as CounselorVisibleTask[]]))
-    for (const task of tasks) grouped.get(task.scheduledFor.slice(0, 10))?.push(task)
+    for (const task of tasks) {
+      const scheduledKey = calendarDateKey(task.scheduledFor)
+      if (scheduledKey) grouped.get(scheduledKey)?.push(task)
+    }
     return grouped
   }, [days, tasks])
   const plannedMinutes = tasks.reduce(
@@ -193,42 +160,26 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
                   {dayTasks.length === 0 ? (
                     <p className="student-weekly-day__empty">بدون وظیفه</p>
                   ) : dayTasks.map((task) => {
-                    const presentation = classifyTaskPresentation(task, todayKey)
-                    const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
+                    const summary = buildCompactTaskSummary(task, todayKey)
+                    const presentationClass = summary.presentation.status.toLowerCase().replaceAll('_', '-')
                     return (
                     <article className={`student-weekly-task student-weekly-task--${task.status.toLowerCase()} task-presentation--${presentationClass}`} key={task.id}>
-                      <h3>{task.title}</h3>
+                      <h3>{summary.title}</h3>
                       <span className={`task-presentation-badge--${presentationClass}`}>
-                        {presentation.label}
+                        {summary.presentation.label}
                       </span>
-                      {presentation.indicatorLabel && (
-                        <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
-                      )}
-                      {task.curriculum.totalItemCount > 0 && (
-                        <p className="task-curriculum-progress">
-                          {formatCurriculumProgress(
-                            task.curriculum.completedItemCount,
-                            task.curriculum.totalItemCount,
-                          )}
-                        </p>
-                      )}
-                      {task.status === 'SKIPPED' && (
-                        <small>
-                          {task.skipReason
-                            ? `دلیل رد کردن: ${skipReasonLabels[task.skipReason]}`
-                            : 'بدون ثبت دلیل رد کردن'}
+                      {summary.presentation.indicatorLabel && (
+                        <small className="task-presentation-indicator">
+                          {summary.presentation.indicatorLabel}
                         </small>
                       )}
-                      {(task.subjectId || task.topicId) && (
-                        <p>
-                          {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}
-                          {task.topicId ? ` · ${topicNames.get(task.topicId) ?? 'مبحث ثبت‌شده'}` : ''}
-                        </p>
+                      {summary.plannedLabel && <small>{summary.plannedLabel}</small>}
+                      {summary.progress && (
+                        <span className="student-weekly-task__progress">
+                          <progress aria-label={summary.progress.label} max={100} value={summary.progress.value} />
+                          <small>{summary.progress.label}</small>
+                        </span>
                       )}
-                      {task.contentType === 'STUDY' && (
-                        <small>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</small>
-                      )}
-                      <small>{task.source === 'COUNSELOR' ? 'تعیین‌شده توسط مشاور' : 'برنامه شخصی دانش‌آموز'}</small>
                     </article>
                     )
                   })}

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildCompactTaskSummary,
+  calendarDateKey,
   classifyTaskPresentation,
   formatCurriculumProgress,
   millisecondsUntilNextTehranDay,
@@ -8,6 +10,80 @@ import {
   summarizeTaskPresentations,
   tehranDateKey,
 } from './index.ts'
+
+test('calendar date keys preserve the scheduled calendar day without timezone conversion', () => {
+  assert.equal(calendarDateKey('2026-10-12'), '2026-10-12')
+  assert.equal(calendarDateKey('2026-10-12T00:00:00.000Z'), '2026-10-12')
+  assert.equal(calendarDateKey('2026-10-12T23:45:00.000-07:00'), '2026-10-12')
+  assert.equal(calendarDateKey('2026-02-29'), null)
+  assert.equal(calendarDateKey('2026-10-12T00:00:00'), null)
+  assert.equal(calendarDateKey('2026-10-12T99:99:99Z'), null)
+  assert.equal(calendarDateKey('2026-10-12T23:59:59+99:99'), null)
+  assert.equal(calendarDateKey('2026-10-12 trailing-data'), null)
+})
+
+test('compact weekly summaries keep lifecycle, planned workload, and measured progress', () => {
+  const summary = buildCompactTaskSummary({
+    actualSolvedTestCount: 7,
+    completedAt: '2026-10-13T08:00:00.000Z',
+    curriculum: { completedItemCount: 2, totalItemCount: 5 },
+    endMinuteOfDay: null,
+    estimatedMinutes: 45,
+    plannedTestCount: 20,
+    scheduledFor: '2026-10-12T00:00:00.000Z',
+    startMinuteOfDay: null,
+    status: 'COMPLETED',
+    title: 'مرور بسیار طولانی فصل تنظیم عصبی',
+  }, '2026-10-14')
+
+  assert.equal(summary.presentation.status, 'COMPLETED_LATE')
+  assert.equal(summary.presentation.label, 'انجام‌شده با تأخیر')
+  assert.equal(summary.plannedLabel, '۴۵ دقیقه')
+  assert.deepEqual(summary.progress, {
+    label: '۲ از ۵ مبحث',
+    value: 40,
+  })
+
+  const testsOnly = buildCompactTaskSummary({
+    actualSolvedTestCount: 9,
+    completedAt: null,
+    curriculum: { completedItemCount: 0, totalItemCount: 0 },
+    endMinuteOfDay: 615,
+    estimatedMinutes: null,
+    plannedTestCount: 12,
+    scheduledFor: '2026-10-12',
+    startMinuteOfDay: 555,
+    status: 'PARTIAL',
+    title: 'آزمون',
+  }, '2026-10-14')
+
+  assert.equal(testsOnly.presentation.status, 'PARTIAL')
+  assert.equal(testsOnly.presentation.indicatorLabel, 'از موعد گذشته')
+  assert.equal(testsOnly.plannedLabel, '۶۰ دقیقه')
+  assert.deepEqual(testsOnly.progress, {
+    label: '۹ از ۱۲ تست',
+    value: 75,
+  })
+
+  const rescheduledWithHistory = buildCompactTaskSummary({
+    actualSolvedTestCount: 9,
+    completedAt: null,
+    curriculum: { completedItemCount: 0, totalItemCount: 0 },
+    deadlineMisses: [{
+      deadlineAt: '2026-10-12T20:30:00.000Z',
+      recordedAt: '2026-10-12T20:35:00.000Z',
+      scheduledFor: '2026-10-12',
+    }],
+    endMinuteOfDay: 615,
+    estimatedMinutes: null,
+    plannedTestCount: 12,
+    scheduledFor: '2026-10-20',
+    startMinuteOfDay: 555,
+    status: 'PENDING',
+    title: 'آزمون',
+  }, '2026-10-14')
+  assert.equal(rescheduledWithHistory.presentation.indicatorLabel, 'دارای سابقه انجام‌نشده')
+})
 
 test('curriculum progress remains visible independently of missed classification', () => {
   assert.equal(formatCurriculumProgress(4, 10), '۴ از ۱۰ مبحث تکمیل شده')

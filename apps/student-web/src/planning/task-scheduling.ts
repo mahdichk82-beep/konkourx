@@ -1,3 +1,5 @@
+import { calendarDateKey } from '@konkourx/task-presentation'
+
 export type TaskScheduleDraft = {
   mode: 'VOLUMETRIC' | 'TIMED'
   startTime: string
@@ -148,17 +150,12 @@ export const formatTaskSchedule = (
 const jalaliDateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   day: 'numeric',
   month: 'long',
+  timeZone: 'UTC',
   year: 'numeric',
 })
 
-export const formatJalaliDate = (dateOnly: string): string => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOnly)
-  if (!match) return dateOnly
-  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-  if (
-    date.getFullYear() !== Number(match[1])
-    || date.getMonth() !== Number(match[2]) - 1
-    || date.getDate() !== Number(match[3])
-  ) return dateOnly
-  return jalaliDateFormatter.format(date)
+export const formatJalaliDate = (scheduledFor: string): string => {
+  const dateKey = calendarDateKey(scheduledFor)
+  if (!dateKey) return scheduledFor
+  return jalaliDateFormatter.format(new Date(`${dateKey}T12:00:00.000Z`))
 }

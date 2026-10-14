@@ -39,7 +39,11 @@ import { useStudyTimer, useStudyTimerElapsed } from '../planning/useStudyTimer'
 import { finalStudySessionElapsedMs } from '../planning/study-timer'
 import { useTehranTodayKey } from '../planning/useTehranTodayKey'
 import { TaskScheduleFields } from '../planning/TaskScheduleFields'
-import { prepareTaskContent, taskOccursOnDate } from '../planning/task-content'
+import {
+  prepareTaskContent,
+  taskOccursBeforeDate,
+  taskOccursOnDate,
+} from '../planning/task-content'
 import {
   createScheduleDraft,
   formatJalaliDate,
@@ -542,7 +546,7 @@ export function TodayPlanningPage({
     (subjectFilter === 'ALL' || task.subjectId === subjectFilter)
 
   const isOverdueTask = (task: DailyTask): boolean =>
-    task.status === 'PENDING' && task.scheduledFor.slice(0, 10) < todayKey
+    task.status === 'PENDING' && taskOccursBeforeDate(task.scheduledFor, todayKey)
 
   const replaceTaskFromServer = (updated: DailyTask) => {
     setSelectedExternalTask((current) => (

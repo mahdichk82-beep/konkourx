@@ -1,8 +1,8 @@
 import type { DragEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  classifyTaskPresentation,
-  formatCurriculumProgress,
+  buildCompactTaskSummary,
+  calendarDateKey,
   summarizeTaskPresentations,
 } from '@konkourx/task-presentation'
 import '@konkourx/task-presentation/styles.css'
@@ -14,9 +14,6 @@ import { ContentState } from '../components/ui/ContentState'
 import {
   planningClient,
   type DailyTask,
-  type DailyTaskSkipReason,
-  type StudySubject,
-  type StudyTopic,
 } from '../planning/planning-client'
 import { addLocalDays, buildWeek, localDateKey, saturdayWeekStart } from '../planning/week'
 import {
@@ -28,6 +25,7 @@ import {
 } from '../planning/weekly-movement'
 import { useTehranTodayKey } from '../planning/useTehranTodayKey'
 import { planningTaskPath } from '../planning/today-workspace'
+import { formatJalaliDate } from '../planning/task-scheduling'
 
 type WeeklyPlanningPageProps = {
   navigate(path: string): void
@@ -38,13 +36,6 @@ type Feedback = {
   message: string
 }
 
-const skipReasonLabels: Record<DailyTaskSkipReason, string> = {
-  FORGOT: 'فراموش کردم',
-  NO_TIME: 'زمان کافی نداشتم',
-  OTHER: 'دلیل دیگر',
-  TOO_DIFFICULT: 'بیش از حد دشوار بود',
-}
-
 const lockLabels: Record<MovementLockReason, string> = {
   CHECKING: 'در حال بررسی سابقه اجرا…',
   COUNSELOR: 'تعیین‌شده توسط مشاور · جابه‌جایی قفل است',
@@ -52,21 +43,9 @@ const lockLabels: Record<MovementLockReason, string> = {
   UNAVAILABLE: 'امکان جابه‌جایی بررسی نشد · قفل موقت',
 }
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
-  day: 'numeric',
-  month: 'long',
-})
-
-const movedDateFormatter = new Intl.DateTimeFormat('fa-IR', {
-  day: 'numeric',
-  month: 'long',
+const weekdayFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+  timeZone: 'UTC',
   weekday: 'long',
-})
-
-const weekFormatter = new Intl.DateTimeFormat('fa-IR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
 })
 
 const initialWeekStart = (): Date => {
@@ -117,28 +96,6 @@ const loadTasks = async (from: string, to: string): Promise<DailyTask[]> => {
   return tasks
 }
 
-const loadSubjects = async (): Promise<StudySubject[]> => {
-  const subjects: StudySubject[] = []
-  let cursor: string | undefined
-  do {
-    const page = await planningClient.listSubjects(cursor)
-    subjects.push(...page.items)
-    cursor = page.nextCursor ?? undefined
-  } while (cursor)
-  return subjects
-}
-
-const loadTopics = async (subjectId: string): Promise<StudyTopic[]> => {
-  const topics: StudyTopic[] = []
-  let cursor: string | undefined
-  do {
-    const page = await planningClient.listTopics(subjectId, cursor)
-    topics.push(...page.items)
-    cursor = page.nextCursor ?? undefined
-  } while (cursor)
-  return topics
-}
-
 const loadExecutionChecks = async (
   tasks: DailyTask[],
 ): Promise<Record<string, ExecutionCheck>> => {
@@ -161,8 +118,6 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
   const todayKey = useTehranTodayKey()
   const [weekStart, setWeekStart] = useState(initialWeekStart)
   const [tasks, setTasks] = useState<DailyTask[]>([])
-  const [subjects, setSubjects] = useState<StudySubject[]>([])
-  const [topics, setTopics] = useState<StudyTopic[]>([])
   const [executionChecks, setExecutionChecks] = useState<Record<string, ExecutionCheck>>({})
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -190,25 +145,15 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
       setDragOverDayKey(null)
 
       try {
-        const [taskItems, subjectItems] = await Promise.all([loadTasks(from, to), loadSubjects()])
-        const subjectIds = [...new Set(
-          taskItems.flatMap((task) => task.subjectId ? [task.subjectId] : []),
-        )]
-        const [topicGroups, checks] = await Promise.all([
-          Promise.all(subjectIds.map((subjectId) => loadTopics(subjectId))),
-          loadExecutionChecks(taskItems),
-        ])
+        const taskItems = await loadTasks(from, to)
+        const checks = await loadExecutionChecks(taskItems)
         if (!active) return
         setTasks(taskItems)
-        setSubjects(subjectItems)
-        setTopics(topicGroups.flat())
         setExecutionChecks(checks)
         setError(null)
       } catch (loadError: unknown) {
         if (!active) return
         setTasks([])
-        setSubjects([])
-        setTopics([])
         setExecutionChecks({})
         setError(errorMessage(loadError))
       } finally {
@@ -223,17 +168,12 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
     }
   }, [from, queryKey, to])
 
-  const subjectNames = useMemo(
-    () => new Map(subjects.map((subject) => [subject.id, subject.name])),
-    [subjects],
-  )
-  const topicNames = useMemo(
-    () => new Map(topics.map((topic) => [topic.id, topic.title])),
-    [topics],
-  )
   const tasksByDay = useMemo(() => {
     const grouped = new Map(days.map((day) => [day.key, [] as DailyTask[]]))
-    for (const task of tasks) grouped.get(task.scheduledFor.slice(0, 10))?.push(task)
+    for (const task of tasks) {
+      const scheduledKey = calendarDateKey(task.scheduledFor)
+      if (scheduledKey) grouped.get(scheduledKey)?.push(task)
+    }
     return grouped
   }, [days, tasks])
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
@@ -250,7 +190,7 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
   const handleMove = async (taskId: string, scheduledFor: string) => {
     const task = tasks.find((item) => item.id === taskId)
     if (!task || lockReason(task) !== null || savingTaskId !== null) return
-    if (task.scheduledFor.slice(0, 10) === scheduledFor) {
+    if (calendarDateKey(task.scheduledFor) === calendarDateKey(scheduledFor)) {
       setSelectedTaskId(null)
       return
     }
@@ -270,7 +210,7 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
       const targetDay = days.find((day) => day.key === scheduledFor)
       setFeedback({
         kind: 'success',
-        message: `«${task.title}» به ${targetDay ? movedDateFormatter.format(targetDay.date) : scheduledFor} منتقل شد.`,
+        message: `«${task.title}» به ${formatJalaliDate(targetDay?.key ?? scheduledFor)} منتقل شد.`,
       })
     } catch (moveError) {
       setTasks((current) => restoreTask(current, task))
@@ -313,7 +253,7 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
       <Card className="weekly-planning-toolbar">
         <div>
           <p className="eyebrow">نمای شنبه تا جمعه</p>
-          <h2>{weekFormatter.format(days[0]!.date)} تا {weekFormatter.format(days[6]!.date)}</h2>
+          <h2>{formatJalaliDate(days[0]!.key)} تا {formatJalaliDate(days[6]!.key)}</h2>
           <p>کار شخصی را بکشید و روی روز مقصد رها کنید؛ در موبایل ابتدا کار و سپس روز را انتخاب کنید.</p>
         </div>
         <div className="weekly-planning-toolbar__actions">
@@ -382,12 +322,12 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
               >
                 <header className="weekly-day__header">
                   <div>
-                    <strong>{new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(day.date)}</strong>
-                    <span>{dateFormatter.format(day.date)}</span>
+                    <strong>{weekdayFormatter.format(new Date(`${day.key}T12:00:00.000Z`))}</strong>
+                    <span>{formatJalaliDate(day.key)}</span>
                   </div>
                   <small>{dayTasks.length.toLocaleString('fa-IR')} کار</small>
                 </header>
-                {selectedTask && selectedTask.scheduledFor.slice(0, 10) !== day.key && (
+                {selectedTask && calendarDateKey(selectedTask.scheduledFor) !== day.key && (
                   <Button
                     className="weekly-day__move-target"
                     disabled={savingTaskId !== null}
@@ -402,7 +342,8 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                 ) : (
                   <div className="weekly-day__tasks">
                     {dayTasks.map((task) => {
-                      const presentation = classifyTaskPresentation(task, todayKey)
+                      const summary = buildCompactTaskSummary(task, todayKey)
+                      const presentation = summary.presentation
                       const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
                       const taskLockReason = lockReason(task)
                       const isEligible = taskLockReason === null
@@ -434,38 +375,25 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                             type="button"
                           >
                             <div className="weekly-task__heading">
-                              <h3>{task.title}</h3>
+                              <h3>{summary.title}</h3>
                               <span className={`task-presentation-badge--${presentationClass}`}>
                                 {presentation.label}
                               </span>
                             </div>
-                            {presentation.indicatorLabel && (
-                              <small className="task-presentation-indicator">{presentation.indicatorLabel}</small>
-                            )}
-                            {task.curriculum.totalItemCount > 0 && (
-                              <p className="task-curriculum-progress">
-                                {formatCurriculumProgress(
-                                  task.curriculum.completedItemCount,
-                                  task.curriculum.totalItemCount,
-                                )}
-                              </p>
-                            )}
-                            {(task.subjectId || task.topicId) && (
-                              <p>
-                                {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}
-                                {task.topicId ? ` · ${topicNames.get(task.topicId) ?? 'مبحث ثبت‌شده'}` : ''}
-                              </p>
+                            {summary.presentation.indicatorLabel && (
+                              <small className="task-presentation-indicator">
+                                {summary.presentation.indicatorLabel}
+                              </small>
                             )}
                             <div className="weekly-task__meta">
-                              {task.estimatedMinutes !== null && <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>}
-                              {task.plannedTestCount > 0 && <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>}
-                              {task.contentType === 'STUDY' && <span>{task.actualSolvedTestCount.toLocaleString('fa-IR')} تست حل‌شده</span>}
-                              {task.status === 'SKIPPED' && task.skipReason && (
-                                <span>دلیل: {skipReasonLabels[task.skipReason]}</span>
+                              {summary.plannedLabel && <span>{summary.plannedLabel}</span>}
+                              {summary.progress && (
+                                <span className="weekly-task__progress">
+                                  <progress aria-label={summary.progress.label} max={100} value={summary.progress.value} />
+                                  <small>{summary.progress.label}</small>
+                                </span>
                               )}
-                              {taskLockReason
-                                ? <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>
-                                : <span>قابل جابه‌جایی</span>}
+                              {taskLockReason && <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>}
                             </div>
                           </button>
                           {isEligible && (

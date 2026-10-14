@@ -65,13 +65,14 @@ export function TodayTaskList({
               )
               const presentation = classifyTaskPresentation(task, todayKey)
               const presentationClass = presentation.status.toLowerCase().replaceAll('_', '-')
+              const isSelected = selectedTaskId === task.id
               return (
                 <article
-                  className={`today-task-row task-presentation--${presentationClass}${selectedTaskId === task.id ? ' is-selected' : ''}`}
+                  className={`today-task-row task-presentation--${presentationClass}${isSelected ? ' is-selected' : ''}`}
                   key={task.id}
                 >
                   <button
-                    aria-current={selectedTaskId === task.id ? 'true' : undefined}
+                    aria-current={isSelected ? 'true' : undefined}
                     className="today-task-row__summary"
                     data-task-focus-id={task.id}
                     onClick={() => onSelectTask(task.id)}
@@ -80,6 +81,7 @@ export function TodayTaskList({
                     <span className="today-task-row__identity">
                       <strong>{summary.title}</strong>
                       {summary.context && <small>{summary.context}</small>}
+                      {isSelected && <span className="today-task-row__selection">انتخاب‌شده</span>}
                     </span>
                     <span className={`task-status task-presentation-badge--${presentationClass}`}>
                       {presentation.label}

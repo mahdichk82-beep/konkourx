@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { prepareTaskContent, taskOccursOnDate } from './task-content.ts'
+import { prepareTaskContent, taskOccursBeforeDate, taskOccursOnDate } from './task-content.ts'
 import type { PlanningCurriculumValue } from '@konkourx/curriculum-browser'
 
 const selected = (...selectors: Array<{ id: string; selector: 'EXACT' | 'SUBTREE' }>): PlanningCurriculumValue => ({
@@ -65,5 +65,11 @@ test('GENERAL omits every Curriculum contract even when stale picker state exist
 
 test('a newly created task appears in Today only on its scheduled date', () => {
   assert.equal(taskOccursOnDate('2026-10-07T12:00:00.000Z', '2026-10-07'), true)
+  assert.equal(taskOccursOnDate('2026-10-07T23:30:00.000-07:00', '2026-10-07'), true)
   assert.equal(taskOccursOnDate('2026-10-08T12:00:00.000Z', '2026-10-07'), false)
+  assert.equal(taskOccursOnDate('2026-02-29T00:00:00.000Z', '2026-02-29'), false)
+  assert.equal(taskOccursOnDate('2026-10-07 trailing-data', '2026-10-07'), false)
+  assert.equal(taskOccursBeforeDate('2026-10-06T00:00:00.000Z', '2026-10-07'), true)
+  assert.equal(taskOccursBeforeDate('2026-10-07T00:00:00.000Z', '2026-10-07'), false)
+  assert.equal(taskOccursBeforeDate('invalid', '2026-10-07'), false)
 })

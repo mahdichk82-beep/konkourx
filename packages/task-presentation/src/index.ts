@@ -24,6 +24,29 @@ export type TaskPresentation = {
   status: TaskPresentationStatus
 }
 
+export type CompactTaskSummaryInput = TaskPresentationInput & {
+  actualSolvedTestCount: number
+  curriculum: {
+    completedItemCount: number
+    totalItemCount: number
+  }
+  endMinuteOfDay: number | null
+  estimatedMinutes: number | null
+  plannedTestCount: number
+  startMinuteOfDay: number | null
+  title: string
+}
+
+export type CompactTaskSummary = {
+  plannedLabel: string | null
+  presentation: TaskPresentation
+  progress: {
+    label: string
+    value: number
+  } | null
+  title: string
+}
+
 export type TehranDaySubscriptionEnvironment<TimerHandle = unknown> = {
   addFocusListener(listener: () => void): () => void
   addVisibilityListener(listener: () => void): () => void
@@ -48,14 +71,70 @@ const lifecycleLabels: Record<TaskLifecycleStatus, string> = {
   SKIPPED: 'ردشده',
 }
 
-const isoDateKey = (value: string): string | null => {
-  const match = /^(\d{4}-\d{2}-\d{2})(?:$|T)/.exec(value)
+export const calendarDateKey = (value: string): string | null => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(?:Z|([+-])(\d{2}):(\d{2})))?$/.exec(value)
   if (!match) return null
-  const key = match[1]!
+  const key = `${match[1]}-${match[2]}-${match[3]}`
   const parsed = new Date(`${key}T00:00:00.000Z`)
-  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== key
+  const invalidTimestamp = match[4] !== undefined && (
+    Number(match[4]) > 23 ||
+    Number(match[5]) > 59 ||
+    Number(match[6]) > 59 ||
+    Number(match[8] ?? 0) > 23 ||
+    Number(match[9] ?? 0) > 59 ||
+    Number.isNaN(Date.parse(value))
+  )
+  return invalidTimestamp || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== key
     ? null
     : key
+}
+
+const compactProgress = (
+  completed: number,
+  total: number,
+  unit: string,
+): CompactTaskSummary['progress'] => {
+  if (!Number.isFinite(total) || total <= 0) return null
+  const safeCompleted = Number.isFinite(completed) ? Math.max(0, completed) : 0
+  return {
+    label: `${persianNumberFormatter.format(safeCompleted)} از ${persianNumberFormatter.format(total)} ${unit}`,
+    value: Math.min(100, Math.round((safeCompleted / total) * 100)),
+  }
+}
+
+export const buildCompactTaskSummary = (
+  task: CompactTaskSummaryInput,
+  todayKey: string,
+): CompactTaskSummary => {
+  const timedMinutes = task.startMinuteOfDay !== null
+    && task.endMinuteOfDay !== null
+    && task.endMinuteOfDay > task.startMinuteOfDay
+    ? task.endMinuteOfDay - task.startMinuteOfDay
+    : null
+  const plannedMinutes = task.estimatedMinutes !== null && task.estimatedMinutes > 0
+    ? task.estimatedMinutes
+    : timedMinutes
+  const plannedLabel = plannedMinutes !== null
+    ? `${persianNumberFormatter.format(plannedMinutes)} دقیقه`
+    : task.plannedTestCount > 0
+      ? `${persianNumberFormatter.format(task.plannedTestCount)} تست برنامه‌ریزی‌شده`
+      : null
+  const curriculumProgress = compactProgress(
+    task.curriculum.completedItemCount,
+    task.curriculum.totalItemCount,
+    'مبحث',
+  )
+
+  return {
+    plannedLabel,
+    presentation: classifyTaskPresentation(task, todayKey),
+    progress: curriculumProgress ?? compactProgress(
+      task.actualSolvedTestCount,
+      task.plannedTestCount,
+      'تست',
+    ),
+    title: task.title,
+  }
 }
 
 export const tehranDateKey = (date: Date): string => {
@@ -132,8 +211,8 @@ export const classifyTaskPresentation = (
   task: TaskPresentationInput,
   todayKey: string,
 ): TaskPresentation => {
-  const scheduledKey = isoDateKey(task.scheduledFor)
-  const validTodayKey = isoDateKey(todayKey)
+  const scheduledKey = calendarDateKey(task.scheduledFor)
+  const validTodayKey = calendarDateKey(todayKey)
   const missedDeadlineCount = task.deadlineMisses?.length ?? 0
   const durableMissPresentation = missedDeadlineCount > 0
     ? {

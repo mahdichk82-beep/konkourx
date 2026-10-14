@@ -195,10 +195,14 @@
 .student-weekly-task { min-width: 0; padding: 0.6rem; display: grid; gap: 0.35rem; border: 1px solid var(--border-default); border-inline-start-width: 3px; border-radius: 9px; background: var(--bg-surface); }
 .student-weekly-task--pending { border-inline-start-color: var(--status-warning); }
 .student-weekly-task--completed { border-inline-start-color: var(--action-primary); }
+.student-weekly-task--partial { border-inline-start-color: var(--brand-secondary); }
 .student-weekly-task--skipped { border-inline-start-color: var(--status-danger); }
-.student-weekly-task h3 { margin: 0; overflow-wrap: anywhere; font-size: 0.76rem; line-height: 1.6; }
+.student-weekly-task h3 { margin: 0; display: -webkit-box; overflow: hidden; overflow-wrap: anywhere; font-size: 0.76rem; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .student-weekly-task > span, .student-weekly-task > small { color: var(--text-muted); font-size: 0.63rem; font-weight: 700; }
 .student-weekly-task p { margin: 0; color: var(--text-muted); font-size: 0.66rem; line-height: 1.55; }
+.student-weekly-task__progress { display: grid; gap: 0.2rem; }
+.student-weekly-task__progress progress { width: 100%; height: 0.35rem; accent-color: var(--action-primary); }
+.student-weekly-task__progress small { color: var(--text-muted); font-size: 0.62rem; }
 
 :root[data-theme='dark'] .counselor-task__status--pending { color: var(--status-warning-text); background: var(--status-warning-bg); border-color: var(--status-warning-border); }
 

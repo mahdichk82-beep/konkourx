@@ -105,6 +105,17 @@ test('compact task summaries use real Curriculum labels and recorded progress on
   assert.equal(taskProgressPercent(task({ estimatedMinutes: null, endMinuteOfDay: null, startMinuteOfDay: null })), null)
 })
 
+test('Counselor weekly cards use the shared compact lifecycle and progress presentation', () => {
+  const source = readFileSync(new URL('../students/StudentWeeklyPlanning.tsx', import.meta.url), 'utf8')
+  assert.match(source, /buildCompactTaskSummary\(task, todayKey\)/)
+  assert.match(source, /<progress/)
+  assert.match(source, /summary\.plannedLabel/)
+  assert.match(source, /summary\.presentation\.label/)
+  assert.match(source, /summary\.presentation\.indicatorLabel/)
+  assert.doesNotMatch(source, /studentTasksClient\.listSubjects|studentTasksClient\.listTopics/)
+  assert.doesNotMatch(source, /skipReasonLabels|subjectNames|topicNames/)
+})
+
 test('task rail filters by real lifecycle status and date', () => {
   const tasks = [
     task(),
