@@ -126,6 +126,7 @@ test('direct task routes load one owned task and reject stale route responses', 
 
 test('Weekly task summaries navigate without sharing the reschedule handler', () => {
   const weeklySource = planningSource('../pages/WeeklyPlanningPage.tsx')
+  const detailSource = planningSource('./TodayTaskDetail.tsx')
   assert.match(weeklySource, /weekly-task__open/)
   assert.match(weeklySource, /navigate\(planningTaskPath\(task\.id\)\)/)
   assert.match(weeklySource, /onClick=\{\(\) => void handleMove\(selectedTask\.id, day\.key\)\}/)
@@ -137,6 +138,10 @@ test('Weekly task summaries navigate without sharing the reschedule handler', ()
   assert.match(weeklySource, /formatJalaliDate\(day\.key\)/)
   assert.match(weeklySource, /calendarDateKey\(task\.scheduledFor\)/)
   assert.doesNotMatch(weeklySource, /formatCurriculumProgress|subjectNames|topicNames/)
+  assert.doesNotMatch(weeklySource, /lockLabels|weekly-task__lock|تعیین‌شده توسط مشاور|جابه‌جایی قفل است/)
+  assert.match(weeklySource, /movementLockReason\(task, executionChecks\[task\.id\]/)
+  assert.match(weeklySource, /const isEligible = taskLockReason === null/)
+  assert.match(detailSource, /تعیین‌شده توسط مشاور/)
 })
 
 test('URL-backed detail closing restores list focus without forcing a scroll jump', () => {

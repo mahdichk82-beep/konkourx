@@ -114,6 +114,7 @@ test('Counselor weekly cards use the shared compact lifecycle and progress prese
   assert.match(source, /summary\.presentation\.indicatorLabel/)
   assert.doesNotMatch(source, /studentTasksClient\.listSubjects|studentTasksClient\.listTopics/)
   assert.doesNotMatch(source, /skipReasonLabels|subjectNames|topicNames/)
+  assert.doesNotMatch(source, /lockLabels|weekly-task__lock|تعیین‌شده توسط مشاور|جابه‌جایی قفل است/)
 })
 
 test('task rail filters by real lifecycle status and date', () => {

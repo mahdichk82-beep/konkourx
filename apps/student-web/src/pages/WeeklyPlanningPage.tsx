@@ -36,13 +36,6 @@ type Feedback = {
   message: string
 }
 
-const lockLabels: Record<MovementLockReason, string> = {
-  CHECKING: 'در حال بررسی سابقه اجرا…',
-  COUNSELOR: 'تعیین‌شده توسط مشاور · جابه‌جایی قفل است',
-  EXECUTED: 'دارای سابقه مطالعه · جابه‌جایی قفل است',
-  UNAVAILABLE: 'امکان جابه‌جایی بررسی نشد · قفل موقت',
-}
-
 const weekdayFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   timeZone: 'UTC',
   weekday: 'long',
@@ -393,7 +386,6 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                                   <small>{summary.progress.label}</small>
                                 </span>
                               )}
-                              {taskLockReason && <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>}
                             </div>
                           </button>
                           {isEligible && (
