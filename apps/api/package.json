@@ -12,6 +12,7 @@
     "seed": "tsx src/scripts/seed-domain.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test test/*.test.ts",
+    "test:timestamp-integrity": "pnpm run build && node --test test/prisma-timestamptz-read-integrity.test.mjs",
     "start": "node dist/server.js"
   },
   "dependencies": {
