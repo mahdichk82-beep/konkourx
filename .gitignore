@@ -30,6 +30,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+.tmp/
+.profile-candidate/
+.superpowers/
 apps/api/test/.tmp-*.test.mjs
 apps/api/test/.tsx-userinfo-workaround.cjs
 docs/curriculum/reports/

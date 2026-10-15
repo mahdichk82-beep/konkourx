@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    name: Validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      VITE_API_URL: https://api.example.test
+      DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/konkourx_ci?schema=public
+    steps:
+      - name: Check out the full history
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .node-version
+
+      - name: Enable the pinned pnpm version
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.24.0 --activate
+
+      - name: Verify and run Gitleaks 8.30.1
+        shell: bash
+        run: |
+          archive="gitleaks_8.30.1_linux_x64.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/$archive"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum --check --strict
+          tar --extract --gzip --file "$archive" gitleaks
+          ./gitleaks version
+          ./gitleaks git . --log-opts="HEAD" --config .gitleaks.toml --redact=100 --no-banner
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate the monorepo
+        run: pnpm validate
+
+  docker-smoke:
+    name: Docker smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      POSTGRES_DB: konkourx_ci
+      POSTGRES_USER: konkourx_ci
+      POSTGRES_PASSWORD: ci-only-postgres-password
+      NODE_ENV: test
+      HOST: 0.0.0.0
+      PORT: "4000"
+      API_URL: http://api:4000
+      STUDENT_APP_URL: http://student-web:8080
+      COUNSELOR_APP_URL: http://counselor-web:8080
+      CORS_ORIGINS: http://student-web:8080,http://counselor-web:8080
+      DATABASE_URL: postgresql://konkourx_ci:ci-only-postgres-password@postgres:5432/konkourx_ci?schema=public
+      ACCESS_TOKEN_SECRET: ci-only-access-token-secret-not-for-production
+      VITE_API_URL: https://api.example.test
+    steps:
+      - name: Check out the reviewed tree
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Build all application images
+        run: docker compose build --pull api student-web counselor-web
+
+      - name: Start isolated services and wait for health
+        run: docker compose up -d --wait --wait-timeout 120
+
+      - name: Smoke-test API readiness
+        run: |
+          docker compose exec -T api node /app/api-healthcheck.mjs
+          docker compose exec -T api node --input-type=module -e "const response = await fetch('http://127.0.0.1:4000/health'); const body = await response.json(); if (!response.ok || body?.data?.status !== 'healthy' || body?.data?.database !== 'connected') process.exit(1)"
+
+      - name: Smoke-test Student SPA and fallback routing
+        shell: bash
+        run: |
+          docker compose exec -T student-web wget -qO- http://127.0.0.1:8080/ | grep -F '<div id="root"></div>'
+          docker compose exec -T student-web wget -qO- http://127.0.0.1:8080/ci-spa-route | grep -F '<div id="root"></div>'
+
+      - name: Smoke-test Counselor SPA and fallback routing
+        shell: bash
+        run: |
+          docker compose exec -T counselor-web wget -qO- http://127.0.0.1:8080/ | grep -F '<div id="root"></div>'
+          docker compose exec -T counselor-web wget -qO- http://127.0.0.1:8080/ci-spa-route | grep -F '<div id="root"></div>'
+
+      - name: Show service logs after a failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+
+      - name: Remove isolated services and volumes
+        if: always()
+        run: docker compose down --volumes --remove-orphans
